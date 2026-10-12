@@ -1,0 +1,357 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id                     Int    @id @default(1)
+  name                   String
+  tagline                String
+  website                String
+  email                  String
+  whatsapp               String
+  mission                String
+  vision                 String
+  experience             String
+  documentDownloadFeePkr Int    @map("document_download_fee_pkr")
+}
+
+model Office {
+  id        String @id @default(uuid())
+  city      String @unique
+  address   String
+  phone     String
+  sortOrder Int    @map("sort_order")
+}
+
+model ManagementMember {
+  id        String @id @default(uuid())
+  name      String
+  title     String
+  sortOrder Int    @map("sort_order")
+}
+
+model Project {
+  id                 String                  @id @default(uuid())
+  slug               String                  @unique
+  name               String
+  city               String
+  location           String
+  developer          String
+  description        String
+  status             String
+  expectedCompletion String                  @map("expected_completion")
+  contactPerson      String                  @map("contact_person")
+  contactPhone       String                  @map("contact_phone")
+  progressPercent    Int                     @map("progress_percent")
+  type               String
+  imagePath          String                  @map("image_path")
+  masterPlan         String                  @map("master_plan")
+  sitePlan           String                  @map("site_plan")
+  pricingLabel       String                  @map("pricing_label")
+  paymentPlan        String                  @map("payment_plan")
+  availableUnits     Int                     @map("available_units")
+  seoTitle           String?                 @map("seo_title")
+  seoDescription     String?                 @map("seo_description")
+  /// "architecture" | "construction"
+  division           String                  @default("construction")
+  /// residential | commercial | industrial | hospitality | healthcare | educational | recreational | consultancy
+  category           String                  @default("residential")
+  featured           Boolean                 @default(false)
+  published          Boolean                 @default(true)
+  stages             ProjectStage[]
+  investments        InvestmentOpportunity[]
+  leads              Lead[]
+  listItems          ProjectListItem[]
+  properties         Property[]
+  bookings           Booking[]
+  documents          Document[]
+
+  @@index([division, category])
+  @@index([published, featured])
+}
+
+/// Named construction/design stages with their own percentage, e.g. "Grey structure 100%".
+model ProjectStage {
+  id         String   @id @default(uuid())
+  projectId  String   @map("project_id")
+  name       String
+  percent    Int
+  /// Optional target or achieved date, YYYY-MM-DD
+  targetDate String?  @map("target_date")
+  note       String   @default("")
+  sortOrder  Int      @default(0) @map("sort_order")
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, sortOrder])
+}
+
+model ProjectListItem {
+  id        String  @id @default(uuid())
+  projectId String  @map("project_id")
+  label     String
+  sortOrder Int     @map("sort_order")
+  kind      String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, sortOrder])
+}
+
+model Property {
+  id          String   @id @default(uuid())
+  /// Null for standalone listings (resale/rental) that are not part of a company project.
+  projectId   String?  @map("project_id")
+  title       String
+  type        String
+  city        String
+  size        String
+  /// Sale price, or monthly rent when listingType = "rent". Whole rupees.
+  pricePkr    Int      @map("price_pkr")
+  status      String
+  imagePath   String   @map("image_path")
+  /// "sale" | "rent"
+  listingType String   @default("sale") @map("listing_type")
+  locality    String   @default("")
+  /// Size normalised to Marla for filtering (1 Kanal = 20 Marla). Null when not a land/house size.
+  areaMarla   Float?   @map("area_marla")
+  description String   @default("")
+  published   Boolean  @default(true)
+  project     Project? @relation(fields: [projectId], references: [id])
+  booking     Booking?
+  leads       Lead[]
+
+  @@index([projectId])
+  @@index([city, status])
+  @@index([status])
+  @@index([listingType, status, published])
+}
+
+model User {
+  id                     String     @id @default(uuid())
+  name                   String
+  email                  String     @unique
+  passwordHash           String     @map("password_hash")
+  role                   String
+  city                   String
+  phone                  String
+  cnic                   String
+  documentDownloadPaidAt DateTime?  @map("document_download_paid_at")
+  active                 Boolean    @default(true)
+  lastLoginAt            DateTime?  @map("last_login_at")
+  sessions               Session[]
+  auditLogs              AuditLog[]
+  bookings               Booking[]
+  documents              Document[] @relation("BuyerDocuments")
+  assignedLeads          Lead[]     @relation("AssignedLeads")
+
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model RolePermission {
+  role     String
+  resource String
+  right    String
+
+  @@id([role, resource, right])
+}
+
+model Booking {
+  id                   String   @id @default(uuid())
+  userId               String   @map("user_id")
+  propertyId           String   @unique @map("property_id")
+  projectId            String   @map("project_id")
+  status               String
+  bookedOn             String   @map("booked_on")
+  totalPricePkr        Int      @map("total_price_pkr")
+  paidPkr              Int      @map("paid_pkr")
+  outstandingPkr       Int      @map("outstanding_pkr")
+  paymentsReceived     Int      @map("payments_received")
+  paymentsRemaining    Int      @map("payments_remaining")
+  nextPaymentDate      String   @map("next_payment_date")
+  nextPaymentAmountPkr Int      @map("next_payment_amount_pkr")
+  user                 User     @relation(fields: [userId], references: [id])
+  property             Property @relation(fields: [propertyId], references: [id])
+  project              Project  @relation(fields: [projectId], references: [id])
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  audience    String
+  userId      String?  @map("user_id")
+  projectId   String?  @map("project_id")
+  name        String
+  category    String
+  issuedOn    String   @map("issued_on")
+  version     String?
+  status      String?
+  fileName    String   @map("file_name")
+  storagePath String?  @map("storage_path")
+  user        User?    @relation("BuyerDocuments", fields: [userId], references: [id])
+  project     Project? @relation(fields: [projectId], references: [id])
+
+  @@index([userId, audience])
+  @@index([audience, issuedOn])
+  @@index([projectId])
+}
+
+model News {
+  id             String  @id @default(uuid())
+  title          String
+  slug           String  @unique
+  publishedOn    String  @map("published_on")
+  excerpt        String
+  body           String
+  seoTitle       String? @map("seo_title")
+  seoDescription String? @map("seo_description")
+
+  @@index([publishedOn])
+}
+
+/// One pipeline for every enquiry: contact form, callback, sell request, investor interest, chatbot, manual.
+model Lead {
+  id           String                 @id @default(uuid())
+  name         String
+  phone        String
+  email        String                 @default("")
+  city         String
+  /// Short summary shown in lists, e.g. "10 Marla villa" or "Petrol pump NOC"
+  interest     String
+  /// new | contacted | requirement_received | quotation_pending | quotation_sent | follow_up | converted | closed
+  status       String
+  /// contact | callback | sell | investment | chatbot | manual
+  source       String                 @default("manual")
+  service      String                 @default("")
+  location     String                 @default("")
+  size         String                 @default("")
+  budget       String                 @default("")
+  message      String                 @default("")
+  /// JSON of structured answers (e.g. chatbot selections)
+  details      String?
+  propertyId   String?                @map("property_id")
+  projectId    String?                @map("project_id")
+  investmentId String?                @map("investment_id")
+  assignedToId String?                @map("assigned_to_id")
+  followUpDate String?                @map("follow_up_date")
+  notes        String                 @default("")
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @default(now()) @updatedAt @map("updated_at")
+  property     Property?              @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  project      Project?               @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  investment   InvestmentOpportunity? @relation(fields: [investmentId], references: [id], onDelete: SetNull)
+  assignedTo   User?                  @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([status, city])
+  @@index([source, createdAt])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+/// Developments open to investors (plaza, homes, shops, market). Figures are editable and dated by admin.
+model InvestmentOpportunity {
+  id                   String   @id @default(uuid())
+  slug                 String   @unique
+  title                String
+  projectId            String?  @map("project_id")
+  /// plaza | residential | shops | market | other
+  investmentType       String   @map("investment_type")
+  city                 String
+  location             String
+  summary              String
+  description          String
+  minimumInvestmentPkr Int      @map("minimum_investment_pkr")
+  targetAmountPkr      Int?     @map("target_amount_pkr")
+  expectedDuration     String   @map("expected_duration")
+  paymentStructure     String   @map("payment_structure")
+  /// Plain-language note about how returns work. Never a guaranteed figure.
+  returnsNote          String   @map("returns_note")
+  /// open | fully_subscribed | closed
+  status               String   @default("open")
+  published            Boolean  @default(true)
+  sortOrder            Int      @default(0) @map("sort_order")
+  imagePath            String   @default("") @map("image_path")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+  project              Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  leads                Lead[]
+
+  @@index([published, status, sortOrder])
+}
+
+model Inquiry {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+}
+
+model SiteSettings {
+  id                        Int     @id @default(1)
+  extraCitiesEnabled        Boolean @default(false) @map("extra_cities_enabled")
+  whatsappAutomationEnabled Boolean @default(false) @map("whatsapp_automation_enabled")
+  paymentGatewayEnabled     Boolean @default(false) @map("payment_gateway_enabled")
+}
+
+/// Editable website copy (spec §49). Keyed blocks such as "home.hero".
+model ContentBlock {
+  key                 String   @id
+  title               String
+  subtitle            String   @default("")
+  description         String   @default("")
+  imagePath           String   @default("") @map("image_path")
+  buttonText          String   @default("") @map("button_text")
+  buttonUrl           String   @default("") @map("button_url")
+  secondaryButtonText String   @default("") @map("secondary_button_text")
+  secondaryButtonUrl  String   @default("") @map("secondary_button_url")
+  active              Boolean  @default(true)
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+}
+
+/// Sensitive admin actions (spec §50). Never stores passwords or tokens.
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  module    String
+  recordId  String?  @map("record_id")
+  oldValue  String?  @map("old_value")
+  newValue  String?  @map("new_value")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([module, recordId])
+}
+
+/// Login attempts for rate limiting brute-force password guessing.
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  key       String
+  success   Boolean
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([key, createdAt])
+}
