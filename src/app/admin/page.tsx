@@ -20,7 +20,7 @@ export default async function AdminPage({ searchParams }: Props) {
     getCompany(),
   ]);
   const staff = users.filter((u) => u.role !== "buyer");
-  const upcoming = bookings.filter((b) => b.outstandingPkr > 0).slice(0, 5);
+  const upcoming = bookings.filter((b) => b.outstandingPkr > 0 && b.status !== "Cancelled").slice(0, 5);
 
   const cards = [
     { label: "Customers", value: counts.customers, href: "/admin/customers" },

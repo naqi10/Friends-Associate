@@ -7,7 +7,7 @@ import { UI } from "@/lib/chatbot/flow";
 import { permissionsFor } from "@/lib/permissions";
 
 const MAX_MESSAGE_LENGTH = 500;
-const BUYER_TOPICS = /payment|owe|outstanding|next|document|progress|qist|qisṭ|raqam|kaghaz|ادائیگی|قسط|کاغذات|دستاویز/i;
+const BUYER_TOPICS = /payment|receipt|raseed|rasid|رسید|owe|outstanding|next|document|progress|qist|qisṭ|raqam|kaghaz|ادائیگی|قسط|کاغذات|دستاویز/i;
 const PUBLIC_TOPICS = /project|available|contact|sales|login/i;
 
 /**

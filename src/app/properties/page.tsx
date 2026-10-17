@@ -5,7 +5,7 @@ import { FormStatus, Honeypot } from "@/components/public/EnquiryForms";
 import { sellPropertyAction } from "@/lib/actions/leads";
 import { BUDGET_BANDS, PROPERTY_TYPES, SIZE_BANDS, type ListingType } from "@/lib/catalog";
 import { CITIES } from "@/lib/constants";
-import { getPropertiesWithProject, getPropertyLocalities } from "@/lib/data";
+import { getPageContent, getPropertiesWithProject, getPropertyLocalities } from "@/lib/data";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -33,10 +33,12 @@ function pick<T extends string>(value: string | undefined, allowed: readonly T[]
 export default async function PropertiesPage({ searchParams }: Props) {
   const sp = await searchParams;
   const tab: Tab = pick(sp.tab, ["buy", "rent", "sell"] as const) ?? "buy";
+  const page = await getPageContent("page.properties");
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-display text-4xl font-semibold">Properties</h1>
+      <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
+      {page.intro && <p className="mt-3 max-w-2xl text-stone-600">{page.intro}</p>}
       <nav aria-label="Property listings" className="mt-6 flex gap-2 border-b border-stone-200">
         {TABS.map((t) => (
           <Link
@@ -171,16 +173,14 @@ async function Listings({ listingType, sp, tab }: { listingType: ListingType; sp
   );
 }
 
-function SellPanel({ sent, error }: { sent?: string; error?: string }) {
+async function SellPanel({ sent, error }: { sent?: string; error?: string }) {
+  const sell = await getPageContent("page.properties.sell");
   const input = "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm";
   return (
     <section id="enquiry" className="mt-8 grid scroll-mt-24 gap-10 lg:grid-cols-[1fr_1.2fr]">
       <div>
-        <h2 className="font-display text-3xl font-semibold">Sell or rent out your property</h2>
-        <p className="mt-3 text-stone-600">
-          Share a few details and our property team will contact you to value, list and market it — plots, houses, apartments, shops and commercial
-          buildings.
-        </p>
+        <h2 className="font-display text-3xl font-semibold">{sell.title}</h2>
+        {sell.intro && <p className="mt-3 text-stone-600">{sell.intro}</p>}
         <ul className="mt-6 space-y-2 text-sm text-stone-700">
           <li>✓ Free initial consultation</li>
           <li>✓ Verified buyers and tenants</li>

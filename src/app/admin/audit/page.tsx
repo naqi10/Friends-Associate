@@ -17,13 +17,14 @@ export default async function AuditLogPage() {
         <p className="mt-6 text-sm text-stone-500">No changes recorded yet.</p>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-xl border bg-white">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[860px] text-left text-sm">
             <thead className="bg-stone-50 text-stone-500">
               <tr>
                 <th className="px-3 py-2">When</th>
                 <th className="px-3 py-2">Who</th>
                 <th className="px-3 py-2">Area</th>
                 <th className="px-3 py-2">Action</th>
+                <th className="px-3 py-2">Record</th>
                 <th className="px-3 py-2">Change</th>
               </tr>
             </thead>
@@ -34,12 +35,15 @@ export default async function AuditLogPage() {
                   <td className="px-3 py-2">{l.user?.name ?? "Deleted user"}</td>
                   <td className="px-3 py-2">{l.module}</td>
                   <td className="px-3 py-2">{l.action}</td>
+                  <td className="max-w-40 truncate px-3 py-2 font-mono text-xs text-stone-500" title={l.recordId ?? undefined}>
+                    {l.recordId ?? "—"}
+                  </td>
                   <td className="max-w-md px-3 py-2">
-                    {l.newValue && (
+                    {(l.newValue || l.oldValue) && (
                       <details>
                         <summary className="cursor-pointer text-teal-800">View details</summary>
                         {l.oldValue && <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-stone-500">Before: {l.oldValue}</pre>}
-                        <pre className="mt-2 whitespace-pre-wrap break-all text-xs">After: {l.newValue}</pre>
+                        {l.newValue && <pre className="mt-2 whitespace-pre-wrap break-all text-xs">After: {l.newValue}</pre>}
                       </details>
                     )}
                   </td>

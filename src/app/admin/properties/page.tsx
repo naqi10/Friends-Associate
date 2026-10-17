@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { AdminNav } from "@/components/AdminNav";
+import { ArchiveTabs } from "@/components/admin/ArchiveTabs";
 import { formatPkr } from "@/lib/format";
 import { getProperties, getProjects } from "@/lib/data";
 import { requireStaffAny } from "@/lib/permissions";
 
-type Props = { searchParams: Promise<{ saved?: string; error?: string }> };
+type Props = { searchParams: Promise<{ saved?: string; error?: string; archived?: string }> };
 
 export default async function AdminPropertiesPage({ searchParams }: Props) {
   const { can } = await requireStaffAny([
@@ -12,8 +13,14 @@ export default async function AdminPropertiesPage({ searchParams }: Props) {
     ["properties", "add"],
   ]);
   const sp = await searchParams;
-  const properties = await getProperties();
-  const projects = await getProjects();
+  const archived = sp.archived === "1";
+  const [properties, archivedList, active, archivedProjects] = await Promise.all([
+    getProperties({ archived }),
+    getProperties({ archived: true }),
+    getProjects(),
+    getProjects({ archived: true }),
+  ]);
+  const projects = [...active, ...archivedProjects];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -27,7 +34,13 @@ export default async function AdminPropertiesPage({ searchParams }: Props) {
         )}
       </div>
       {sp.saved === "1" && <p className="mt-3 text-sm text-teal-800">Saved.</p>}
-      <table className="mt-6 w-full text-left text-sm">
+      {sp.saved === "deleted" && <p className="mt-3 text-sm text-teal-800">Listing deleted.</p>}
+      <ArchiveTabs base="/admin/properties" archived={archived} archivedCount={archivedList.length} />
+      {properties.length === 0 && (
+        <p className="mt-6 text-sm text-stone-500">{archived ? "No archived listings." : "No listings yet."}</p>
+      )}
+      <div className="overflow-x-auto">
+      <table className="mt-6 w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr className="border-b text-stone-500">
             <th className="py-2">Title</th>
@@ -65,6 +78,7 @@ export default async function AdminPropertiesPage({ searchParams }: Props) {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

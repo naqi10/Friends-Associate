@@ -53,7 +53,7 @@ export async function getBuyerOptions() {
   return prisma.user.findMany({
     where: { role: "buyer", active: true },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, email: true, _count: { select: { bookings: true } } },
+    select: { id: true, name: true, email: true, _count: { select: { bookings: { where: { status: { not: "Cancelled" } } } } } },
   });
 }
 

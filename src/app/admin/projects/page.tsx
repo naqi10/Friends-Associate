@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { AdminNav } from "@/components/AdminNav";
+import { ArchiveTabs } from "@/components/admin/ArchiveTabs";
 import { DIVISIONS, PROJECT_CATEGORIES, labelOf } from "@/lib/catalog";
 import { getProjects } from "@/lib/data";
 import { requireStaffAny } from "@/lib/permissions";
 
-type Props = { searchParams: Promise<{ saved?: string }> };
+type Props = { searchParams: Promise<{ saved?: string; archived?: string }> };
 
 export default async function AdminProjectsPage({ searchParams }: Props) {
   const { can } = await requireStaffAny([
@@ -12,7 +13,8 @@ export default async function AdminProjectsPage({ searchParams }: Props) {
     ["projects", "add"],
   ]);
   const sp = await searchParams;
-  const projects = await getProjects();
+  const archived = sp.archived === "1";
+  const [projects, archivedList] = await Promise.all([getProjects({ archived }), getProjects({ archived: true })]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -26,6 +28,11 @@ export default async function AdminProjectsPage({ searchParams }: Props) {
         )}
       </div>
       {sp.saved === "1" && <p className="mt-3 text-sm text-teal-800">Saved.</p>}
+      {sp.saved === "deleted" && <p className="mt-3 text-sm text-teal-800">Project deleted.</p>}
+      <ArchiveTabs base="/admin/projects" archived={archived} archivedCount={archivedList.length} />
+      {projects.length === 0 && (
+        <p className="mt-6 text-sm text-stone-500">{archived ? "No archived projects." : "No projects yet."}</p>
+      )}
       <ul className="mt-6 space-y-2">
         {projects.map((p) => (
           <li key={p.id} className="flex items-center justify-between rounded border bg-white p-3 text-sm">

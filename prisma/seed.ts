@@ -23,6 +23,7 @@ async function main() {
     prisma.lead.deleteMany(),
     prisma.news.deleteMany(),
     prisma.document.deleteMany(),
+    prisma.payment.deleteMany(),
     prisma.booking.deleteMany(),
     prisma.session.deleteMany(),
     prisma.property.deleteMany(),
@@ -218,6 +219,36 @@ async function main() {
       { id: "bk3", userId: IDS.users.bilal, propertyId: IDS.properties.rykHouse, projectId: IDS.projects.ryk, status: "Civil-stage booking", bookedOn: "2025-08-20", totalPricePkr: 18500000, paidPkr: 5550000, outstandingPkr: 12950000, paymentsReceived: 3, paymentsRemaining: 9, nextPaymentDate: "2026-10-20", nextPaymentAmountPkr: 1387500 },
     ],
   });
+
+  // Itemised receipts that add up exactly to each booking's paid amount: the booking payment on the
+  // booking date, then quarterly instalments. Bank transfers carry a reference, as the admin form requires.
+  const seededBookings = await prisma.booking.findMany({ orderBy: { id: "asc" } });
+  for (const b of seededBookings) {
+    const count = b.paymentsReceived;
+    const first = Math.round(b.paidPkr * 0.3);
+    const each = Math.floor((b.paidPkr - first) / Math.max(1, count - 1));
+    const start = new Date(`${b.bookedOn}T00:00:00Z`);
+    let total = 0;
+    for (let i = 0; i < count; i++) {
+      const amount = i === 0 ? first : i === count - 1 ? b.paidPkr - total : each;
+      total += amount;
+      const d = new Date(start);
+      d.setUTCMonth(d.getUTCMonth() + i * 3);
+      const method = i % 3 === 2 ? "Cheque" : "Bank Transfer";
+      await prisma.payment.create({
+        data: {
+          bookingId: b.id,
+          userId: b.userId,
+          amountPkr: amount,
+          paidOn: d.toISOString().slice(0, 10),
+          method,
+          referenceNumber: method === "Cheque" ? `CHQ-${48210 + i}` : `IBFT-${b.id.toUpperCase()}-${String(i + 1).padStart(2, "0")}`,
+          remarks: i === 0 ? "Booking payment" : `Instalment ${i}`,
+          createdById: IDS.users.admin,
+        },
+      });
+    }
+  }
 
   const publicDocs = [
     { id: "d-p1", audience: "public", name: "Company profile 2026", category: "Company", issuedOn: "2026-01-10", fileName: "FARYK-profile.pdf", projectId: null },

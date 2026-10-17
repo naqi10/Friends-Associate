@@ -52,3 +52,14 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+/* Printing (receipts): only the page content, no site header, footer or chat button. */
+@media print {
+  body *:has(~ #main),
+  #main ~ * {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+}

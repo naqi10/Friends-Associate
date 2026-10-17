@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ProjectCard } from "@/components/public/Cards";
 import { DIVISIONS, PROJECT_CATEGORIES, isKey } from "@/lib/catalog";
 import { CITIES } from "@/lib/constants";
-import { getProjectsFiltered } from "@/lib/data";
+import { getPageContent, getProjectsFiltered } from "@/lib/data";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -21,18 +21,19 @@ export default async function ProjectsPage({ searchParams }: Props) {
     category: isKey(PROJECT_CATEGORIES, sp.category) ? sp.category : undefined,
     city: (CITIES as readonly string[]).includes(sp.city ?? "") ? sp.city : undefined,
   };
-  const projects = await getProjectsFiltered({ ...filter, publishedOnly: true });
+  const [projects, page] = await Promise.all([getProjectsFiltered({ ...filter, publishedOnly: true }), getPageContent("page.projects")]);
   const filtered = Object.values(filter).some(Boolean);
   const select = "rounded-md border border-stone-300 px-3 py-2";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-display text-4xl font-semibold">Projects</h1>
+        <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
         <Link href="/progress" className="text-sm font-medium text-teal-800 hover:underline">
           See construction progress by category →
         </Link>
       </div>
+      {page.intro && <p className="mt-3 max-w-2xl text-stone-600">{page.intro}</p>}
       <form method="get" className="mt-6 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4 text-sm">
         <label className="flex flex-col gap-1">
           <span className="text-xs font-medium text-stone-500">Division</span>

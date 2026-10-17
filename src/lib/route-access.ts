@@ -18,7 +18,7 @@ const RULES: [RegExp, AccessRule][] = [
   [/^\/sales(\/|$)/, { kind: "perm", any: [["leads", "view"]] }],
   [/^\/pm(\/|$)/, { kind: "perm", any: [["progress", "view"]] }],
   [/^\/admin\/?$/, { kind: "admin" }],
-  [/^\/admin\/(staff|permissions|content|audit)(\/|$)/, { kind: "admin" }],
+  [/^\/admin\/(staff|permissions|content|audit|services)(\/|$)/, { kind: "admin" }],
   [/^\/admin\/customers\/new\/?$/, { kind: "perm", any: [["users", "add"]] }],
   [/^\/admin\/customers(\/|$)/, { kind: "perm", any: [["users", "view"]] }],
   [/^\/admin\/bookings\/new\/?$/, { kind: "perm", any: [["bookings", "add"]] }],

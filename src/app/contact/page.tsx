@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { FormStatus, Honeypot } from "@/components/public/EnquiryForms";
 import { contactAction } from "@/lib/actions/leads";
 import { BRAND } from "@/lib/brand";
-import { SERVICES } from "@/lib/catalog";
-import { getCompany, getOffices } from "@/lib/data";
-import { pageMetadata } from "@/lib/seo";
+import { getCompany, getFaqs, getHomeExtras, getOffices, getPageContent, getPublishedServices } from "@/lib/data";
+import { jsonLd, pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Contact us",
@@ -14,24 +13,25 @@ export const metadata: Metadata = pageMetadata({
 
 type Props = { searchParams: Promise<{ sent?: string; error?: string }> };
 
-const SERVICE_OPTIONS = [
-  ...SERVICES.architecture.map((g) => g.title),
-  ...SERVICES.construction.map((g) => g.title),
-  "Buying a property",
-  "Selling / renting out a property",
-  "Investment",
-  "Other",
-];
+const OTHER_OPTIONS = ["Buying a property", "Selling / renting out a property", "Investment", "Other"];
 
 export default async function ContactPage({ searchParams }: Props) {
-  const [sp, company, offices] = await Promise.all([searchParams, getCompany(), getOffices()]);
+  const [sp, company, offices, page, faqs, extras] = await Promise.all([
+    searchParams,
+    getCompany(),
+    getOffices(),
+    getPageContent("page.contact"),
+    getFaqs(),
+    getHomeExtras(),
+  ]);
+  const serviceOptions = [...new Set([...(await getPublishedServices()).map((s) => s.name), ...OTHER_OPTIONS])];
   const whatsapp = `https://wa.me/${company.whatsapp.replace(/\D/g, "")}`;
   const input = "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-display text-4xl font-semibold">Contact us</h1>
-      <p className="mt-2 text-stone-600">Tell us about your project — we usually reply the same day.</p>
+      <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
+      {page.intro && <p className="mt-2 text-stone-600">{page.intro}</p>}
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_1.3fr]">
         <div className="space-y-6">
@@ -52,6 +52,7 @@ export default async function ContactPage({ searchParams }: Props) {
                 {company.email}
               </a>
             </p>
+            {extras.hours && <p className="mt-1 text-sm text-stone-600">Office hours: {extras.hours}</p>}
           </div>
           <ul className="space-y-4 text-sm">
             {offices.map((o) => (
@@ -94,7 +95,7 @@ export default async function ContactPage({ searchParams }: Props) {
             <label className="text-sm sm:col-span-2">
               Service
               <select name="service" className={input}>
-                {SERVICE_OPTIONS.map((s) => (
+                {serviceOptions.map((s) => (
                   <option key={s}>{s}</option>
                 ))}
               </select>
@@ -118,6 +119,35 @@ export default async function ContactPage({ searchParams }: Props) {
           </form>
         </section>
       </div>
+
+      {faqs.length > 0 && (
+        <section id="faq" aria-labelledby="faq-heading" className="mt-14 scroll-mt-24">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={jsonLd({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })),
+            })}
+          />
+          <h2 id="faq-heading" className="font-display text-3xl font-semibold">
+            Frequently asked questions
+          </h2>
+          <div className="mt-6 divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white">
+            {faqs.map((f) => (
+              <details key={f.id} className="group p-5">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 font-medium">
+                  {f.question}
+                  <span aria-hidden className="text-xl leading-none text-stone-400 group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 whitespace-pre-line text-sm text-stone-600">{f.answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

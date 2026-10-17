@@ -34,7 +34,10 @@ export type ProjectCategory = (typeof PROJECT_CATEGORIES)[number]["key"];
 
 export type ServiceGroup = { title: string; icon: string; items: string[] };
 
-/** Services per division, worded as in the client brief. */
+/**
+ * Original services per division, worded as in the client brief. Since the 20261016 services migration these
+ * live in the Service table (Admin → Website content → Services); this list is only the reference they were copied from.
+ */
 export const SERVICES: Record<Division, ServiceGroup[]> = {
   architecture: [
     {
@@ -110,6 +113,9 @@ export const LEAD_STATUSES = [
   { key: "closed", label: "Closed" },
 ] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number]["key"];
+
+/** Payment methods from PROJECT_SPEC §24. */
+export const PAYMENT_METHODS = ["Bank Transfer", "Cash", "Cheque", "Online Payment", "Other"] as const;
 
 export const LEAD_SOURCES = [
   { key: "contact", label: "Contact form" },

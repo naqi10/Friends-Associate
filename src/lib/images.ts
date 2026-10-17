@@ -15,7 +15,7 @@ export class ImageError extends Error {
  * Validates an uploaded photo by decoding it, then stores a clean WebP copy:
  * max 2400px wide, EXIF/GPS stripped, orientation applied. Returns the public path for <Image src>.
  */
-export async function saveImage(file: File, folder: "projects" | "properties" | "investments"): Promise<string> {
+export async function saveImage(file: File, folder: "projects" | "properties" | "investments" | "team" | "services"): Promise<string> {
   if (file.size > MAX_IMAGE_BYTES) throw new ImageError("image-size");
   const input = Buffer.from(await file.arrayBuffer());
   let output: Buffer;

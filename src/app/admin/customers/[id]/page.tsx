@@ -2,14 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
+import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { Field, Notice, SelectField } from "@/components/admin/Field";
+import { deleteCustomerAction } from "@/lib/actions/lifecycle";
 import {
   resetCustomerPasswordAction,
   setDownloadFeeAction,
   updateCustomerAction,
 } from "@/lib/actions/customers";
 import { CITIES, MIN_PASSWORD_LENGTH } from "@/lib/constants";
-import { getBookingsForUserDetailed, getCompany, getCustomer, MAX_BOOKINGS_PER_BUYER } from "@/lib/data";
+import { customerBlockers, getBookingsForUserDetailed, getCompany, getCustomer, MAX_BOOKINGS_PER_BUYER } from "@/lib/data";
 import { formatDate, formatPkr } from "@/lib/format";
 import { requireStaff } from "@/lib/permissions";
 
@@ -28,7 +30,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
   const { can } = await requireStaff("users", "view");
   const canEdit = can("users", "update");
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const [customer, bookings, company] = await Promise.all([getCustomer(id), getBookingsForUserDetailed(id), getCompany()]);
+  const [customer, bookings, company, blockers] = await Promise.all([getCustomer(id), getBookingsForUserDetailed(id), getCompany(), customerBlockers(id)]);
   if (!customer) notFound();
 
   return (
@@ -138,7 +140,10 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
             {bookings.map((b) => (
               <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                 <div>
-                  <p className="font-medium">{b.property.title}</p>
+                  <p className="font-medium">
+                    {b.property.title}
+                    {b.status === "Cancelled" && <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-normal text-stone-600">Cancelled</span>}
+                  </p>
                   <p className="text-stone-600">
                     {b.project.name} · Paid {formatPkr(b.paid_pkr)} · Outstanding {formatPkr(b.outstanding_pkr)}
                   </p>
@@ -153,6 +158,28 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
           </ul>
         )}
       </section>
+
+      {can("users", "delete") && blockers && (
+        <section className="mt-6 rounded-xl border border-red-200 bg-white p-6">
+          <h2 className="font-semibold text-red-800">Delete customer</h2>
+          {blockers.bookings + blockers.payments + blockers.documents > 0 ? (
+            <p className="mt-1 text-sm text-stone-600">
+              This customer cannot be deleted because their account holds {blockers.bookings} booking(s), {blockers.payments} payment(s) and{" "}
+              {blockers.documents} document(s), which must be kept. To stop them signing in, untick &ldquo;Account active&rdquo; in the profile instead.
+            </p>
+          ) : (
+            <form action={deleteCustomerAction} className="mt-2">
+              <input type="hidden" name="id" value={customer.id} />
+              <p className="text-sm text-stone-600">
+                Removes this account permanently, for example one created by mistake. They will no longer be able to sign in.
+              </p>
+              <ConfirmButton className="mt-3" message={`Permanently delete the customer account of ${customer.name}? This cannot be undone.`}>
+                Delete customer
+              </ConfirmButton>
+            </form>
+          )}
+        </section>
+      )}
     </div>
   );
 }

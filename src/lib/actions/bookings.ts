@@ -8,9 +8,12 @@ import {
   createBooking,
   getBooking,
   recordBookingPayment,
+  reverseBookingPayment,
   updateBooking,
   writeAuditLog,
 } from "@/lib/data";
+import { PAYMENT_METHODS } from "@/lib/catalog";
+import { receiptLabel, todayPk } from "@/lib/format";
 import { requireStaff } from "@/lib/permissions";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -137,19 +140,44 @@ export async function recordPaymentAction(formData: FormData) {
   const back = (code: string) => redirect(`/admin/bookings/${id}?error=${code}`);
   const amount = wholeNumber(formData, "amount_pkr");
   if (!amount) back("amount");
+  const paidOn = text(formData, "paid_on");
+  if (!validDate(paidOn) || paidOn > todayPk()) back("payment-date");
+  const method = text(formData, "method");
+  if (!(PAYMENT_METHODS as readonly string[]).includes(method)) back("method");
+  const referenceNumber = text(formData, "reference_number").slice(0, 80);
+  // A bank transfer or cheque without its reference cannot be traced back to the bank statement.
+  if ((method === "Bank Transfer" || method === "Cheque") && !referenceNumber) back("reference");
+  const remarks = text(formData, "remarks").slice(0, 500);
 
   let failure = "";
   let userId = "";
+  let paymentId = "";
   try {
-    const { before, after } = await recordBookingPayment(id, amount!);
+    const { before, after, payment } = await recordBookingPayment(id, {
+      amountPkr: amount!,
+      paidOn,
+      method,
+      referenceNumber,
+      remarks,
+      createdById: actor.id,
+    });
     userId = after.userId;
+    paymentId = payment.id;
     await writeAuditLog({
       userId: actor.id,
       action: "record-payment",
       module: "payments",
-      recordId: id,
-      oldValue: { paidPkr: before.paidPkr, outstandingPkr: before.outstandingPkr },
-      newValue: { amountPkr: amount, paidPkr: after.paidPkr, outstandingPkr: after.outstandingPkr, method: text(formData, "method") },
+      recordId: payment.id,
+      oldValue: { bookingId: id, paidPkr: before.paidPkr, outstandingPkr: before.outstandingPkr },
+      newValue: {
+        receipt: receiptLabel(payment.receiptNo),
+        amountPkr: amount,
+        paidOn,
+        method,
+        referenceNumber,
+        paidPkr: after.paidPkr,
+        outstandingPkr: after.outstandingPkr,
+      },
     });
   } catch (e) {
     failure = ruleCode(e);
@@ -157,5 +185,37 @@ export async function recordPaymentAction(formData: FormData) {
   if (failure) back(failure);
 
   revalidateBookingViews(userId);
-  redirect(`/admin/bookings/${id}?saved=payment`);
+  redirect(`/admin/bookings/${id}?saved=payment&receipt=${paymentId}`);
+}
+
+/** Reversing needs Payments → Edit: it changes money figures that were already confirmed to the buyer. */
+export async function reversePaymentAction(formData: FormData) {
+  const { user: actor } = await requireStaff("payments", "update");
+  const bookingId = text(formData, "booking_id");
+  const paymentId = text(formData, "payment_id");
+  const back = (code: string) => redirect(`/admin/bookings/${bookingId}?error=${code}`);
+  const reason = text(formData, "reason").slice(0, 300);
+  if (reason.length < 5) back("reversal-reason");
+
+  let failure = "";
+  let userId = "";
+  try {
+    const { payment, before, after } = await reverseBookingPayment(paymentId, actor.id, reason);
+    if (payment.bookingId !== bookingId) throw new BookingRuleError("missing");
+    userId = after.userId;
+    await writeAuditLog({
+      userId: actor.id,
+      action: "reverse-payment",
+      module: "payments",
+      recordId: paymentId,
+      oldValue: { receipt: receiptLabel(payment.receiptNo), status: "received", paidPkr: before.paidPkr, outstandingPkr: before.outstandingPkr },
+      newValue: { status: "reversed", reason, paidPkr: after.paidPkr, outstandingPkr: after.outstandingPkr },
+    });
+  } catch (e) {
+    failure = ruleCode(e);
+  }
+  if (failure) back(failure);
+
+  revalidateBookingViews(userId);
+  redirect(`/admin/bookings/${bookingId}?saved=reversed`);
 }

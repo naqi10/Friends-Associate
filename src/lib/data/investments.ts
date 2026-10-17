@@ -20,8 +20,9 @@ export async function getInvestmentById(id: string) {
   return prisma.investmentOpportunity.findUnique({ where: { id } });
 }
 
-export async function getInvestmentRows() {
+export async function getInvestmentRows({ archived = false } = {}) {
   return prisma.investmentOpportunity.findMany({
+    where: { archivedAt: archived ? { not: null } : null },
     orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
     include: { _count: { select: { leads: true } } },
   });
@@ -48,7 +49,11 @@ export type InvestmentInput = {
 };
 
 export async function saveInvestment(id: string | undefined, data: InvestmentInput) {
-  if (id) return prisma.investmentOpportunity.update({ where: { id }, data });
+  if (id) {
+    // An archived opportunity stays hidden until it is restored, whatever the edit form says.
+    const archived = (await prisma.investmentOpportunity.findUnique({ where: { id }, select: { archivedAt: true } }))?.archivedAt;
+    return prisma.investmentOpportunity.update({ where: { id }, data: archived ? { ...data, published: false } : data });
+  }
   return prisma.investmentOpportunity.create({ data });
 }
 

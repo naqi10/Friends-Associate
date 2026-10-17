@@ -44,3 +44,50 @@ export function formatPKR(amount: number): string {
 export function plural(count: number, one: string, many = `${one}s`): string {
   return `${count} ${count === 1 ? one : many}`;
 }
+
+/** Today's date in Pakistan as YYYY-MM-DD (the server may run in another timezone). */
+export function todayPk(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
+}
+
+/** Receipt number as printed: 123 → "FA-R-000123". */
+export function receiptLabel(receiptNo: number): string {
+  return `FA-R-${String(receiptNo).padStart(6, "0")}`;
+}
+
+/** The instalment that is past due: the next payment once its date has passed, capped at the balance. */
+export function overdueAmount(b: { outstandingPkr: number; nextPaymentDate: string; nextPaymentAmountPkr: number }, today = todayPk()): number {
+  if (b.outstandingPkr <= 0 || !b.nextPaymentDate || b.nextPaymentDate >= today) return 0;
+  return Math.min(b.nextPaymentAmountPkr, b.outstandingPkr);
+}
+
+const ONES = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+const TENS = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+function belowHundred(n: number): string {
+  return n < 20 ? ONES[n] : `${TENS[Math.floor(n / 10)]}${n % 10 ? ` ${ONES[n % 10]}` : ""}`;
+}
+
+function belowThousand(n: number): string {
+  const h = Math.floor(n / 100);
+  const rest = n % 100;
+  return [h ? `${ONES[h]} Hundred` : "", rest ? belowHundred(rest) : ""].filter(Boolean).join(" ");
+}
+
+/** Amount in words, Pakistani style, as printed on receipts: 1250000 → "Twelve Lakh Fifty Thousand Rupees Only". */
+export function rupeesInWords(amount: number): string {
+  let n = Math.floor(Math.abs(amount));
+  if (n === 0) return "Zero Rupees Only";
+  const parts: string[] = [];
+  const crore = Math.floor(n / 10_000_000);
+  n %= 10_000_000;
+  const lakh = Math.floor(n / 100_000);
+  n %= 100_000;
+  const thousand = Math.floor(n / 1000);
+  n %= 1000;
+  if (crore) parts.push(`${crore >= 100 ? belowThousand(crore) : belowHundred(crore)} Crore`);
+  if (lakh) parts.push(`${belowHundred(lakh)} Lakh`);
+  if (thousand) parts.push(`${belowHundred(thousand)} Thousand`);
+  if (n) parts.push(belowThousand(n));
+  return `${parts.join(" ")} Rupees Only`;
+}

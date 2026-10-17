@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { Field, Notice } from "@/components/admin/Field";
+import { ContentTabs } from "@/components/admin/ContentTabs";
 import { saveHeroAction, saveHomeExtrasAction } from "@/lib/actions/content";
 import { getHeroContent, getHeroMedia, getHomeExtras, getTestimonialRows } from "@/lib/data";
 import { requireAdmin } from "@/lib/permissions";
@@ -18,6 +19,7 @@ export default async function AdminContentPage({ searchParams }: Props) {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <AdminNav active="/admin/content" />
       <h1 className="text-2xl font-bold">Website content</h1>
+      <ContentTabs active="/admin/content" />
       <p className="mt-1 text-sm text-stone-600">
         Changes go live on the{" "}
         <Link href="/" className="text-teal-800 underline" target="_blank">

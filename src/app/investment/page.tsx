@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { CoverImage } from "@/components/public/CoverImage";
 import { InvestmentDisclosure } from "@/components/public/InvestmentDisclosure";
 import { INVESTMENT_STATUSES, INVESTMENT_TYPES, labelOf } from "@/lib/catalog";
-import { getPublishedInvestments } from "@/lib/data";
+import { getPageContent, getPublishedInvestments } from "@/lib/data";
 import { formatPkr } from "@/lib/format";
 import { pageMetadata } from "@/lib/seo";
 
@@ -15,14 +15,11 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function InvestmentPage() {
-  const items = await getPublishedInvestments();
+  const [items, page] = await Promise.all([getPublishedInvestments(), getPageContent("page.investment")]);
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-display text-4xl font-semibold">Investment opportunities</h1>
-      <p className="mt-3 max-w-2xl text-stone-600">
-        Partner with Friends Associates in developing plazas, residential homes, shops and markets. Choose a project to see the minimum investment,
-        timeline and how returns are shared, then register your interest.
-      </p>
+      <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
+      {page.intro && <p className="mt-3 max-w-2xl text-stone-600">{page.intro}</p>}
       <div className="mt-6">
         <InvestmentDisclosure />
       </div>

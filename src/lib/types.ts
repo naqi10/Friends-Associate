@@ -58,6 +58,10 @@ export interface ManagementMember {
   name: string;
   title: string;
   sort_order: number;
+  bio: string;
+  experience: string;
+  photo_path: string;
+  active: boolean;
 }
 
 export interface ProjectListItem {
@@ -93,6 +97,8 @@ export interface Project {
   category: ProjectCategory;
   featured: boolean;
   published: boolean;
+  /** ISO time when archived; null while active. */
+  archived_at: string | null;
 }
 
 export interface Property {
@@ -111,6 +117,8 @@ export interface Property {
   area_marla: number | null;
   description: string;
   published: boolean;
+  /** ISO time when archived; null while active. */
+  archived_at: string | null;
 }
 
 export interface User {

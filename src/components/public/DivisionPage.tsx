@@ -1,14 +1,18 @@
 import Link from "next/link";
 import { ProjectCard } from "@/components/public/Cards";
-import { DIVISIONS, PROJECT_CATEGORIES, SERVICES, isKey, type Division } from "@/lib/catalog";
-import { getProjectCategoryCounts, getProjectsFiltered } from "@/lib/data";
+import Image from "next/image";
+import { DIVISIONS, PROJECT_CATEGORIES, isKey, type Division } from "@/lib/catalog";
+import { getPageContent, getProjectCategoryCounts, getProjectsFiltered, getPublishedServices } from "@/lib/data";
+import { hasRealImage } from "@/lib/media";
 import { BRAND } from "@/lib/brand";
 
 /** Landing page for one division (Architecture or Construction): services, categories and projects. */
 export async function DivisionPage({ division, category }: { division: Division; category?: string }) {
   const meta = DIVISIONS.find((d) => d.key === division)!;
   const activeCategory = isKey(PROJECT_CATEGORIES, category) ? category : undefined;
-  const [counts, projects] = await Promise.all([
+  const [page, services, counts, projects] = await Promise.all([
+    getPageContent(`page.${division}`),
+    getPublishedServices(division),
     getProjectCategoryCounts(division),
     getProjectsFiltered({ division, category: activeCategory, publishedOnly: true }),
   ]);
@@ -18,8 +22,8 @@ export async function DivisionPage({ division, category }: { division: Division;
       <section className="border-b border-stone-200 bg-gradient-to-br from-stone-100 to-teal-50">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{BRAND.name}</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">{meta.label}</h1>
-          <p className="mt-4 max-w-2xl text-lg text-stone-600">{meta.summary}</p>
+          <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">{page.title}</h1>
+          {page.intro && <p className="mt-4 max-w-2xl text-lg text-stone-600">{page.intro}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/contact#enquiry" className="rounded-md bg-amber-500 px-5 py-2.5 text-sm font-semibold text-stone-950 hover:bg-amber-400">
               Get a quotation
@@ -36,28 +40,61 @@ export async function DivisionPage({ division, category }: { division: Division;
         </div>
       </section>
 
-      <section aria-labelledby="services" className="mx-auto max-w-6xl px-4 py-14">
-        <h2 id="services" className="font-display text-3xl font-semibold">
-          Services
-        </h2>
-        <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {SERVICES[division].map((g) => (
-            <article key={g.title} className="rounded-xl border border-stone-200 bg-white p-5">
-              <h3 className="font-semibold">
-                <span aria-hidden className="mr-2">
-                  {g.icon}
-                </span>
-                {g.title}
-              </h3>
-              <ul className="mt-3 space-y-1 text-sm text-stone-600">
-                {g.items.map((i) => (
-                  <li key={i}>• {i}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
+      {services.length > 0 && (
+        <section aria-labelledby="services" className="mx-auto max-w-6xl px-4 py-14">
+          <h2 id="services" className="font-display text-3xl font-semibold">
+            Services
+          </h2>
+          <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            {services.map((s) => (
+              <article key={s.id} className="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white">
+                {hasRealImage(s.imagePath) && (
+                  <Image src={s.imagePath} alt="" width={600} height={340} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw" className="h-40 w-full object-cover" />
+                )}
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="font-semibold">
+                    {s.icon && (
+                      <span aria-hidden className="mr-2">
+                        {s.icon}
+                      </span>
+                    )}
+                    {s.name}
+                  </h3>
+                  {s.shortDescription && <p className="mt-2 text-sm text-stone-600">{s.shortDescription}</p>}
+                  {s.features.length > 0 && (
+                    <ul className="mt-3 space-y-1 text-sm text-stone-600">
+                      {s.features.map((f) => (
+                        <li key={f}>• {f}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {(s.startingPrice || s.estimatedDuration) && (
+                    <dl className="mt-4 space-y-1 text-xs text-stone-500">
+                      {s.startingPrice && (
+                        <div>
+                          <dt className="inline">Price: </dt>
+                          <dd className="inline font-medium text-stone-700">{s.startingPrice}</dd>
+                        </div>
+                      )}
+                      {s.estimatedDuration && (
+                        <div>
+                          <dt className="inline">Duration: </dt>
+                          <dd className="inline font-medium text-stone-700">{s.estimatedDuration}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  )}
+                  {s.ctaText && s.ctaUrl && (
+                    <Link href={s.ctaUrl} className="mt-auto pt-4 text-sm font-semibold text-teal-800 hover:underline">
+                      {s.ctaText} →
+                    </Link>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="categories" className="bg-white py-14">
         <div className="mx-auto max-w-6xl px-4">

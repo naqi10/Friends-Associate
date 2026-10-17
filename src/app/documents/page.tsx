@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { formatDate } from "@/lib/format";
-import { getPublicDocuments } from "@/lib/data";
+import { getPageContent, getPublicDocuments } from "@/lib/data";
 import { getSessionUser } from "@/lib/auth";
 import { permissionsFor } from "@/lib/permissions";
 
@@ -13,11 +13,11 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function DocumentsPage() {
-  const can = await permissionsFor(await getSessionUser());
+  const [can, page] = await Promise.all([getSessionUser().then(permissionsFor), getPageContent("page.documents")]);
   if (!can("documents", "view")) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <h1 className="text-3xl font-bold">Public documents</h1>
+        <h1 className="text-3xl font-bold">{page.title}</h1>
         <p className="mt-4 text-stone-600">Documents are not available at the moment. Please contact Friends Associates sales.</p>
       </div>
     );
@@ -25,8 +25,8 @@ export default async function DocumentsPage() {
   const docs = await getPublicDocuments();
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-bold">Public documents</h1>
-      <p className="mt-2 text-sm text-stone-600">Buyer-specific files are available after login in the portal.</p>
+      <h1 className="text-3xl font-bold">{page.title}</h1>
+      {page.intro && <p className="mt-2 text-sm text-stone-600">{page.intro}</p>}
       <table className="mt-8 w-full text-left text-sm">
         <thead>
           <tr className="border-b text-stone-500">

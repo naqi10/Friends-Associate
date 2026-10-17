@@ -24,17 +24,24 @@ export default async function PortalDashboardPage() {
           {bookings.map((b) => {
               const prop = b.property;
               const proj = b.project;
+              const cancelled = b.status === "Cancelled";
               return (
                 <li key={b.id} className="rounded-xl border border-stone-200 bg-white p-4">
-                  <p className="font-medium">{prop?.title}</p>
+                  <p className="font-medium">
+                    {prop?.title}
+                    {cancelled && <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-normal text-stone-600">Booking cancelled</span>}
+                  </p>
                   <p className="text-sm text-stone-600">{proj?.name}</p>
                   <p className="mt-2 text-sm">
-                    Paid {formatPkr(b.paid_pkr)} · Outstanding {formatPkr(b.outstanding_pkr)}
+                    Paid {formatPkr(b.paid_pkr)}
+                    {!cancelled && <> · Outstanding {formatPkr(b.outstanding_pkr)}</>}
                   </p>
-                  <p className="text-sm text-stone-600">
-                    Next payment {formatDate(b.next_payment_date)} — {formatPkr(b.next_payment_amount_pkr)}
-                  </p>
-                  <p className="text-sm">Construction: {proj?.progress_percent}%</p>
+                  {!cancelled && b.outstanding_pkr > 0 && (
+                    <p className="text-sm text-stone-600">
+                      Next payment {formatDate(b.next_payment_date)} — {formatPkr(b.next_payment_amount_pkr)}
+                    </p>
+                  )}
+                  {!cancelled && <p className="text-sm">Construction: {proj?.progress_percent}%</p>}
                   <Link href="/portal/payments" className="mt-2 inline-block text-sm text-teal-800">
                     View payments
                   </Link>

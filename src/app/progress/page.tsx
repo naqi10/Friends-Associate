@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { StageBars } from "@/components/StageBars";
 import { DIVISIONS, PROJECT_CATEGORIES, labelOf } from "@/lib/catalog";
-import { getProjectsFiltered } from "@/lib/data";
+import { getPageContent, getProjectsFiltered } from "@/lib/data";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -12,7 +12,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function ProgressPage() {
-  const projects = await getProjectsFiltered({ publishedOnly: true });
+  const [projects, page] = await Promise.all([getProjectsFiltered({ publishedOnly: true }), getPageContent("page.progress")]);
   // Category-wise, as the brief asks: each category lists its projects with stage percentages.
   const groups = PROJECT_CATEGORIES.map((c) => ({ ...c, projects: projects.filter((p) => p.category === c.key) })).filter(
     (g) => g.projects.length > 0,
@@ -20,8 +20,8 @@ export default async function ProgressPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-display text-4xl font-semibold">Project progress</h1>
-      <p className="mt-2 max-w-2xl text-stone-600">Each project shows its stages with the percentage completed, updated by our project managers.</p>
+      <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
+      {page.intro && <p className="mt-3 max-w-2xl text-stone-600">{page.intro}</p>}
 
       <nav aria-label="Jump to category" className="mt-6 flex flex-wrap gap-2 text-sm">
         {groups.map((g) => (

@@ -9,12 +9,12 @@ import { requireStaff } from "@/lib/permissions";
 
 export const metadata: Metadata = { title: "Sales desk", robots: { index: false, follow: false } };
 
-type Props = { searchParams: Promise<{ denied?: string }> };
+type Props = { searchParams: Promise<{ denied?: string; saved?: string }> };
 
 export default async function SalesDeskPage({ searchParams }: Props) {
   const { can } = await requireStaff("leads", "view");
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
-  const [{ denied }, rows, counts, due] = await Promise.all([searchParams, getLeadRows(), getLeadStatusCounts(), getDueFollowUps(today)]);
+  const [{ denied, saved }, rows, counts, due] = await Promise.all([searchParams, getLeadRows(), getLeadStatusCounts(), getDueFollowUps(today)]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
@@ -29,6 +29,7 @@ export default async function SalesDeskPage({ searchParams }: Props) {
       <div className="mt-6">
         <AdminNav active="/sales" />
         <DeniedNotice denied={denied} />
+        {saved === "deleted" && <p className="mb-6 rounded-md bg-teal-50 p-3 text-sm text-teal-900">Lead deleted.</p>}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">

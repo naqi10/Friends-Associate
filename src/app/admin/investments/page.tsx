@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminNav } from "@/components/AdminNav";
+import { ArchiveTabs } from "@/components/admin/ArchiveTabs";
 import { Notice } from "@/components/admin/Field";
 import { INVESTMENT_STATUSES, INVESTMENT_TYPES, labelOf } from "@/lib/catalog";
 import { getInvestmentRows } from "@/lib/data";
@@ -8,14 +9,16 @@ import { requireStaffAny } from "@/lib/permissions";
 
 export const metadata = { title: "Investments" };
 
-type Props = { searchParams: Promise<{ saved?: string }> };
+type Props = { searchParams: Promise<{ saved?: string; archived?: string }> };
 
 export default async function AdminInvestmentsPage({ searchParams }: Props) {
   const { can } = await requireStaffAny([
     ["projects", "update"],
     ["projects", "add"],
   ]);
-  const [sp, rows] = await Promise.all([searchParams, getInvestmentRows()]);
+  const sp = await searchParams;
+  const archived = sp.archived === "1";
+  const [rows, archivedRows] = await Promise.all([getInvestmentRows({ archived }), getInvestmentRows({ archived: true })]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -31,7 +34,8 @@ export default async function AdminInvestmentsPage({ searchParams }: Props) {
           </Link>
         )}
       </div>
-      <Notice message={sp.saved ? "Saved." : undefined} />
+      <Notice message={sp.saved === "deleted" ? "Opportunity deleted." : sp.saved ? "Saved." : undefined} />
+      <ArchiveTabs base="/admin/investments" archived={archived} archivedCount={archivedRows.length} />
       <div className="mt-6 overflow-x-auto rounded-xl border bg-white">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="bg-stone-50 text-stone-500">

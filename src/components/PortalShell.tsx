@@ -12,7 +12,7 @@ const links = [
 export function PortalShell({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
     <div className="pb-20 md:pb-8">
-      <div className="border-b border-stone-200 bg-white">
+      <div className="border-b border-stone-200 bg-white print:hidden">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <div>
             <p className="text-xs font-medium uppercase text-teal-800">Customer portal</p>
@@ -36,7 +36,7 @@ export function PortalShell({ children, title }: { children: React.ReactNode; ti
         </nav>
       </div>
       <div className="mx-auto max-w-4xl px-4 py-8">{children}</div>
-      <nav className="fixed bottom-0 left-0 right-0 flex border-t border-stone-200 bg-white text-xs md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 flex border-t border-stone-200 bg-white text-xs md:hidden print:hidden">
         {links.map((l) => (
           <Link key={l.href} href={l.href} className="flex flex-1 flex-col items-center py-2 text-stone-700">
             {l.label}

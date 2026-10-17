@@ -2,10 +2,11 @@ import {
   getBookingsForUserDetailed,
   getCompany,
   getDocumentsForUser,
-  getProjects,
+  getProjectsFiltered,
+  getPaymentsForUser,
   getPropertiesWithProject,
 } from "@/lib/data";
-import { formatDate, formatPkr } from "./format";
+import { formatDate, formatPkr, receiptLabel } from "./format";
 import type { User } from "./types";
 import type { Can } from "./permissions";
 
@@ -25,8 +26,8 @@ export async function runHelpChat(message: string, user: User | null, can: Can):
     }
     if (text.includes("project") || text.includes("available")) {
       const [available, projects] = await Promise.all([
-        getPropertiesWithProject({ status: "Available" }, 10),
-        getProjects(),
+        getPropertiesWithProject({ status: "Available", publishedOnly: true }, 10),
+        getProjectsFiltered({ publishedOnly: true }),
       ]);
       const projectsList = projects.map((p) => `• ${p.name} (${p.city}) — ${p.status}`).join("\n");
       const units =
@@ -44,7 +45,13 @@ export async function runHelpChat(message: string, user: User | null, can: Can):
 
   if (user.role === "buyer") {
     // Authorization happens here: only this buyer's own bookings are ever loaded.
-    const bookings = await getBookingsForUserDetailed(user.id);
+    const bookings = (await getBookingsForUserDetailed(user.id)).filter((b) => b.status !== "Cancelled");
+    if (can("payments", "view") && /receipt|raseed|rasid|رسید/.test(text)) {
+      const receipts = (await getPaymentsForUser(user.id)).filter((p) => p.status === "received").slice(0, 5);
+      if (receipts.length === 0) return "No payment receipts on file yet. See Payments in your portal.";
+      const lines = receipts.map((p) => `• ${receiptLabel(p.receiptNo)}: ${formatPkr(p.amountPkr)} on ${formatDate(p.paidOn)} (${p.method})`);
+      return `Your latest receipts:\n${lines.join("\n")}\n\nOpen Payments in your portal to view or print any receipt.`;
+    }
     if (
       can("payments", "view") &&
       (text.includes("payment") ||

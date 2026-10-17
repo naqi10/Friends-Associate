@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/require-user";
 
 export default async function PortalProgressPage() {
   const user = await requireUser(["buyer"]);
-  const bookings = await getBookingsForUserDetailed(user.id);
+  const bookings = (await getBookingsForUserDetailed(user.id)).filter((b) => b.status !== "Cancelled");
   // A buyer with several units in one project should see that project once.
   const projects = [...new Map(bookings.map((b) => [b.project.id, b.project])).values()];
   const stages = await Promise.all(projects.map((p) => getProjectStages(p.id)));

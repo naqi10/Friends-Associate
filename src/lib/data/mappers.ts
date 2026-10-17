@@ -58,7 +58,16 @@ export function mapOffice(o: DbOffice): Office {
 }
 
 export function mapMgmt(m: DbMgmt): ManagementMember {
-  return { id: m.id, name: m.name, title: m.title, sort_order: m.sortOrder };
+  return {
+    id: m.id,
+    name: m.name,
+    title: m.title,
+    sort_order: m.sortOrder,
+    bio: m.bio,
+    experience: m.experience,
+    photo_path: m.photoPath,
+    active: m.active,
+  };
 }
 
 export function mapProject(p: DbProject): Project {
@@ -88,6 +97,7 @@ export function mapProject(p: DbProject): Project {
     category: p.category as Project["category"],
     featured: p.featured,
     published: p.published,
+    archived_at: p.archivedAt?.toISOString() ?? null,
   };
 }
 
@@ -111,6 +121,7 @@ export function mapProperty(p: DbProperty): Property {
     area_marla: p.areaMarla,
     description: p.description,
     published: p.published,
+    archived_at: p.archivedAt?.toISOString() ?? null,
   };
 }
 

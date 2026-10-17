@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
+import { Notice } from "@/components/admin/Field";
 import { CustomersTable } from "@/components/admin/CustomersTable";
 import { getCustomerRows } from "@/lib/data";
 import { requireStaff } from "@/lib/permissions";
 
 export const metadata = { title: "Customers" };
 
-type Props = { searchParams: Promise<{ error?: string }> };
+type Props = { searchParams: Promise<{ error?: string; saved?: string }> };
 
 export default async function AdminCustomersPage({ searchParams }: Props) {
   const { can } = await requireStaff("users", "view");
-  const [{ error }, rows] = await Promise.all([searchParams, getCustomerRows()]);
+  const [{ error, saved }, rows] = await Promise.all([searchParams, getCustomerRows()]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -27,6 +28,7 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
           </Link>
         )}
       </div>
+      <Notice message={saved === "deleted" ? "Customer deleted." : undefined} />
       <FormError code={error} />
       <div className="mt-6">
         <CustomersTable rows={rows} />

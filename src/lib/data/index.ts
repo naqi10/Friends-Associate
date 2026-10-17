@@ -30,13 +30,18 @@ export const getOffices = cache(async () => {
   return rows.map(mapOffice);
 });
 
-export async function getManagement() {
-  const rows = await prisma.managementMember.findMany({ orderBy: { sortOrder: "asc" } });
+/** Team members for the About page; `includeHidden` for the admin screen. */
+export async function getManagement({ includeHidden = false } = {}) {
+  const rows = await prisma.managementMember.findMany({
+    where: includeHidden ? {} : { active: true },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+  });
   return rows.map(mapMgmt);
 }
 
-export async function getProjects() {
-  const rows = await prisma.project.findMany({ orderBy: { name: "asc" } });
+/** Active projects for admin lists and pickers; `archived: true` lists only the archived ones. */
+export async function getProjects({ archived = false } = {}) {
+  const rows = await prisma.project.findMany({ where: { archivedAt: archived ? { not: null } : null }, orderBy: { name: "asc" } });
   return rows.map(mapProject);
 }
 
@@ -58,8 +63,9 @@ export async function getProjectLists(projectId: string) {
   return rows.map(mapListItem);
 }
 
-export async function getProperties() {
-  const rows = await prisma.property.findMany({ orderBy: { title: "asc" } });
+/** Active listings for admin lists; `archived: true` lists only the archived ones. */
+export async function getProperties({ archived = false } = {}) {
+  const rows = await prisma.property.findMany({ where: { archivedAt: archived ? { not: null } : null }, orderBy: { title: "asc" } });
   return rows.map(mapProperty);
 }
 
@@ -255,7 +261,10 @@ export async function upsertProject(data: Partial<Project> & { id?: string; slug
     published: data.published,
   };
   if (data.id) {
-    await prisma.project.update({ where: { id: data.id }, data: definedOnly(fields) });
+    // An archived project stays hidden until it is restored, whatever the edit form says.
+    const archived = (await prisma.project.findUnique({ where: { id: data.id }, select: { archivedAt: true } }))?.archivedAt;
+    const safe = archived ? { ...fields, published: false, featured: false } : fields;
+    await prisma.project.update({ where: { id: data.id }, data: definedOnly(safe) });
     return data.id;
   }
   const row = await prisma.project.create({
@@ -309,7 +318,9 @@ export async function upsertProperty(data: Partial<Property> & { id?: string; pr
     imagePath: data.image_path,
   };
   if (data.id) {
-    await prisma.property.update({ where: { id: data.id }, data: definedOnly(fields) });
+    // An archived unit stays hidden until it is restored, whatever the edit form says.
+    const archived = (await prisma.property.findUnique({ where: { id: data.id }, select: { archivedAt: true } }))?.archivedAt;
+    await prisma.property.update({ where: { id: data.id }, data: definedOnly(archived ? { ...fields, published: false } : fields) });
     return data.id;
   }
   const row = await prisma.property.create({
@@ -425,6 +436,7 @@ export async function getPropertiesWithProject(filter: PropertyFilter = {}, take
       ...(filter.projectId ? { projectId: filter.projectId } : {}),
       ...(filter.locality ? { locality: { contains: filter.locality } } : {}),
       ...(filter.publishedOnly ? { published: true } : {}),
+      archivedAt: null,
       ...(filter.minPrice !== undefined || filter.maxPrice !== undefined
         ? { pricePkr: { ...(filter.minPrice !== undefined ? { gte: filter.minPrice } : {}), ...(filter.maxPrice !== undefined ? { lt: filter.maxPrice } : {}) } }
         : {}),
@@ -459,6 +471,7 @@ export async function getProjectsFiltered(filter: ProjectFilter = {}) {
       ...(filter.city ? { city: filter.city } : {}),
       ...(filter.status ? { status: filter.status } : {}),
       ...(filter.publishedOnly ? { published: true } : {}),
+      archivedAt: null,
     },
     orderBy: [{ featured: "desc" }, { name: "asc" }],
     include: { stages: { orderBy: { sortOrder: "asc" } } },
@@ -502,8 +515,8 @@ export async function getLatestNews(take = 3) {
 
 export async function getSiteStats() {
   const [projects, availableUnits, cities] = await Promise.all([
-    prisma.project.count(),
-    prisma.property.count({ where: { status: "Available" } }),
+    prisma.project.count({ where: { archivedAt: null } }),
+    prisma.property.count({ where: { status: "Available", archivedAt: null } }),
     prisma.office.count(),
   ]);
   return { projects, availableUnits, cities };
@@ -512,11 +525,12 @@ export async function getSiteStats() {
 export async function getAdminCounts() {
   const [customers, projects, propertyGroups, inquiries, leads, outstanding] = await Promise.all([
     prisma.user.count({ where: { role: "buyer" } }),
-    prisma.project.count(),
-    prisma.property.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.project.count({ where: { archivedAt: null } }),
+    prisma.property.groupBy({ by: ["status"], where: { archivedAt: null }, _count: { _all: true } }),
     prisma.inquiry.count(),
     prisma.lead.count(),
-    prisma.booking.aggregate({ _sum: { outstandingPkr: true } }),
+    // Cancelled bookings keep their last figures as history; they are not money still owed.
+    prisma.booking.aggregate({ where: { status: { not: "Cancelled" } }, _sum: { outstandingPkr: true } }),
   ]);
   const byStatus = Object.fromEntries(propertyGroups.map((g) => [g.status, g._count._all]));
   return {
@@ -539,5 +553,8 @@ export * from "./login-attempts";
 export * from "./staff";
 export * from "./role-permissions";
 export * from "./stages";
+export * from "./site";
+export * from "./services";
+export * from "./lifecycle";
 export * from "./leads";
 export * from "./investments";

@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
+import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { Notice, SelectField } from "@/components/admin/Field";
+import { deleteLeadAction } from "@/lib/actions/lifecycle";
 import { updateLeadAction } from "@/lib/actions/leads";
 import { LEAD_SOURCES, LEAD_STATUSES, labelOf } from "@/lib/catalog";
 import { getAssignableStaff, getLead } from "@/lib/data";
@@ -132,6 +134,17 @@ export default async function LeadPage({ params, searchParams }: Props) {
           </form>
         </section>
       </div>
+
+      {can("leads", "delete") && (
+        <form action={deleteLeadAction} className="mt-6 rounded-xl border border-red-200 bg-white p-6">
+          <input type="hidden" name="id" value={lead.id} />
+          <h2 className="font-semibold text-red-800">Delete lead</h2>
+          <p className="mt-1 text-sm text-stone-600">For spam or duplicates. Real enquiries that did not work out should be set to Closed instead, so they stay in the reports.</p>
+          <ConfirmButton className="mt-3" message={`Delete the lead from ${lead.name}? This cannot be undone.`}>
+            Delete lead
+          </ConfirmButton>
+        </form>
+      )}
     </div>
   );
 }
