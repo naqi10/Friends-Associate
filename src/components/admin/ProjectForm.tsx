@@ -9,7 +9,7 @@ import type { Project } from "@/lib/types";
 export function ProjectForm({ project }: { project?: Project }) {
   const p = project;
   return (
-    <form action={saveProjectAction} className="mt-6 grid gap-4 rounded-xl border bg-white p-6 sm:grid-cols-2">
+    <form action={saveProjectAction} className="mt-6 grid gap-4 admin-card p-6 sm:grid-cols-2">
       {p && <input type="hidden" name="id" value={p.id} />}
       <div className="sm:col-span-2">
         <Field label="Project name" name="name" defaultValue={p?.name} required maxLength={150} />
@@ -67,7 +67,7 @@ export function ProjectForm({ project }: { project?: Project }) {
         </label>
       </div>
       <div className="sm:col-span-2">
-        <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+        <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
           {p ? "Save changes" : "Create project"}
         </button>
       </div>

@@ -19,6 +19,7 @@ type Investment = {
   expectedDuration: string;
   paymentStructure: string;
   returnsNote: string;
+  figuresReviewedOn: string | null;
   status: string;
   published: boolean;
   sortOrder: number;
@@ -27,7 +28,7 @@ type Investment = {
 
 export function InvestmentForm({ inv, projects }: { inv?: Investment; projects: { id: string; name: string }[] }) {
   return (
-    <form action={saveInvestmentAction} className="mt-6 grid gap-4 rounded-xl border bg-white p-6 sm:grid-cols-2">
+    <form action={saveInvestmentAction} className="mt-6 grid gap-4 admin-card p-6 sm:grid-cols-2">
       {inv && <input type="hidden" name="id" value={inv.id} />}
       <div className="sm:col-span-2">
         <Field label="Title" name="title" defaultValue={inv?.title} required maxLength={150} />
@@ -78,6 +79,15 @@ export function InvestmentForm({ inv, projects }: { inv?: Investment; projects: 
         />
         <span className="mt-1 block text-xs text-stone-500">Describe the arrangement. Do not promise a guaranteed or fixed return.</span>
       </label>
+      <Field
+        label="Figures last reviewed"
+        name="figures_reviewed_on"
+        type="date"
+        required
+        max={new Date().toISOString().slice(0, 10)}
+        defaultValue={inv?.figuresReviewedOn ?? new Date().toISOString().slice(0, 10)}
+        hint="Change this whenever you check the minimum, target, timeline and returns. It is shown to investors."
+      />
       <div className="sm:col-span-2">
         <ImageField current={inv?.imagePath} />
       </div>
@@ -87,7 +97,7 @@ export function InvestmentForm({ inv, projects }: { inv?: Investment; projects: 
         Published on the website
       </label>
       <div className="sm:col-span-2">
-        <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+        <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
           {inv ? "Save changes" : "Create opportunity"}
         </button>
       </div>

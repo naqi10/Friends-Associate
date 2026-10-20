@@ -6,6 +6,7 @@ import { ChatComingSoon } from "@/components/ChatComingSoon";
 import { ChatWidget } from "@/components/ChatWidget";
 import { isEnabled } from "@/lib/release";
 import { Providers } from "@/components/Providers";
+import { PublicChrome } from "@/components/PublicChrome";
 import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
@@ -98,12 +99,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Skip to content
           </a>
-          <SiteHeader />
+          <PublicChrome>
+            <SiteHeader />
+          </PublicChrome>
           <main id="main" className="flex-1">
             {children}
           </main>
-          <SiteFooter />
-          {isEnabled("chatbot") ? <ChatWidget /> : <ChatComingSoon />}
+          <PublicChrome>
+            <SiteFooter />
+            {isEnabled("chatbot") ? <ChatWidget /> : <ChatComingSoon />}
+          </PublicChrome>
         </Providers>
       </body>
     </html>

@@ -50,7 +50,7 @@ export function PermissionMatrix({ initial, saveAction }: Props) {
 
   return (
     <form action={saveAction} onSubmit={() => setSubmitting(true)}>
-      <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white">
+      <div className="overflow-x-auto admin-card">
         <table className="w-full min-w-[960px] border-collapse text-sm">
           <caption className="sr-only">Permissions by role and area</caption>
           <thead>
@@ -131,7 +131,7 @@ export function PermissionMatrix({ initial, saveAction }: Props) {
         <button
           type="submit"
           disabled={changes === 0 || submitting}
-          className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body disabled:cursor-not-allowed disabled:opacity-40"
         >
           {submitting ? "Saving…" : "Save permissions"}
         </button>

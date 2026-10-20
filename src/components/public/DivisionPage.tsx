@@ -3,7 +3,7 @@ import { ProjectCard } from "@/components/public/Cards";
 import Image from "next/image";
 import { DIVISIONS, PROJECT_CATEGORIES, isKey, type Division } from "@/lib/catalog";
 import { getPageContent, getProjectCategoryCounts, getProjectsFiltered, getPublishedServices } from "@/lib/data";
-import { hasRealImage } from "@/lib/media";
+import { focalPosition, hasRealImage } from "@/lib/media";
 import { BRAND } from "@/lib/brand";
 
 /** Landing page for one division (Architecture or Construction): services, categories and projects. */
@@ -49,7 +49,7 @@ export async function DivisionPage({ division, category }: { division: Division;
             {services.map((s) => (
               <article key={s.id} className="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white">
                 {hasRealImage(s.imagePath) && (
-                  <Image src={s.imagePath} alt="" width={600} height={340} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw" className="h-40 w-full object-cover" />
+                  <Image src={s.imagePath} alt="" width={600} height={340} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw" className="h-40 w-full object-cover" style={{ objectPosition: focalPosition(s.imagePath) }} />
                 )}
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="font-semibold">

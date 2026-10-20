@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { hasRealImage } from "@/lib/media";
+import { focalPosition, hasRealImage } from "@/lib/media";
 
 /**
  * Photo area for the black & white design: the uploaded photo when there is one,
@@ -22,7 +22,7 @@ export function HomeImage({
   className?: string;
   sizes?: string;
   preload?: boolean;
-  /** CSS object-position, e.g. "50% 70%" to keep the subject in frame when the photo is cropped. */
+  /** Fallback CSS object-position for bundled photos; uploaded photos use the focal point found at upload. */
   position?: string;
   children?: React.ReactNode;
 }) {
@@ -30,7 +30,7 @@ export function HomeImage({
   return (
     <div className={`relative overflow-hidden ${real ? "bg-ph" : dark ? "stripes-dark" : "stripes"} ${className}`}>
       {real ? (
-        <Image src={src} alt={alt} fill sizes={sizes} preload={preload} className="object-cover" style={position ? { objectPosition: position } : undefined} />
+        <Image src={src} alt={alt} fill sizes={sizes} preload={preload} className="object-cover" style={{ objectPosition: focalPosition(src, position) }} />
       ) : (
         <span role="img" aria-label={alt} className="absolute inset-0" />
       )}

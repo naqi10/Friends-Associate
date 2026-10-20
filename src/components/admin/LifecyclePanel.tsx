@@ -38,7 +38,7 @@ export function LifecyclePanel({
   const archivedIso = archivedAt instanceof Date ? archivedAt.toISOString() : archivedAt;
 
   return (
-    <section aria-labelledby={`lifecycle-${id}`} className="mt-8 rounded-xl border border-stone-300 bg-white p-6">
+    <section aria-labelledby={`lifecycle-${id}`} className="mt-8 admin-card p-6">
       <h2 id={`lifecycle-${id}`} className="font-semibold">
         Archive or delete
       </h2>

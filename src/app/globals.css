@@ -63,3 +63,13 @@ body {
     background: #fff !important;
   }
 }
+
+/* Admin cards: bold white edge, soft shadow, generously rounded corners. */
+@utility admin-card {
+  border-radius: 28px;
+  border: 3px solid #ffffff;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgb(14 14 14 / 0.06),
+    0 18px 40px -18px rgb(14 14 14 / 0.28);
+}

@@ -9,7 +9,7 @@ import type { Property } from "@/lib/types";
 export function PropertyForm({ property, projects }: { property?: Property; projects: { id: string; name: string }[] }) {
   const p = property;
   return (
-    <form action={savePropertyAction} className="mt-6 grid gap-4 rounded-xl border bg-white p-6 sm:grid-cols-2">
+    <form action={savePropertyAction} className="mt-6 grid gap-4 admin-card p-6 sm:grid-cols-2">
       {p && <input type="hidden" name="id" value={p.id} />}
       <div className="sm:col-span-2">
         <Field label="Title" name="title" defaultValue={p?.title} required maxLength={150} placeholder="10 Marla House, Model Town" />
@@ -63,7 +63,7 @@ export function PropertyForm({ property, projects }: { property?: Property; proj
         Published on the website
       </label>
       <div className="sm:col-span-2">
-        <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+        <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
           {p ? "Save changes" : "Create listing"}
         </button>
       </div>

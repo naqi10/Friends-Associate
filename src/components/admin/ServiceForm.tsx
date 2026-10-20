@@ -1,14 +1,13 @@
 import { DIVISIONS } from "@/lib/catalog";
 import { saveServiceAction } from "@/lib/actions/services";
 import type { ServiceRow } from "@/lib/data";
-import { hasRealImage } from "@/lib/media";
 import { CheckboxField, Field, SelectField, TextAreaField } from "./Field";
 import { ImageField } from "./ImageField";
 
 /** Add / edit form for one service (PROJECT_SPEC §15). */
 export function ServiceForm({ service }: { service?: ServiceRow }) {
   return (
-    <form action={saveServiceAction} className="mt-6 space-y-4 rounded-xl border bg-white p-6">
+    <form action={saveServiceAction} className="mt-6 space-y-4 admin-card p-6">
       {service && <input type="hidden" name="id" value={service.id} />}
       <div className="grid gap-4 sm:grid-cols-[1fr_6rem]">
         <Field label="Service name" name="name" defaultValue={service?.name} maxLength={80} required />
@@ -38,10 +37,9 @@ export function ServiceForm({ service }: { service?: ServiceRow }) {
         <Field label="Button text" name="cta_text" defaultValue={service?.ctaText} maxLength={40} hint="Optional, e.g. Get a quotation" />
         <Field label="Button link" name="cta_url" defaultValue={service?.ctaUrl} maxLength={300} hint="e.g. /contact#enquiry" />
       </div>
-      <ImageField current={service?.imagePath} label="Photo (optional)" />
-      {service && hasRealImage(service.imagePath) && <CheckboxField label="Remove the current photo" name="remove_image" />}
+      <ImageField current={service?.imagePath} label="Photo (optional)" removeName="remove_image" />
       <CheckboxField label="Published (shown on the website)" name="published" defaultChecked={service ? service.published : true} />
-      <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+      <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
         {service ? "Save service" : "Add service"}
       </button>
     </form>

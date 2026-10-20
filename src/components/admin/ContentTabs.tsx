@@ -12,14 +12,14 @@ const TABS = [
 /** Sub-navigation for Admin → Website content. */
 export function ContentTabs({ active }: { active: string }) {
   return (
-    <nav aria-label="Website content sections" className="mt-4 flex gap-1 overflow-x-auto border-b border-stone-200 text-sm">
+    <nav aria-label="Website content sections" className="mt-5 flex gap-2 overflow-x-auto pb-1 text-sm">
       {TABS.map((t) => (
         <Link
           key={t.href}
           href={t.href}
           aria-current={t.href === active ? "page" : undefined}
-          className={`-mb-px shrink-0 border-b-2 px-3 py-2 font-medium ${
-            t.href === active ? "border-teal-800 text-teal-900" : "border-transparent text-stone-600 hover:text-stone-900"
+          className={`shrink-0 rounded-full px-4 py-2 font-semibold ${
+            t.href === active ? "bg-ink text-paper" : "border-[1.5px] border-line-strong bg-white text-body hover:bg-mist"
           }`}
         >
           {t.label}

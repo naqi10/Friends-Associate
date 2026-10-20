@@ -33,6 +33,9 @@ export function PortalShell({ children, title }: { children: React.ReactNode; ti
           <Link href="/portal/progress" className="text-teal-900 hover:underline">
             Progress
           </Link>
+          <Link href="/portal/notifications" className="text-teal-900 hover:underline">
+            Notifications
+          </Link>
         </nav>
       </div>
       <div className="mx-auto max-w-4xl px-4 py-8">{children}</div>
