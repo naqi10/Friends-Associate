@@ -148,7 +148,7 @@ export async function deleteLead(id: string) {
 }
 
 export async function deleteDocumentRecord(id: string) {
-  const before = await prisma.document.findUnique({ where: { id } });
+  const before = await prisma.document.findUnique({ where: { id }, include: { versions: { select: { storagePath: true } } } });
   if (!before) throw new LifecycleError("missing");
   await prisma.document.delete({ where: { id } });
   return before;
@@ -169,8 +169,11 @@ export async function getDocumentRowsForAdmin() {
       category: true,
       issuedOn: true,
       storagePath: true,
+      fileName: true,
+      version: true,
       user: { select: { id: true, name: true } },
-      project: { select: { name: true } },
+      project: { select: { id: true, name: true } },
+      _count: { select: { versions: true } },
     },
   });
 }

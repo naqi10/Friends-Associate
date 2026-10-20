@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { getInvestmentById, investmentSlugTaken, saveInvestment, writeAuditLog } from "@/lib/data";
 import { INVESTMENT_STATUSES, INVESTMENT_TYPES, isKey } from "@/lib/catalog";
 import { ImageError, optionalImage, removeImage, saveImage } from "@/lib/images";
+import { prisma } from "@/lib/db";
+import { todayPk } from "@/lib/format";
 import { requireStaff } from "@/lib/permissions";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -57,6 +59,10 @@ export async function saveInvestmentAction(formData: FormData) {
     }
   }
 
+  // Financial figures are dated (PROJECT_SPEC §16): the date they were last checked, never in the future.
+  const reviewedOn = text(formData, "figures_reviewed_on", 10) || todayPk();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(reviewedOn) || Number.isNaN(Date.parse(reviewedOn)) || reviewedOn > todayPk()) back("reviewed-date");
+
   const data = {
     slug,
     title,
@@ -71,6 +77,7 @@ export async function saveInvestmentAction(formData: FormData) {
     expectedDuration: text(formData, "expected_duration", 80),
     paymentStructure: text(formData, "payment_structure", 200),
     returnsNote,
+    figuresReviewedOn: reviewedOn,
     status,
     published: formData.get("published") === "on",
     sortOrder: amount(formData, "sort_order") ?? 0,
@@ -83,4 +90,40 @@ export async function saveInvestmentAction(formData: FormData) {
   revalidatePath("/investment", "layout");
   revalidatePath("/");
   redirect("/admin/investments?saved=1");
+}
+
+/* ---------- Quick actions from the opportunity cards ---------- */
+
+function backToList(formData: FormData, param: string): never {
+  const r = String(formData.get("return") ?? "");
+  const url = /^\/admin\/investments(\?[A-Za-z0-9_\-=&.%+]*)?$/.test(r) ? r : "/admin/investments";
+  redirect(`${url}${url.includes("?") ? "&" : "?"}${param}`);
+}
+
+/** The "Published on website" switch. */
+export async function toggleInvestmentPublishedAction(formData: FormData) {
+  const { user } = await requireStaff("projects", "update");
+  const id = String(formData.get("id") ?? "").slice(0, 60);
+  const inv = await getInvestmentById(id);
+  if (!inv || inv.archivedAt) backToList(formData, "error=missing");
+  await prisma.investmentOpportunity.update({ where: { id }, data: { published: !inv!.published } });
+  await writeAuditLog({ userId: user.id, action: inv!.published ? "unpublish" : "publish", module: "investments", recordId: id });
+  revalidatePath("/investment", "layout");
+  revalidatePath("/");
+  backToList(formData, `saved=${inv!.published ? "unpublished" : "published"}`);
+}
+
+/** Open / Fully subscribed / Closed from the card menu. */
+export async function setInvestmentStatusAction(formData: FormData) {
+  const { user } = await requireStaff("projects", "update");
+  const id = String(formData.get("id") ?? "").slice(0, 60);
+  const status = String(formData.get("status") ?? "");
+  if (!isKey(INVESTMENT_STATUSES, status)) backToList(formData, "error=required");
+  const inv = await getInvestmentById(id);
+  if (!inv || inv.archivedAt) backToList(formData, "error=missing");
+  await prisma.investmentOpportunity.update({ where: { id }, data: { status } });
+  await writeAuditLog({ userId: user.id, action: `status:${status}`, module: "investments", recordId: id, oldValue: { status: inv!.status }, newValue: { status } });
+  revalidatePath("/investment", "layout");
+  revalidatePath("/");
+  backToList(formData, "saved=status");
 }

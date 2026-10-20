@@ -42,6 +42,7 @@ export type InvestmentInput = {
   expectedDuration: string;
   paymentStructure: string;
   returnsNote: string;
+  figuresReviewedOn: string | null;
   status: string;
   published: boolean;
   sortOrder: number;
@@ -70,4 +71,10 @@ export async function getInvestmentsForProject(projectId: string) {
     orderBy: { sortOrder: "asc" },
     select: { slug: true, title: true, status: true, minimumInvestmentPkr: true },
   });
+}
+
+/** Investor enquiries per opportunity: how many, and when the latest arrived. */
+export async function getInvestmentEnquiries() {
+  const rows = await prisma.lead.groupBy({ by: ["investmentId"], where: { investmentId: { not: null } }, _count: { _all: true }, _max: { createdAt: true } });
+  return new Map(rows.map((r) => [r.investmentId!, { count: r._count._all, latest: r._max.createdAt }]));
 }

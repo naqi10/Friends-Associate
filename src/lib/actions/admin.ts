@@ -5,16 +5,12 @@ import { redirect } from "next/navigation";
 import {
   upsertProject,
   upsertProperty,
-  createDocumentRecord,
   getProjectBySlugExcluding,
   getProjectById,
   getPropertyById,
-  getUserById,
   writeAuditLog,
 } from "@/lib/data";
 import { requireStaff } from "@/lib/permissions";
-import { saveDocumentFile } from "@/lib/files";
-import { contentTypeFor } from "@/lib/storage";
 import type { City, ProjectType, PropertyStatus, PropertyType } from "@/lib/types";
 import {
   DIVISIONS,
@@ -29,8 +25,6 @@ import {
 import { ImageError, optionalImage, removeImage, saveImage } from "@/lib/images";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
-const ALLOWED_UPLOAD_EXT = /\.(pdf|jpe?g|png|webp|docx?|xlsx?)$/i;
 
 function text(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
@@ -167,44 +161,4 @@ export async function savePropertyAction(formData: FormData) {
 
   revalidatePath("/", "layout");
   redirect("/admin/properties?saved=1");
-}
-
-export async function uploadDocumentAction(formData: FormData) {
-  const { user: actor } = await requireStaff("documents", "add");
-  const audience = text(formData, "audience") === "buyer" ? "buyer" : "public";
-  const name = text(formData, "name");
-  const userId = text(formData, "user_id") || null;
-  const file = formData.get("file");
-  if (!name || !(file instanceof File) || file.size === 0) {
-    redirect("/admin/documents?error=required");
-  }
-  if (file.size > MAX_UPLOAD_BYTES) redirect("/admin/documents?error=size");
-  if (!ALLOWED_UPLOAD_EXT.test(file.name)) redirect("/admin/documents?error=type");
-  if (audience === "buyer") {
-    const buyer = userId ? await getUserById(userId) : undefined;
-    if (!buyer || buyer.role !== "buyer") redirect("/admin/documents?error=buyer");
-  }
-
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const { storagePath, fileName } = await saveDocumentFile(audience, file.name, bytes, contentTypeFor(file.name));
-  const doc = await createDocumentRecord({
-    audience,
-    userId: audience === "buyer" ? userId : null,
-    projectId: text(formData, "project_id") || null,
-    name,
-    category: text(formData, "category") || name,
-    issuedOn: new Date().toISOString().slice(0, 10),
-    fileName,
-    storagePath,
-  });
-  await writeAuditLog({
-    userId: actor.id,
-    action: "upload",
-    module: "documents",
-    recordId: doc.id,
-    newValue: { name, audience, userId, fileName, sizeBytes: file.size },
-  });
-  revalidatePath("/documents");
-  revalidatePath("/portal/documents");
-  redirect("/admin/documents?saved=1");
 }

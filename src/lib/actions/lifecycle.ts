@@ -17,6 +17,7 @@ import {
   setPropertyArchived,
   writeAuditLog,
 } from "@/lib/data";
+import { documentsReturn } from "@/lib/documents-return";
 import { removeImage } from "@/lib/images";
 import { requireStaff } from "@/lib/permissions";
 import { normalizeKey, storage } from "@/lib/storage";
@@ -160,15 +161,19 @@ export async function deleteDocumentAction(formData: FormData) {
   try {
     const before = await deleteDocumentRecord(id);
     // The row is gone first, so a failed file removal can only leave an unreachable file, never a broken link.
-    if (before.storagePath) await storage().remove(normalizeKey(before.storagePath)).catch(() => undefined);
-    await writeAuditLog({ userId: actor.id, action: "delete", module: "documents", recordId: id, oldValue: before });
+    const { versions, ...doc } = before;
+    for (const path of [doc.storagePath, ...versions.map((v) => v.storagePath)]) {
+      if (path) await storage().remove(normalizeKey(path)).catch(() => undefined);
+    }
+    await writeAuditLog({ userId: actor.id, action: "delete", module: "documents", recordId: id, oldValue: { ...doc, oldVersions: versions.length } });
   } catch (e) {
     failure = code(e);
   }
-  if (failure) redirect(`/admin/documents?error=${failure}`);
+  const back = documentsReturn(formData);
+  if (failure) redirect(`${back}${back.includes("?") ? "&" : "?"}error=${failure}`);
   revalidatePath("/documents");
   revalidatePath("/portal/documents");
-  redirect("/admin/documents?saved=deleted");
+  redirect(`${back}${back.includes("?") ? "&" : "?"}saved=deleted`);
 }
 
 /* ---------- Bookings ---------- */

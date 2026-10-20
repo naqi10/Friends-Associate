@@ -7,10 +7,14 @@ import {
   deleteStage,
   getProjectById,
   getStage,
+  notifyProjectBuyers,
+  publishPm,
+  savePmDraft,
   updateProjectProgress,
   updateStage,
   writeAuditLog,
 } from "@/lib/data";
+import { ImageError, saveImage } from "@/lib/images";
 import { requireStaff } from "@/lib/permissions";
 
 export async function updateProgressAction(formData: FormData) {
@@ -92,4 +96,70 @@ export async function deleteStageAction(formData: FormData) {
   await writeAuditLog({ userId: actor.id, action: "delete-stage", module: "progress", recordId: removed.projectId, oldValue: removed });
   refreshProgressViews(removed.projectId);
   redirect(`/pm/${removed.projectId}?saved=deleted`);
+}
+
+/* ---------- PM desk: stages, status, site update, draft / publish ---------- */
+
+const MAX_UPDATE_PHOTOS = 6;
+
+export async function savePmDeskAction(formData: FormData) {
+  const { user } = await requireStaff("progress", "update");
+  const projectId = String(formData.get("project_id") ?? "").slice(0, 60);
+  const mode = formData.get("mode") === "draft" ? "draft" : "publish";
+  const back = (code: string) => redirect(`/pm?p=${encodeURIComponent(projectId)}&error=${code}`);
+  const project = await getProjectById(projectId);
+  if (!project || project.archived_at) back("missing");
+
+  const status = String(formData.get("status") ?? "").trim().slice(0, 60);
+  if (!status) back("required");
+  const stageIds = formData.getAll("stage_id").map(String);
+  const stages: { id: string; percent: number }[] = [];
+  for (const id of stageIds) {
+    const n = Number(formData.get(`stage_${id}`));
+    if (!Number.isInteger(n) || n < 0 || n > 100) back("stage");
+    stages.push({ id, percent: n });
+  }
+  const text = String(formData.get("update_text") ?? "").trim().slice(0, 1000);
+
+  const files = formData.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length > MAX_UPDATE_PHOTOS) back("photos");
+  const newPhotos: string[] = [];
+  for (const f of files) {
+    try {
+      newPhotos.push(await saveImage(f, "updates"));
+    } catch (e) {
+      if (e instanceof ImageError) back(e.code);
+      throw e;
+    }
+  }
+
+  const input = { projectId, status, stages, text, newPhotos, actorId: user.id };
+  if (mode === "draft") {
+    await savePmDraft(input);
+    await writeAuditLog({ userId: user.id, action: "save-draft", module: "progress", recordId: projectId, newValue: { status, stages, text, photos: newPhotos.length } });
+    revalidatePath("/pm");
+    redirect(`/pm?p=${projectId}&saved=draft`);
+  }
+
+  const result = await publishPm(input);
+  await writeAuditLog({
+    userId: user.id,
+    action: "publish",
+    module: "progress",
+    recordId: projectId,
+    oldValue: { status: result.before.status, progress: result.before.progressPercent, stages: result.before.stages.map((s) => ({ name: s.name, percent: s.percent })) },
+    newValue: { status, progress: result.overall, stages: result.stages.map((s) => ({ name: s.name, percent: s.percent })), update: !!result.update },
+  });
+  const notified = await notifyProjectBuyers(projectId, {
+    type: "progress",
+    title: `${project!.name} is now ${result.overall}% complete`,
+    message: text || (result.current ? `Current stage: ${result.current.name} (${result.current.percent}%).` : "All stages are complete."),
+    link: "/portal/progress",
+  });
+  revalidatePath("/pm");
+  revalidatePath("/progress");
+  revalidatePath(`/projects/${project!.slug}`);
+  revalidatePath("/portal", "layout");
+  revalidatePath("/");
+  redirect(`/pm?p=${projectId}&saved=published&n=${notified}`);
 }

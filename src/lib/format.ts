@@ -91,3 +91,10 @@ export function rupeesInWords(amount: number): string {
   if (n) parts.push(belowThousand(n));
   return `${parts.join(" ")} Rupees Only`;
 }
+
+/** Short amounts for small screens: 6750000 → "PKR 67.5 L", 10888889 → "PKR 1.09 Cr", 45000 → "PKR 45,000". */
+export function formatPkrShort(amount: number): string {
+  if (amount >= 10_000_000) return `PKR ${(Math.round((amount / 10_000_000) * 100) / 100).toString()} Cr`;
+  if (amount >= 100_000) return `PKR ${(Math.round((amount / 100_000) * 10) / 10).toString()} L`;
+  return `PKR ${amount.toLocaleString("en-PK")}`;
+}

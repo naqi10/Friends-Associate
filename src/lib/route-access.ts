@@ -27,6 +27,7 @@ const RULES: [RegExp, AccessRule][] = [
   [/^\/admin\/projects\/[^/]+\/?$/, { kind: "perm", any: [["projects", "update"]] }],
   [/^\/admin\/projects\/?$/, { kind: "perm", any: [["projects", "update"], ["projects", "add"]] }],
   [/^\/admin\/properties\/new\/?$/, { kind: "perm", any: [["properties", "add"]] }],
+  [/^\/admin\/properties\/import\/?$/, { kind: "perm", any: [["properties", "add"]] }],
   [/^\/admin\/properties\/[^/]+\/?$/, { kind: "perm", any: [["properties", "update"]] }],
   [/^\/admin\/properties\/?$/, { kind: "perm", any: [["properties", "update"], ["properties", "add"]] }],
   [/^\/admin\/documents(\/|$)/, { kind: "perm", any: [["documents", "add"]] }],

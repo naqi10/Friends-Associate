@@ -4,7 +4,9 @@ import fs from "fs";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { HOME_BLOCK_KEYS, getHeroContent, saveContentBlock, writeAuditLog } from "@/lib/data";
+import { HOME_BLOCK_KEYS, getHeroContent, getHeroMedia, saveContentBlock, writeAuditLog } from "@/lib/data";
+import { ImageError, optionalImage, removeImage, saveImage } from "@/lib/images";
+import { MEDIA_PREFIX } from "@/lib/media";
 import { HERO_DEFAULTS, HERO_MEDIA_DEFAULTS } from "@/lib/content-defaults";
 import { requireAdmin } from "@/lib/permissions";
 import { isSafeLink } from "@/lib/seo";
@@ -15,16 +17,35 @@ function text(formData: FormData, key: string, max: number) {
   return String(formData.get(key) ?? "").trim().slice(0, max);
 }
 
+/**
+ * Resolves one hero photo from the form: a newly uploaded file, a "remove" request, or the current path.
+ * Current paths must be an uploaded media file or an existing file in /public/images, so the hero never
+ * points at something broken. An empty result shows the design's placeholder pattern on the website.
+ */
+async function heroPhoto(formData: FormData, field: "image" | "image2", current: string) {
+  const file = optionalImage(formData, `${field}_file`);
+  if (file) return { path: await saveImage(file, "content"), uploaded: true };
+  if (formData.get(`${field}_remove`) === "on") return { path: "", uploaded: false };
+  return { path: current, uploaded: false };
+}
+
+function photoPathOk(p: string) {
+  if (p === "") return true;
+  if (p.startsWith(MEDIA_PREFIX)) return /^\/api\/media\/public\/[A-Za-z0-9_\-/]+\.webp$/.test(p) && !p.includes("..");
+  return IMAGE_PATH_RE.test(p) && !p.includes("..") && fs.existsSync(path.join(process.cwd(), "public", p));
+}
+
 export async function saveHeroAction(formData: FormData) {
   const { user: actor } = await requireAdmin();
   const back = (code: string) => redirect(`/admin/content?error=${code}`);
+  const [before, beforeMedia] = await Promise.all([getHeroContent(), getHeroMedia()]);
 
   const hero = {
     key: HERO_DEFAULTS.key,
     subtitle: text(formData, "subtitle", 80),
     title: text(formData, "title", 120),
     description: text(formData, "description", 400),
-    imagePath: text(formData, "image_path", 200) || HERO_DEFAULTS.imagePath,
+    imagePath: before.imagePath,
     buttonText: text(formData, "button_text", 40),
     buttonUrl: text(formData, "button_url", 300),
     secondaryButtonText: text(formData, "secondary_button_text", 40),
@@ -36,14 +57,24 @@ export async function saveHeroAction(formData: FormData) {
   for (const url of [hero.buttonUrl, hero.secondaryButtonUrl]) {
     if (url && !isSafeLink(url)) back("link");
   }
-  // Must be an existing file in /public/images so the hero can never render a broken image.
-  const imageOk = (p: string) => IMAGE_PATH_RE.test(p) && !p.includes("..") && fs.existsSync(path.join(process.cwd(), "public", p));
-  if (!imageOk(hero.imagePath)) back("image");
+
+  let large: { path: string; uploaded: boolean };
+  let small: { path: string; uploaded: boolean };
+  try {
+    large = await heroPhoto(formData, "image", before.imagePath);
+    small = await heroPhoto(formData, "image2", beforeMedia.secondImage);
+  } catch (e) {
+    if (e instanceof ImageError) return back(e.code);
+    throw e;
+  }
+  if (!photoPathOk(large.path) || !photoPathOk(small.path)) back("image");
+  hero.imagePath = large.path;
+
   const media = {
     key: HERO_MEDIA_DEFAULTS.key,
     title: text(formData, "image_alt", 160) || HERO_MEDIA_DEFAULTS.title,
     subtitle: text(formData, "image2_alt", 160) || HERO_MEDIA_DEFAULTS.subtitle,
-    imagePath: text(formData, "image2_path", 200) || HERO_MEDIA_DEFAULTS.imagePath,
+    imagePath: small.path,
     description: "",
     buttonText: "",
     buttonUrl: "",
@@ -51,12 +82,13 @@ export async function saveHeroAction(formData: FormData) {
     secondaryButtonUrl: "",
     active: true,
   };
-  if (!imageOk(media.imagePath)) back("image");
 
-  const before = await getHeroContent();
   await saveContentBlock(hero);
   await saveContentBlock(media);
-  await writeAuditLog({ userId: actor.id, action: "update", module: "content", recordId: hero.key, oldValue: before, newValue: { ...hero, media } });
+  // Delete replaced uploads only after the new paths are saved (bundled /images files are never touched).
+  if (before.imagePath !== large.path) await removeImage(before.imagePath);
+  if (beforeMedia.secondImage !== small.path) await removeImage(beforeMedia.secondImage);
+  await writeAuditLog({ userId: actor.id, action: "update", module: "content", recordId: hero.key, oldValue: { ...before, media: beforeMedia }, newValue: { ...hero, media } });
 
   revalidatePath("/");
   redirect("/admin/content?saved=1");

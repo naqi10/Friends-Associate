@@ -169,3 +169,63 @@ export function parseMarla(size: string): number | null {
   if (!Number.isFinite(n)) return null;
   return m[2] === "kanal" ? n * 20 : n;
 }
+
+/** Project statuses offered on the PM desk (PROJECT_SPEC §10 plus the office's own wording). */
+export const PROJECT_STATUS_OPTIONS = [
+  "Planning",
+  "Design in progress",
+  "Approvals in progress",
+  "Under construction",
+  "Civil works",
+  "Finishing",
+  "Near completion",
+  "Completed",
+  "Handed over",
+  "On hold",
+] as const;
+
+export type StatusGroup = "construction" | "approvals" | "design" | "completed" | "other";
+
+/** Groups free-text statuses for the PM desk tabs and chips. */
+export function statusGroup(status: string): StatusGroup {
+  const s = status.toLowerCase();
+  if (/complete|handed/.test(s) && !/near/.test(s)) return "completed";
+  if (/approv|noc/.test(s)) return "approvals";
+  if (/design|plan|concept|drawing/.test(s)) return "design";
+  if (/construct|civil|finish|structure|near/.test(s)) return "construction";
+  return "other";
+}
+
+export const STATUS_GROUPS: { key: StatusGroup; label: string; short: string; chip: string }[] = [
+  { key: "construction", label: "Under construction", short: "Under construction", chip: "bg-teal-50 text-teal-800" },
+  { key: "approvals", label: "Approvals in progress", short: "Approvals", chip: "bg-amber-50 text-amber-800" },
+  { key: "design", label: "Design in progress", short: "Design", chip: "bg-mist text-body" },
+  { key: "completed", label: "Completed", short: "Completed", chip: "bg-emerald-50 text-emerald-800" },
+  { key: "other", label: "Other", short: "Other", chip: "bg-mist text-muted" },
+];
+
+/** Plain-language state of one progress stage. */
+export function stageState(percent: number): { key: "done" | "progress" | "started" | "todo"; label: string } {
+  if (percent >= 100) return { key: "done", label: "Done" };
+  if (percent >= 50) return { key: "progress", label: "In progress" };
+  if (percent > 0) return { key: "started", label: "Started" };
+  return { key: "todo", label: "Not started" };
+}
+
+/** Document types (PROJECT_SPEC §19), plus Brochure for public marketing files. */
+export const DOCUMENT_TYPES = [
+  "Booking Form",
+  "Buyer Agreement",
+  "Sale/Purchase Agreement",
+  "Payment Receipt",
+  "Allocation Letter",
+  "Possession Document",
+  "Property Plan",
+  "Floor Plan",
+  "Master Plan",
+  "Approved Project Document",
+  "Construction Report",
+  "Company Document",
+  "Brochure",
+  "Other",
+] as const;

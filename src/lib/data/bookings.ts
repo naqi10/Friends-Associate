@@ -312,3 +312,87 @@ export async function cancelBooking(id: string, reason: string) {
     return { before: current, after: updated };
   });
 }
+
+/* ---------- Bookings & payments desk ---------- */
+
+export type DeskTab = "all" | "overdue" | "today" | "paid";
+
+export type DeskBooking = {
+  id: string;
+  buyer: { id: string; name: string; phone: string };
+  property: string;
+  project: { id: string; name: string };
+  totalPkr: number;
+  paidPkr: number;
+  outstandingPkr: number;
+  nextDate: string;
+  nextAmountPkr: number;
+  /** Days until the next instalment (negative = overdue); null when fully paid. */
+  daysUntil: number | null;
+};
+
+const days = (from: string, to: string) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+
+/** Every active (not cancelled) booking with its payment position, for the desk and its figures. */
+export async function getBookingDesk(today: string) {
+  const rows = await prisma.booking.findMany({
+    where: { status: { not: CANCELLED } },
+    orderBy: { nextPaymentDate: "asc" },
+    select: {
+      id: true,
+      totalPricePkr: true,
+      paidPkr: true,
+      outstandingPkr: true,
+      nextPaymentDate: true,
+      nextPaymentAmountPkr: true,
+      user: { select: { id: true, name: true, phone: true } },
+      property: { select: { title: true } },
+      project: { select: { id: true, name: true } },
+    },
+  });
+  const all: DeskBooking[] = rows.map((b) => ({
+    id: b.id,
+    buyer: b.user,
+    property: b.property.title,
+    project: b.project,
+    totalPkr: b.totalPricePkr,
+    paidPkr: b.paidPkr,
+    outstandingPkr: b.outstandingPkr,
+    nextDate: b.nextPaymentDate,
+    nextAmountPkr: Math.min(b.nextPaymentAmountPkr, b.outstandingPkr),
+    daysUntil: b.outstandingPkr > 0 ? days(today, b.nextPaymentDate) : null,
+  }));
+  // Most urgent first: overdue (oldest first), then due soonest, then fully paid.
+  all.sort((a, b) => (a.daysUntil ?? 1e9) - (b.daysUntil ?? 1e9));
+  const overdue = all.filter((b) => b.daysUntil !== null && b.daysUntil < 0);
+  const today_ = all.filter((b) => b.daysUntil === 0);
+  const paid = all.filter((b) => b.outstandingPkr === 0);
+  const sum = (list: DeskBooking[], k: "totalPkr" | "paidPkr" | "outstandingPkr" | "nextAmountPkr") => list.reduce((s, b) => s + b[k], 0);
+  return {
+    all,
+    tabs: { all: all.length, overdue: overdue.length, today: today_.length, paid: paid.length },
+    figures: {
+      bookedPkr: sum(all, "totalPkr"),
+      receivedPkr: sum(all, "paidPkr"),
+      outstandingPkr: sum(all, "outstandingPkr"),
+      buyersOwing: new Set(all.filter((b) => b.outstandingPkr > 0).map((b) => b.buyer.id)).size,
+      overduePkr: sum(overdue, "nextAmountPkr"),
+      overdueCount: overdue.length,
+      dueTodayCount: today_.length,
+    },
+    projects: [...new Map(all.map((b) => [b.project.id, b.project])).values()].sort((a, b) => a.name.localeCompare(b.name)),
+  };
+}
+
+export function filterDesk(all: DeskBooking[], tab: DeskTab, q?: string, projectId?: string) {
+  const term = q?.trim().toLowerCase();
+  return all.filter(
+    (b) =>
+      (tab === "all" ||
+        (tab === "overdue" && b.daysUntil !== null && b.daysUntil < 0) ||
+        (tab === "today" && b.daysUntil === 0) ||
+        (tab === "paid" && b.outstandingPkr === 0)) &&
+      (!projectId || b.project.id === projectId) &&
+      (!term || [b.buyer.name, b.property, b.project.name].some((s) => s.toLowerCase().includes(term))),
+  );
+}
