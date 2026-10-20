@@ -45,7 +45,7 @@ export default async function PortalPaymentsPage() {
         const history = payments.filter((p) => p.bookingId === b.id);
         const earlier = unitemisedPaid(b.paid_pkr, history);
         return (
-          <section key={b.id} className="mt-6 rounded-xl border bg-white p-4" aria-label={prop?.title}>
+          <section key={b.id} id={`b-${b.id}`} className="mt-6 scroll-mt-24 rounded-xl border bg-white p-4" aria-label={prop?.title}>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="font-medium">{prop?.title}</h2>
               {cancelled && <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">Booking cancelled</span>}

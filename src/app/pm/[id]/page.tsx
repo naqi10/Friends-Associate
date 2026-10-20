@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { Notice } from "@/components/admin/Field";
 import { StageBars } from "@/components/StageBars";
@@ -28,8 +27,7 @@ export default async function ProjectStagesPage({ params, searchParams }: Props)
   const input = "rounded-md border border-stone-300 px-2 py-1.5 text-sm";
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <AdminNav active="/pm" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <Link href="/pm" className="text-sm text-stone-600 hover:underline">
         ← All projects
       </Link>
@@ -40,7 +38,7 @@ export default async function ProjectStagesPage({ params, searchParams }: Props)
       <Notice message={sp.saved ? SAVED[sp.saved] : undefined} />
       <FormError code={sp.error} />
 
-      <section className="mt-6 rounded-xl border bg-white p-6">
+      <section className="mt-6 admin-card p-6">
         <h2 className="font-semibold">As shown on the website</h2>
         <div className="mt-4">
           <StageBars stages={stages} />
@@ -48,7 +46,7 @@ export default async function ProjectStagesPage({ params, searchParams }: Props)
       </section>
 
       {(can("progress", "update") || can("progress", "delete")) && stages.length > 0 && (
-        <section className="mt-6 rounded-xl border bg-white p-6">
+        <section className="mt-6 admin-card p-6">
           <h2 className="font-semibold">Edit stages</h2>
           <ul className="mt-4 divide-y">
             {stages.map((s) => (
@@ -72,7 +70,7 @@ export default async function ProjectStagesPage({ params, searchParams }: Props)
                       Note
                       <input name="note" defaultValue={s.note} maxLength={200} className={`mt-1 block w-48 ${input}`} />
                     </label>
-                    <button type="submit" className="rounded-md bg-teal-800 px-3 py-1.5 text-sm text-white hover:bg-teal-900">
+                    <button type="submit" className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-body">
                       Save
                     </button>
                   </form>
@@ -94,7 +92,7 @@ export default async function ProjectStagesPage({ params, searchParams }: Props)
       )}
 
       {can("progress", "add") && (
-        <section className="mt-6 rounded-xl border bg-white p-6">
+        <section id="add" className="mt-6 scroll-mt-24 admin-card p-6">
           <h2 className="font-semibold">Add a stage</h2>
           <form action={addStageAction} className="mt-4 flex flex-wrap items-end gap-2">
             <input type="hidden" name="projectId" value={project.id} />
@@ -119,7 +117,7 @@ export default async function ProjectStagesPage({ params, searchParams }: Props)
               Note
               <input name="note" maxLength={200} className={`mt-1 block w-48 ${input}`} />
             </label>
-            <button type="submit" className="rounded-md bg-teal-800 px-3 py-1.5 text-sm text-white hover:bg-teal-900">
+            <button type="submit" className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-body">
               Add stage
             </button>
           </form>

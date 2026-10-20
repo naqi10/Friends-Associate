@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { pageMetadata } from "@/lib/seo";
 import { getAboutLists, getCompany, getManagement, getPageContent } from "@/lib/data";
-import { hasRealImage } from "@/lib/media";
+import { focalPosition, hasRealImage } from "@/lib/media";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getPageContent("page.about");
@@ -80,7 +80,7 @@ export default async function AboutPage() {
             {management.map((m) => (
               <li key={m.id} className="flex gap-4 rounded-lg border border-stone-200 bg-white p-4">
                 {hasRealImage(m.photo_path) ? (
-                  <Image src={m.photo_path} alt={m.name} width={72} height={72} className="h-18 w-18 shrink-0 rounded-full object-cover" />
+                  <Image src={m.photo_path} alt={m.name} width={72} height={72} className="h-18 w-18 shrink-0 rounded-full object-cover" style={{ objectPosition: focalPosition(m.photo_path) }} />
                 ) : (
                   <span aria-hidden className="flex h-18 w-18 shrink-0 items-center justify-center rounded-full bg-stone-100 text-xl font-semibold text-stone-500">
                     {m.name.charAt(0)}

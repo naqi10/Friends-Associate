@@ -69,6 +69,7 @@ export default async function InvestmentDetailPage({ params, searchParams }: Pro
           <div className="mt-6 rounded-xl border border-stone-200 bg-white p-5">
             <h2 className="font-semibold">How returns work</h2>
             <p className="mt-2 text-sm text-stone-700">{i.returnsNote}</p>
+            {i.figuresReviewedOn && <p className="mt-2 text-xs text-stone-500">Figures last reviewed on {formatDate(i.figuresReviewedOn)}.</p>}
           </div>
           {i.project && (
             <p className="mt-6 text-sm">

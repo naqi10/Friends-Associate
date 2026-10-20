@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminNav, DeniedNotice } from "@/components/AdminNav";
+import { DeniedNotice } from "@/components/AdminNav";
 import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { logoutAction } from "@/lib/actions/auth";
 import { ROLE_LABELS } from "@/lib/permission-catalog";
@@ -15,7 +15,7 @@ export default async function AccountPage({ searchParams }: Props) {
   const sp = await searchParams;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
+    <div className="px-5 py-10 sm:px-[30px]">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">My account</h1>
         <form action={logoutAction}>
@@ -25,10 +25,9 @@ export default async function AccountPage({ searchParams }: Props) {
         </form>
       </div>
       <div className="mt-6">
-        <AdminNav active="/account" />
         <DeniedNotice denied={sp.denied} />
       </div>
-      <dl className="grid gap-4 rounded-xl border bg-white p-6 text-sm sm:grid-cols-2">
+      <dl className="grid gap-4 admin-card p-6 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-stone-500">Name</dt>
           <dd className="font-medium">{user.name}</dd>

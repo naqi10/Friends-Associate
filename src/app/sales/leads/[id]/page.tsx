@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { Notice, SelectField } from "@/components/admin/Field";
@@ -48,8 +47,7 @@ export default async function LeadPage({ params, searchParams }: Props) {
   ].filter((f) => f.value);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <AdminNav active="/sales" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <Link href="/sales" className="text-sm text-stone-600 hover:underline">
         ← All leads
       </Link>
@@ -61,7 +59,7 @@ export default async function LeadPage({ params, searchParams }: Props) {
       <FormError code={sp.error} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_380px]">
-        <section className="rounded-xl border bg-white p-6">
+        <section className="admin-card p-6">
           <dl className="grid gap-4 text-sm sm:grid-cols-2">
             {facts.map((f) => (
               <div key={f.label}>
@@ -103,7 +101,7 @@ export default async function LeadPage({ params, searchParams }: Props) {
           </div>
         </section>
 
-        <section className="rounded-xl border bg-white p-6">
+        <section className="admin-card p-6">
           <h2 className="font-semibold">Follow-up</h2>
           <form action={updateLeadAction} className="mt-4 space-y-4">
             <fieldset disabled={!canEdit} className="space-y-4">
@@ -124,7 +122,7 @@ export default async function LeadPage({ params, searchParams }: Props) {
                 <textarea name="notes" rows={6} maxLength={5000} defaultValue={lead.notes} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2" />
               </label>
               {canEdit ? (
-                <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+                <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
                   Save
                 </button>
               ) : (
@@ -136,7 +134,7 @@ export default async function LeadPage({ params, searchParams }: Props) {
       </div>
 
       {can("leads", "delete") && (
-        <form action={deleteLeadAction} className="mt-6 rounded-xl border border-red-200 bg-white p-6">
+        <form action={deleteLeadAction} className="mt-6 rounded-[28px] border-2 border-red-200 bg-white shadow-[0_18px_40px_-18px_rgb(14_14_14/0.28)] p-6">
           <input type="hidden" name="id" value={lead.id} />
           <h2 className="font-semibold text-red-800">Delete lead</h2>
           <p className="mt-1 text-sm text-stone-600">For spam or duplicates. Real enquiries that did not work out should be set to Closed instead, so they stay in the reports.</p>
