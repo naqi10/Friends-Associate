@@ -1,4 +1,3 @@
-import { AdminNav } from "@/components/AdminNav";
 import { getRecentAuditLogs } from "@/lib/data";
 import { requireAdmin } from "@/lib/permissions";
 
@@ -9,14 +8,13 @@ export default async function AuditLogPage() {
   const logs = await getRecentAuditLogs(100);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <AdminNav active="/admin/audit" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <h1 className="text-2xl font-bold">Audit log</h1>
       <p className="mt-1 text-sm text-stone-600">The latest 100 sensitive changes. Passwords and tokens are never recorded.</p>
       {logs.length === 0 ? (
         <p className="mt-6 text-sm text-stone-500">No changes recorded yet.</p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-xl border bg-white">
+        <div className="mt-6 overflow-x-auto admin-card">
           <table className="w-full min-w-[860px] text-left text-sm">
             <thead className="bg-stone-50 text-stone-500">
               <tr>

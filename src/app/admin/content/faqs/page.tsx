@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { ContentTabs } from "@/components/admin/ContentTabs";
@@ -26,7 +25,7 @@ function FaqForm({ f }: { f?: Faq }) {
         </div>
         <CheckboxField label="Show on the website" name="active" defaultChecked={f ? f.active : true} />
       </div>
-      <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+      <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
         {f ? "Save" : "Add question"}
       </button>
     </form>
@@ -38,8 +37,7 @@ export default async function FaqContentPage({ searchParams }: Props) {
   const [sp, faqs] = await Promise.all([searchParams, getFaqs({ includeHidden: true })]);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <AdminNav active="/admin/content" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <h1 className="text-2xl font-bold">Website content</h1>
       <ContentTabs active="/admin/content/faqs" />
       <p className="mt-4 text-sm text-stone-600">
@@ -53,9 +51,9 @@ export default async function FaqContentPage({ searchParams }: Props) {
       <FormError code={sp.error} />
 
       {faqs.length === 0 && <p className="mt-6 text-sm text-stone-500">No questions yet.</p>}
-      <div className="mt-6 space-y-4">
+      <div className="mt-6 grid items-start gap-5 lg:grid-cols-2">
         {faqs.map((f) => (
-          <details key={f.id} id={`f-${f.id}`} className="scroll-mt-24 rounded-xl border bg-white p-5">
+          <details key={f.id} id={`f-${f.id}`} className="scroll-mt-24 admin-card p-5">
             <summary className="cursor-pointer font-medium">
               {f.question}
               {!f.active && <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-normal text-stone-600">Hidden</span>}
@@ -72,7 +70,7 @@ export default async function FaqContentPage({ searchParams }: Props) {
           </details>
         ))}
       </div>
-      <div id="faq-new" className="mt-6 scroll-mt-24 rounded-xl border border-dashed bg-white p-5">
+      <div id="faq-new" className="mt-6 scroll-mt-24 rounded-[28px] border-2 border-dashed border-line-strong bg-white p-5">
         <h2 className="mb-3 font-semibold">Add a question</h2>
         <FaqForm />
       </div>

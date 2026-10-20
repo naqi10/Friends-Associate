@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { Field, Notice, SelectField } from "@/components/admin/Field";
@@ -40,8 +39,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
   const pct = b.totalPricePkr > 0 ? Math.round((b.paidPkr / b.totalPricePkr) * 100) : 0;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <AdminNav active="/admin/bookings" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <Link href="/admin/bookings" className="text-sm text-stone-600 hover:underline">
         ← All bookings
       </Link>
@@ -77,7 +75,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
           { label: "Outstanding", value: formatPkr(b.outstandingPkr) },
           { label: "Paid so far", value: `${pct}%` },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl border bg-white p-4">
+          <div key={s.label} className="admin-card p-4">
             <dt className="text-xs text-stone-500">{s.label}</dt>
             <dd className="mt-1 font-semibold">{s.value}</dd>
           </div>
@@ -90,7 +88,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
         </p>
       )}
 
-      <section className="mt-6 rounded-xl border bg-white p-6">
+      <section id="pay" className="mt-6 scroll-mt-24 admin-card p-6">
         <h2 className="font-semibold">Record a received payment</h2>
         <p className="mt-1 text-sm text-stone-600">
           Use this after a bank transfer, cash or cheque clears. It creates a numbered receipt, adds to Paid, reduces Outstanding and moves one
@@ -123,7 +121,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
               <Field label="Remarks (optional)" name="remarks" maxLength={500} hint="Printed on the receipt, e.g. 8th quarterly instalment." />
             </div>
             <div className="sm:col-span-2">
-              <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+              <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
                 Record payment
               </button>
             </div>
@@ -132,7 +130,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
       </section>
 
       {canSeePayments && (
-        <section className="mt-6 rounded-xl border bg-white p-6">
+        <section className="mt-6 admin-card p-6">
           <h2 className="font-semibold">Payment history</h2>
           {payments.length === 0 && earlier === 0 ? (
             <p className="mt-3 text-sm text-stone-500">No payment records available.</p>
@@ -209,7 +207,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
       )}
 
       {can("bookings", "update") && !cancelled && (
-        <section className="mt-6 rounded-xl border bg-white p-6">
+        <section className="mt-6 admin-card p-6">
           <h2 className="font-semibold">Edit schedule and figures</h2>
           <form action={updateBookingAction} className="mt-4 grid gap-4 sm:grid-cols-2">
             <input type="hidden" name="id" value={b.id} />
@@ -236,7 +234,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
             <Field label="Next payment date" name="next_payment_date" type="date" defaultValue={b.nextPaymentDate} required />
             <Field label="Next payment amount (PKR)" name="next_payment_amount_pkr" type="number" min={0} step={1} defaultValue={b.nextPaymentAmountPkr} required />
             <div className="sm:col-span-2">
-              <button type="submit" className="rounded-md border border-stone-300 px-4 py-2 text-sm font-medium hover:bg-stone-50">
+              <button type="submit" className="rounded-full border-[1.5px] border-line-strong bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-mist">
                 Save changes
               </button>
             </div>
@@ -245,7 +243,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
       )}
 
       {can("bookings", "delete") && !cancelled && (
-        <section className="mt-6 rounded-xl border border-red-200 bg-white p-6">
+        <section className="mt-6 rounded-[28px] border-2 border-red-200 bg-white shadow-[0_18px_40px_-18px_rgb(14_14_14/0.28)] p-6">
           <h2 className="font-semibold text-red-800">Cancel this booking</h2>
           <p className="mt-1 text-sm text-stone-600">
             Use this when the sale falls through. The unit goes back on sale and the buyer sees the booking as cancelled. Nothing is deleted: the

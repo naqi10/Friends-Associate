@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { Notice } from "@/components/admin/Field";
 import { InvestmentForm } from "@/components/admin/InvestmentForm";
@@ -28,8 +27,7 @@ export default async function EditInvestmentPage({ params, searchParams }: Props
   const projects = own ? [...active, { ...own, name: `${own.name} (archived)` }] : active;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <AdminNav active="/admin/investments" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <Link href={inv.archivedAt ? "/admin/investments?archived=1" : "/admin/investments"} className="text-sm text-stone-600 hover:underline">
         ← {inv.archivedAt ? "Archived opportunities" : "All opportunities"}
       </Link>

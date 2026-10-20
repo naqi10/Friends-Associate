@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { ContentTabs } from "@/components/admin/ContentTabs";
@@ -33,10 +32,9 @@ function MemberForm({ m }: { m?: ManagementMember }) {
         <Field label="Display order" name="sort_order" type="number" min={0} max={999} defaultValue={m?.sort_order ?? 0} hint="Lower numbers show first." />
       </div>
       <TextAreaField label="Short biography" name="bio" defaultValue={m?.bio} maxLength={600} rows={3} />
-      <ImageField current={m?.photo_path} label="Photo" />
-      {m && hasRealImage(m.photo_path) && <CheckboxField label="Remove the current photo" name="remove_photo" />}
+      <ImageField current={m?.photo_path} label="Photo" removeName="remove_photo" shape="square" />
       <CheckboxField label="Show on the About page" name="active" defaultChecked={m ? m.active : true} />
-      <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+      <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
         {m ? "Save" : "Add team member"}
       </button>
     </form>
@@ -48,8 +46,7 @@ export default async function AboutContentPage({ searchParams }: Props) {
   const [sp, company, lists, team] = await Promise.all([searchParams, getCompany(), getAboutLists(), getManagement({ includeHidden: true })]);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <AdminNav active="/admin/content" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <h1 className="text-2xl font-bold">Website content</h1>
       <ContentTabs active="/admin/content/about" />
       <p className="mt-4 text-sm text-stone-600">
@@ -62,7 +59,7 @@ export default async function AboutContentPage({ searchParams }: Props) {
       <Notice message={sp.saved ? SAVED[sp.saved] : undefined} />
       <FormError code={sp.error} />
 
-      <form id="about" action={saveAboutAction} className="mt-6 scroll-mt-24 space-y-4 rounded-xl border bg-white p-6">
+      <form id="about" action={saveAboutAction} className="mt-6 scroll-mt-24 space-y-4 admin-card p-6">
         <h2 className="font-semibold">Company profile</h2>
         <TextAreaField label="Company profile" name="experience" defaultValue={company.experience} maxLength={1500} rows={5} />
         <TextAreaField label="Mission" name="mission" defaultValue={company.mission} maxLength={600} rows={3} />
@@ -80,7 +77,7 @@ export default async function AboutContentPage({ searchParams }: Props) {
           </fieldset>
         ))}
         <p className="text-xs text-stone-500">Leave a box empty to hide that section on the About page.</p>
-        <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+        <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
           Save About page
         </button>
       </form>
@@ -88,9 +85,9 @@ export default async function AboutContentPage({ searchParams }: Props) {
       <section id="team" className="mt-8 scroll-mt-24">
         <h2 className="text-lg font-semibold">Management team</h2>
         {team.length === 0 && <p className="mt-2 text-sm text-stone-500">No team members yet.</p>}
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 grid items-start gap-5 lg:grid-cols-2">
           {team.map((m) => (
-            <details key={m.id} id={`m-${m.id}`} className="scroll-mt-24 rounded-xl border bg-white p-5">
+            <details key={m.id} id={`m-${m.id}`} className="scroll-mt-24 admin-card p-5">
               <summary className="flex cursor-pointer flex-wrap items-center gap-3">
                 {hasRealImage(m.photo_path) ? (
                   <Image src={m.photo_path} alt="" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
@@ -115,7 +112,7 @@ export default async function AboutContentPage({ searchParams }: Props) {
             </details>
           ))}
         </div>
-        <div id="team-new" className="mt-6 scroll-mt-24 rounded-xl border border-dashed bg-white p-5">
+        <div id="team-new" className="mt-6 scroll-mt-24 rounded-[28px] border-2 border-dashed border-line-strong bg-white p-5">
           <h3 className="mb-3 font-semibold">Add a team member</h3>
           <MemberForm />
         </div>

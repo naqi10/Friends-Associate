@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { Field, SelectField } from "@/components/admin/Field";
 import { createBookingAction } from "@/lib/actions/bookings";
@@ -19,8 +18,7 @@ export default async function NewBookingPage({ searchParams }: Props) {
 
   if (eligible.length === 0 || properties.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-10">
-        <AdminNav active="/admin/bookings" />
+      <div className="px-5 py-10 sm:px-[30px]">
         <h1 className="text-2xl font-bold">New booking</h1>
         <p className="mt-4 rounded-md bg-amber-50 p-4 text-sm text-amber-900">
           {eligible.length === 0 ? (
@@ -38,14 +36,13 @@ export default async function NewBookingPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <AdminNav active="/admin/bookings" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <h1 className="text-2xl font-bold">New booking</h1>
       <p className="mt-1 text-sm text-stone-600">
         The total price is copied from the property. Outstanding is calculated as total minus paid. The unit is marked Booked.
       </p>
       <FormError code={sp.error} />
-      <form action={createBookingAction} className="mt-6 grid gap-4 rounded-xl border bg-white p-6 sm:grid-cols-2">
+      <form action={createBookingAction} className="mt-6 grid gap-4 admin-card p-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <SelectField
             label="Buyer"
@@ -71,7 +68,7 @@ export default async function NewBookingPage({ searchParams }: Props) {
         <Field label="Next payment date" name="next_payment_date" type="date" required />
         <Field label="Next payment amount (PKR)" name="next_payment_amount_pkr" type="number" min={0} step={1} defaultValue={0} required />
         <div className="sm:col-span-2">
-          <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+          <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
             Create booking
           </button>
         </div>

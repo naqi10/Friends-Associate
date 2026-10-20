@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { Notice } from "@/components/admin/Field";
 import { LifecyclePanel } from "@/components/admin/LifecyclePanel";
@@ -28,8 +27,7 @@ export default async function EditPropertyPage({ params, searchParams }: Props) 
   const projects = own ? [...active, { ...own, name: `${own.name} (archived)` }] : active;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <AdminNav active="/admin/properties" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <Link href={prop.archived_at ? "/admin/properties?archived=1" : "/admin/properties"} className="text-sm text-stone-600 hover:underline">
         ← {prop.archived_at ? "Archived listings" : "All listings"}
       </Link>

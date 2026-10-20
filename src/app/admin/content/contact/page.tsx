@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { ContentTabs } from "@/components/admin/ContentTabs";
 import { Field, Notice } from "@/components/admin/Field";
@@ -19,8 +18,7 @@ export default async function ContactContentPage({ searchParams }: Props) {
   const [sp, company, offices] = await Promise.all([searchParams, getCompany(), getOffices()]);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <AdminNav active="/admin/content" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <h1 className="text-2xl font-bold">Website content</h1>
       <ContentTabs active="/admin/content/contact" />
       <p className="mt-4 text-sm text-stone-600">
@@ -33,7 +31,7 @@ export default async function ContactContentPage({ searchParams }: Props) {
       <Notice message={sp.saved ? SAVED[sp.saved] : undefined} />
       <FormError code={sp.error} />
 
-      <form id="company" action={saveContactAction} className="mt-6 scroll-mt-24 space-y-4 rounded-xl border bg-white p-6">
+      <form id="company" action={saveContactAction} className="mt-6 scroll-mt-24 space-y-4 admin-card p-6">
         <h2 className="font-semibold">Company contact details</h2>
         <Field label="Tagline (under the name in the footer)" name="tagline" defaultValue={company.tagline} maxLength={120} required />
         <div className="grid gap-4 sm:grid-cols-2">
@@ -41,15 +39,15 @@ export default async function ContactContentPage({ searchParams }: Props) {
           <Field label="WhatsApp number" name="whatsapp" type="tel" defaultValue={company.whatsapp} maxLength={30} required hint="e.g. +92 312 6711828" />
         </div>
         <p className="text-xs text-stone-500">The main phone number ({BRAND.phone}) is part of the site design; ask the developer to change it.</p>
-        <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+        <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
           Save contact details
         </button>
       </form>
 
       <h2 className="mt-8 text-lg font-semibold">Offices</h2>
-      <div className="mt-4 space-y-4">
+      <div className="mt-4 grid items-start gap-5 lg:grid-cols-3">
         {offices.map((o) => (
-          <form key={o.id} id={`o-${o.id}`} action={saveOfficeAction} className="scroll-mt-24 space-y-3 rounded-xl border bg-white p-5">
+          <form key={o.id} id={`o-${o.id}`} action={saveOfficeAction} className="scroll-mt-24 space-y-3 admin-card p-5">
             <input type="hidden" name="id" value={o.id} />
             <h3 className="font-semibold">
               {o.city}
@@ -60,7 +58,7 @@ export default async function ContactContentPage({ searchParams }: Props) {
               <Field label="Phone" name="phone" type="tel" defaultValue={o.phone} maxLength={40} />
               <Field label="Display order" name="sort_order" type="number" min={0} max={999} defaultValue={o.sort_order} />
             </div>
-            <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+            <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
               Save {o.city} office
             </button>
           </form>

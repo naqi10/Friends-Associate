@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { StaffTable } from "@/components/admin/StaffTable";
 import { getStaffRows } from "@/lib/data";
@@ -17,8 +16,7 @@ export default async function StaffPage({ searchParams }: Props) {
   const active = rows.filter((r) => r.active);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <AdminNav active="/admin/staff" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Staff</h1>
@@ -30,7 +28,7 @@ export default async function StaffPage({ searchParams }: Props) {
             .
           </p>
         </div>
-        <Link href="/admin/staff/new" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+        <Link href="/admin/staff/new" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
           Add staff member
         </Link>
       </div>
@@ -44,12 +42,12 @@ export default async function StaffPage({ searchParams }: Props) {
       )}
 
       <dl className="mt-6 grid gap-4 sm:grid-cols-4">
-        <div className="rounded-xl border bg-white p-4">
+        <div className="admin-card p-4">
           <dt className="text-sm text-stone-600">Active accounts</dt>
           <dd className="mt-1 text-2xl font-semibold">{active.length}</dd>
         </div>
         {STAFF_ROLES.map((role) => (
-          <div key={role} className="rounded-xl border bg-white p-4">
+          <div key={role} className="admin-card p-4">
             <dt className="text-sm text-stone-600">{ROLE_LABELS[role]}</dt>
             <dd className="mt-1 text-2xl font-semibold">{active.filter((r) => r.role === role).length}</dd>
           </div>

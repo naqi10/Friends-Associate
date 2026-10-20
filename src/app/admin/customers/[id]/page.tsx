@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { Field, Notice, SelectField } from "@/components/admin/Field";
@@ -34,8 +33,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
   if (!customer) notFound();
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <AdminNav active="/admin/customers" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <Link href="/admin/customers" className="text-sm text-stone-600 hover:underline">
         ← All customers
       </Link>
@@ -51,7 +49,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
           Read-only: you can view this customer but not change their account.
         </p>
       )}
-      <section className="mt-8 rounded-xl border bg-white p-6">
+      <section className="mt-8 admin-card p-6">
         <h2 className="font-semibold">Profile</h2>
         <form action={updateCustomerAction}>
           <fieldset disabled={!canEdit} className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -69,7 +67,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
           </label>
           <div className="sm:col-span-2">
             {canEdit && (
-              <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+              <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
                 Save profile
               </button>
             )}
@@ -79,7 +77,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
       </section>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
-        <section className="rounded-xl border bg-white p-6">
+        <section className="admin-card p-6">
           <h2 className="font-semibold">Document downloads</h2>
           {customer.documentDownloadPaidAt ? (
             <p className="mt-2 text-sm text-teal-800">
@@ -96,7 +94,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
             <input type="hidden" name="paid" value={customer.documentDownloadPaidAt ? "0" : "1"} />
             <button
               type="submit"
-              className={`rounded-md px-4 py-2 text-sm font-medium ${customer.documentDownloadPaidAt ? "border border-stone-300 text-stone-700 hover:bg-stone-50" : "bg-teal-800 text-white hover:bg-teal-900"}`}
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold ${customer.documentDownloadPaidAt ? "border-[1.5px] border-line-strong bg-white text-ink hover:bg-mist" : "bg-ink text-paper hover:bg-body"}`}
             >
               {customer.documentDownloadPaidAt ? "Lock downloads again" : "Mark fee paid and unlock"}
             </button>
@@ -105,13 +103,13 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
         </section>
 
         {canEdit && (
-        <section className="rounded-xl border bg-white p-6">
+        <section id="password" className="admin-card scroll-mt-24 p-6">
           <h2 className="font-semibold">Reset password</h2>
           <form action={resetCustomerPasswordAction} className="mt-4 space-y-3">
             <input type="hidden" name="id" value={customer.id} />
             <Field label="New password" name="password" type="password" required minLength={MIN_PASSWORD_LENGTH} autoComplete="new-password" />
             <Field label="Confirm new password" name="confirm" type="password" required autoComplete="new-password" />
-            <button type="submit" className="rounded-md border border-stone-300 px-4 py-2 text-sm font-medium hover:bg-stone-50">
+            <button type="submit" className="rounded-full border-[1.5px] border-line-strong bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-mist">
               Reset password
             </button>
           </form>
@@ -119,7 +117,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
         )}
       </div>
 
-      <section className="mt-6 rounded-xl border bg-white p-6">
+      <section className="mt-6 admin-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">
             Bookings ({bookings.length}/{MAX_BOOKINGS_PER_BUYER})
@@ -127,7 +125,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
           {can("bookings", "add") && customer.active && bookings.length < MAX_BOOKINGS_PER_BUYER && (
             <Link
               href={`/admin/bookings/new?buyer=${customer.id}`}
-              className="rounded-md bg-teal-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-900"
+              className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper hover:bg-body"
             >
               Add booking
             </Link>
@@ -160,7 +158,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
       </section>
 
       {can("users", "delete") && blockers && (
-        <section className="mt-6 rounded-xl border border-red-200 bg-white p-6">
+        <section className="mt-6 rounded-[28px] border-2 border-red-200 bg-white shadow-[0_18px_40px_-18px_rgb(14_14_14/0.28)] p-6">
           <h2 className="font-semibold text-red-800">Delete customer</h2>
           {blockers.bookings + blockers.payments + blockers.documents > 0 ? (
             <p className="mt-1 text-sm text-stone-600">

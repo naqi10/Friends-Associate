@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { ServiceForm } from "@/components/admin/ServiceForm";
@@ -19,8 +18,7 @@ export default async function EditServicePage({ params, searchParams }: Props) {
   if (!service) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <AdminNav active="/admin/content" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <Link href="/admin/services" className="text-sm text-stone-600 hover:underline">
         ← All services
       </Link>
@@ -28,7 +26,7 @@ export default async function EditServicePage({ params, searchParams }: Props) {
       <FormError code={sp.error} />
       <ServiceForm service={service} />
 
-      <form action={deleteServiceAction} className="mt-6 rounded-xl border border-red-200 bg-white p-6">
+      <form action={deleteServiceAction} className="mt-6 rounded-[28px] border-2 border-red-200 bg-white shadow-[0_18px_40px_-18px_rgb(14_14_14/0.28)] p-6">
         <input type="hidden" name="id" value={service.id} />
         <h2 className="font-semibold text-red-800">Delete this service</h2>
         <p className="mt-1 text-sm text-stone-600">

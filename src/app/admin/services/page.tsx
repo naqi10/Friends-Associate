@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { ContentTabs } from "@/components/admin/ContentTabs";
 import { Notice } from "@/components/admin/Field";
@@ -22,13 +21,12 @@ export default async function AdminServicesPage({ searchParams }: Props) {
   const [sp, services] = await Promise.all([searchParams, getAllServices()]);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <AdminNav active="/admin/content" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <h1 className="text-2xl font-bold">Website content</h1>
       <ContentTabs active="/admin/services" />
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-stone-600">Services on the Architecture and Construction pages, and in the contact form&apos;s service list.</p>
-        <Link href="/admin/services/new" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+        <Link href="/admin/services/new" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
           Add service
         </Link>
       </div>
@@ -50,7 +48,7 @@ export default async function AdminServicesPage({ searchParams }: Props) {
             {list.length === 0 ? (
               <p className="mt-2 text-sm text-stone-500">No services on this page yet.</p>
             ) : (
-              <ul className="mt-3 divide-y divide-stone-100 rounded-xl border bg-white">
+              <ul className="mt-3 divide-y divide-stone-100 admin-card">
                 {list.map((s) => (
                   <li key={s.id} id={`s-${s.id}`} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                     <div className="min-w-0">

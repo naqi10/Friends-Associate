@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { Notice } from "@/components/admin/Field";
 import { LifecyclePanel } from "@/components/admin/LifecyclePanel";
@@ -12,6 +11,7 @@ import { requireStaff } from "@/lib/permissions";
 export const metadata = { title: "Edit project" };
 
 const SAVED: Record<string, string> = {
+  duplicated: "Copy created: same details and stage names, progress at 0%, not published. Change the name and slug, then publish.",
   archived: "Project archived. It is hidden from the website.",
   restored: "Project restored. It is unpublished: tick Published and save when it is ready to go live.",
 };
@@ -25,8 +25,7 @@ export default async function EditProjectPage({ params, searchParams }: Props) {
   if (!p || !blockers) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <AdminNav active="/admin/projects" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <Link href={p.archived_at ? "/admin/projects?archived=1" : "/admin/projects"} className="text-sm text-stone-600 hover:underline">
         ← {p.archived_at ? "Archived projects" : "All projects"}
       </Link>

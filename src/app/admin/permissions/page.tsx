@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AdminNav } from "@/components/AdminNav";
 import { Notice } from "@/components/admin/Field";
 import { PermissionMatrix } from "@/components/admin/PermissionMatrix";
 import { ResetPermissionsButton } from "@/components/admin/ResetPermissionsButton";
@@ -25,8 +24,7 @@ export default async function PermissionsPage({ searchParams }: Props) {
         : `${sp.reset ? "Reset to defaults" : "Saved"}: ${savedCount} change${savedCount === 1 ? "" : "s"}. They apply immediately, without anyone logging out.`;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
-      <AdminNav active="/admin/permissions" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="max-w-3xl">
           <h1 className="text-2xl font-bold">Permissions</h1>

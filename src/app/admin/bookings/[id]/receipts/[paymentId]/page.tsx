@@ -18,7 +18,7 @@ export default async function AdminReceiptPage({ params }: Props) {
   if (!payment || payment.bookingId !== id) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 print:max-w-none print:p-0">
+    <div className="px-5 py-10 sm:px-[30px] print:max-w-none print:p-0">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Link href={`/admin/bookings/${id}`} className="text-sm text-stone-600 hover:underline">
           ← Back to booking

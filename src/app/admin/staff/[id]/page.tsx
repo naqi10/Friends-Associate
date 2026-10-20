@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminNav } from "@/components/AdminNav";
 import { FormError } from "@/components/FormError";
 import { Field, Notice, SelectField } from "@/components/admin/Field";
 import { resetStaffPasswordAction, updateStaffAction } from "@/lib/actions/staff";
@@ -27,8 +26,7 @@ export default async function StaffMemberPage({ params, searchParams }: Props) {
   const isSelf = member.id === actor.id;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <AdminNav active="/admin/staff" />
+    <div className="px-5 py-10 sm:px-[30px]">
       <Link href="/admin/staff" className="text-sm text-stone-600 hover:underline">
         ← All staff
       </Link>
@@ -44,7 +42,7 @@ export default async function StaffMemberPage({ params, searchParams }: Props) {
       <Notice message={sp.saved ? SAVED[sp.saved] : undefined} />
       <FormError code={sp.error} />
 
-      <section className="mt-8 rounded-xl border bg-white p-6">
+      <section className="mt-8 admin-card p-6">
         <h2 className="font-semibold">Account and role</h2>
         {isSelf && (
           <p className="mt-2 text-sm text-stone-600">
@@ -82,14 +80,14 @@ export default async function StaffMemberPage({ params, searchParams }: Props) {
             </label>
           )}
           <div className="sm:col-span-2">
-            <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+            <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
               Save
             </button>
           </div>
         </form>
       </section>
 
-      <section className="mt-6 rounded-xl border bg-white p-6">
+      <section className="mt-6 admin-card p-6">
         <h2 className="font-semibold">Reset password</h2>
         {isSelf ? (
           <p className="mt-2 text-sm text-stone-600">
@@ -105,7 +103,7 @@ export default async function StaffMemberPage({ params, searchParams }: Props) {
             <Field label="New temporary password" name="password" type="password" required minLength={MIN_PASSWORD_LENGTH} autoComplete="new-password" />
             <Field label="Confirm password" name="confirm" type="password" required autoComplete="new-password" />
             <div className="sm:col-span-2">
-              <button type="submit" className="rounded-md border border-stone-300 px-4 py-2 text-sm font-medium hover:bg-stone-50">
+              <button type="submit" className="rounded-full border-[1.5px] border-line-strong bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-mist">
                 Reset password and sign them out
               </button>
             </div>
