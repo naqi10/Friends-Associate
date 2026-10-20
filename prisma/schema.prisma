@@ -48,6 +48,8 @@ model Project {
   developer          String
   description        String
   status             String
+  /// Unpublished status change from the PM desk.
+  draftStatus        String?                 @map("draft_status")
   expectedCompletion String                  @map("expected_completion")
   contactPerson      String                  @map("contact_person")
   contactPhone       String                  @map("contact_phone")
@@ -76,6 +78,7 @@ model Project {
   properties         Property[]
   bookings           Booking[]
   documents          Document[]
+  updates            ProjectUpdate[]
 
   @@index([division, category])
   @@index([published, featured])
@@ -83,16 +86,18 @@ model Project {
 
 /// Named construction/design stages with their own percentage, e.g. "Grey structure 100%".
 model ProjectStage {
-  id         String   @id @default(uuid())
-  projectId  String   @map("project_id")
-  name       String
-  percent    Int
+  id           String   @id @default(uuid())
+  projectId    String   @map("project_id")
+  name         String
+  percent      Int
+  /// Unpublished value from the PM desk ("Save draft"); buyers keep seeing `percent` until published.
+  draftPercent Int?     @map("draft_percent")
   /// Optional target or achieved date, YYYY-MM-DD
-  targetDate String?  @map("target_date")
-  note       String   @default("")
-  sortOrder  Int      @default(0) @map("sort_order")
-  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
-  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  targetDate   String?  @map("target_date")
+  note         String   @default("")
+  sortOrder    Int      @default(0) @map("sort_order")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId, sortOrder])
 }
@@ -141,25 +146,30 @@ model Property {
 }
 
 model User {
-  id                     String     @id @default(uuid())
+  id                     String            @id @default(uuid())
   name                   String
-  email                  String     @unique
-  passwordHash           String     @map("password_hash")
+  email                  String            @unique
+  passwordHash           String            @map("password_hash")
   role                   String
   city                   String
   phone                  String
   cnic                   String
-  documentDownloadPaidAt DateTime?  @map("document_download_paid_at")
-  active                 Boolean    @default(true)
-  lastLoginAt            DateTime?  @map("last_login_at")
+  documentDownloadPaidAt DateTime?         @map("document_download_paid_at")
+  active                 Boolean           @default(true)
+  lastLoginAt            DateTime?         @map("last_login_at")
   sessions               Session[]
   auditLogs              AuditLog[]
   bookings               Booking[]
-  documents              Document[] @relation("BuyerDocuments")
-  assignedLeads          Lead[]     @relation("AssignedLeads")
-  payments               Payment[]  @relation("BuyerPayments")
-  recordedPayments       Payment[]  @relation("RecordedPayments")
-  reversedPayments       Payment[]  @relation("ReversedPayments")
+  documents              Document[]        @relation("BuyerDocuments")
+  assignedLeads          Lead[]            @relation("AssignedLeads")
+  payments               Payment[]         @relation("BuyerPayments")
+  recordedPayments       Payment[]         @relation("RecordedPayments")
+  reversedPayments       Payment[]         @relation("ReversedPayments")
+  convertedLeads         Lead[]            @relation("ConvertedLeads")
+  leadActivities         LeadActivity[]
+  notifications          Notification[]    @relation("UserNotifications")
+  projectUpdates         ProjectUpdate[]
+  documentVersions       DocumentVersion[]
 
   @@index([role])
 }
@@ -212,46 +222,49 @@ model Booking {
 
 /// One received instalment. Rows are never deleted: a mistake is reversed (status "reversed") so receipts stay traceable.
 model Payment {
-  id              String    @id @default(uuid())
+  id                String    @id @default(uuid())
   /// Human receipt number, shown as FA-R-000123.
-  receiptNo       Int       @unique @default(autoincrement()) @map("receipt_no")
-  bookingId       String    @map("booking_id")
+  receiptNo         Int       @unique @default(autoincrement()) @map("receipt_no")
+  bookingId         String    @map("booking_id")
   /// Copied from the booking so ownership checks never depend on a join.
-  userId          String    @map("user_id")
-  amountPkr       Int       @map("amount_pkr")
-  paidOn          String    @map("paid_on")
-  method          String
-  referenceNumber String    @default("") @map("reference_number")
-  remarks         String    @default("")
-  status          String    @default("received")
-  createdById     String?   @map("created_by_id")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  reversedAt      DateTime? @map("reversed_at")
-  reversedById    String?   @map("reversed_by_id")
-  reversalReason  String    @default("") @map("reversal_reason")
-  booking         Booking   @relation(fields: [bookingId], references: [id], onDelete: Restrict)
-  user            User      @relation("BuyerPayments", fields: [userId], references: [id])
-  createdBy       User?     @relation("RecordedPayments", fields: [createdById], references: [id], onDelete: SetNull)
-  reversedBy      User?     @relation("ReversedPayments", fields: [reversedById], references: [id], onDelete: SetNull)
+  userId            String    @map("user_id")
+  amountPkr         Int       @map("amount_pkr")
+  paidOn            String    @map("paid_on")
+  method            String
+  referenceNumber   String    @default("") @map("reference_number")
+  remarks           String    @default("")
+  /// Uploaded bank slip / cheque photo, kept as a private document of the buyer.
+  receiptDocumentId String?   @map("receipt_document_id")
+  status            String    @default("received")
+  createdById       String?   @map("created_by_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  reversedAt        DateTime? @map("reversed_at")
+  reversedById      String?   @map("reversed_by_id")
+  reversalReason    String    @default("") @map("reversal_reason")
+  booking           Booking   @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  user              User      @relation("BuyerPayments", fields: [userId], references: [id])
+  createdBy         User?     @relation("RecordedPayments", fields: [createdById], references: [id], onDelete: SetNull)
+  reversedBy        User?     @relation("ReversedPayments", fields: [reversedById], references: [id], onDelete: SetNull)
 
   @@index([bookingId, paidOn])
   @@index([userId])
 }
 
 model Document {
-  id          String   @id @default(uuid())
+  id          String            @id @default(uuid())
   audience    String
-  userId      String?  @map("user_id")
-  projectId   String?  @map("project_id")
+  userId      String?           @map("user_id")
+  projectId   String?           @map("project_id")
   name        String
   category    String
-  issuedOn    String   @map("issued_on")
+  issuedOn    String            @map("issued_on")
   version     String?
   status      String?
-  fileName    String   @map("file_name")
-  storagePath String?  @map("storage_path")
-  user        User?    @relation("BuyerDocuments", fields: [userId], references: [id])
-  project     Project? @relation(fields: [projectId], references: [id])
+  fileName    String            @map("file_name")
+  storagePath String?           @map("storage_path")
+  user        User?             @relation("BuyerDocuments", fields: [userId], references: [id])
+  project     Project?          @relation(fields: [projectId], references: [id])
+  versions    DocumentVersion[]
 
   @@index([userId, audience])
   @@index([audience, issuedOn])
@@ -273,36 +286,40 @@ model News {
 
 /// One pipeline for every enquiry: contact form, callback, sell request, investor interest, chatbot, manual.
 model Lead {
-  id           String                 @id @default(uuid())
-  name         String
-  phone        String
-  email        String                 @default("")
-  city         String
+  id              String                 @id @default(uuid())
+  name            String
+  phone           String
+  email           String                 @default("")
+  city            String
   /// Short summary shown in lists, e.g. "10 Marla villa" or "Petrol pump NOC"
-  interest     String
+  interest        String
   /// new | contacted | requirement_received | quotation_pending | quotation_sent | follow_up | converted | closed
-  status       String
+  status          String
   /// contact | callback | sell | investment | chatbot | manual
-  source       String                 @default("manual")
-  service      String                 @default("")
-  location     String                 @default("")
-  size         String                 @default("")
-  budget       String                 @default("")
-  message      String                 @default("")
+  source          String                 @default("manual")
+  service         String                 @default("")
+  location        String                 @default("")
+  size            String                 @default("")
+  budget          String                 @default("")
+  message         String                 @default("")
   /// JSON of structured answers (e.g. chatbot selections)
-  details      String?
-  propertyId   String?                @map("property_id")
-  projectId    String?                @map("project_id")
-  investmentId String?                @map("investment_id")
-  assignedToId String?                @map("assigned_to_id")
-  followUpDate String?                @map("follow_up_date")
-  notes        String                 @default("")
-  createdAt    DateTime               @default(now()) @map("created_at")
-  updatedAt    DateTime               @default(now()) @updatedAt @map("updated_at")
-  property     Property?              @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  project      Project?               @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  investment   InvestmentOpportunity? @relation(fields: [investmentId], references: [id], onDelete: SetNull)
-  assignedTo   User?                  @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
+  details         String?
+  propertyId      String?                @map("property_id")
+  projectId       String?                @map("project_id")
+  investmentId    String?                @map("investment_id")
+  assignedToId    String?                @map("assigned_to_id")
+  followUpDate    String?                @map("follow_up_date")
+  notes           String                 @default("")
+  /// The customer account this lead became (Convert to customer).
+  convertedUserId String?                @map("converted_user_id")
+  createdAt       DateTime               @default(now()) @map("created_at")
+  updatedAt       DateTime               @default(now()) @updatedAt @map("updated_at")
+  property        Property?              @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  project         Project?               @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  investment      InvestmentOpportunity? @relation(fields: [investmentId], references: [id], onDelete: SetNull)
+  assignedTo      User?                  @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
+  convertedUser   User?                  @relation("ConvertedLeads", fields: [convertedUserId], references: [id], onDelete: SetNull)
+  activities      LeadActivity[]
 
   @@index([status, city])
   @@index([source, createdAt])
@@ -328,6 +345,8 @@ model InvestmentOpportunity {
   paymentStructure     String    @map("payment_structure")
   /// Plain-language note about how returns work. Never a guaranteed figure.
   returnsNote          String    @map("returns_note")
+  /// Date the figures (minimum, target, timeline, returns note) were last checked (PROJECT_SPEC §16).
+  figuresReviewedOn    String?   @map("figures_reviewed_on")
   /// open | fully_subscribed | closed
   status               String    @default("open")
   published            Boolean   @default(true)
@@ -423,4 +442,66 @@ model LoginAttempt {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([key, createdAt])
+}
+
+/// Timeline of a lead: notes, stage changes, assignments, calls and WhatsApp taps.
+model LeadActivity {
+  id        String   @id @default(uuid())
+  leadId    String   @map("lead_id")
+  userId    String?  @map("user_id")
+  kind      String
+  text      String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([leadId, createdAt])
+}
+
+/// Messages to a buyer in their portal (PROJECT_SPEC §26): payment reminders, progress updates, documents.
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  type      String
+  title     String
+  message   String    @default("")
+  link      String    @default("")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+/// Site update posted from the PM desk (PROJECT_SPEC §17): text and photos, draft until published.
+model ProjectUpdate {
+  id          String    @id @default(uuid())
+  projectId   String    @map("project_id")
+  text        String    @default("")
+  /// JSON array of uploaded photo paths.
+  photos      String    @default("[]")
+  status      String    @default("draft")
+  createdById String?   @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  publishedAt DateTime? @map("published_at")
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status, publishedAt])
+}
+
+/// Earlier files of a document. Replacing a file never overwrites it silently (PROJECT_SPEC §62).
+model DocumentVersion {
+  id           String   @id @default(uuid())
+  documentId   String   @map("document_id")
+  version      String
+  fileName     String   @map("file_name")
+  storagePath  String   @map("storage_path")
+  uploadedById String?  @map("uploaded_by_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([documentId, createdAt])
 }
