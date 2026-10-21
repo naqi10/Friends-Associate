@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { HomeImage, Pill } from "@/components/home/HomeImage";
+import { propertyPath } from "@/lib/property-slug";
 
 export type HomeListing = {
   id: string;
+  slug: string | null;
   title: string;
   locality: string;
   city: string;
@@ -18,8 +20,8 @@ export type HomeListing = {
 type Tab = "sale" | "rent";
 
 /** "For sale / For rent" switch for the homepage properties section. Prices arrive pre-formatted from the server. */
-export function PropertiesToggle({ sale, rent }: { sale: HomeListing[]; rent: HomeListing[] }) {
-  const [tab, setTab] = useState<Tab>(sale.length || !rent.length ? "sale" : "rent");
+export function PropertiesToggle({ sale, rent, initial }: { sale: HomeListing[]; rent: HomeListing[]; initial?: Tab }) {
+  const [tab, setTab] = useState<Tab>(initial ?? (sale.length || !rent.length ? "sale" : "rent"));
   const items = tab === "sale" ? sale : rent;
   const tabs: { key: Tab; label: string }[] = [
     { key: "sale", label: "For sale" },
@@ -28,19 +30,25 @@ export function PropertiesToggle({ sale, rent }: { sale: HomeListing[]; rent: Ho
 
   return (
     <>
-      <div role="group" aria-label="Listing type" className="flex gap-1 rounded-full border border-ink p-1">
+      {/* Real links, so the switch works before JavaScript loads (slow mobile data); once loaded it switches instantly. */}
+      <nav aria-label="Listing type" className="flex gap-1 rounded-full border border-ink p-1">
         {tabs.map((t) => (
-          <button
+          <Link
             key={t.key}
-            type="button"
-            aria-pressed={tab === t.key}
-            onClick={() => setTab(t.key)}
-            className={`min-h-11 rounded-full px-5 text-sm font-semibold transition ${tab === t.key ? "bg-ink text-paper" : "text-ink hover:bg-mist"}`}
+            href={`/?listing=${t.key}#properties`}
+            scroll={false}
+            replace
+            aria-current={tab === t.key ? "true" : undefined}
+            onClick={(e) => {
+              e.preventDefault();
+              setTab(t.key);
+            }}
+            className={`flex min-h-11 items-center rounded-full px-5 text-sm font-semibold transition ${tab === t.key ? "bg-ink text-paper" : "text-ink hover:bg-mist"}`}
           >
             {t.label}
-          </button>
+          </Link>
         ))}
-      </div>
+      </nav>
 
       {/* Grid sits in the section below the heading row; rendered via a portal-free sibling slot. */}
       <div className="order-last basis-full">
@@ -57,7 +65,7 @@ export function PropertiesToggle({ sale, rent }: { sale: HomeListing[]; rent: Ho
             {items.map((l) => (
               <li key={l.id}>
                 <Link
-                  href={`/properties/${l.id}`}
+                  href={propertyPath(l)}
                   className="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-paper transition-transform duration-200 hover:-translate-y-1"
                 >
                   <HomeImage src={l.imagePath} alt={l.title} className="h-[220px]">

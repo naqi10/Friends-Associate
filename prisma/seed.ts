@@ -4,6 +4,7 @@ import { IDS } from "../src/lib/ids";
 import { HERO_DEFAULTS } from "../src/lib/content-defaults";
 import { DEFAULT_GRANTS } from "../src/lib/permission-catalog";
 import { applyRestructure } from "./sample-content";
+import { backfillPropertySlugs } from "../src/lib/property-slug";
 
 const prisma = new PrismaClient();
 const DEMO_PASSWORD_HASH = bcrypt.hashSync("Faryk@2026", 10);
@@ -216,7 +217,7 @@ async function main() {
     data: [
       { id: "bk1", userId: IDS.users.ahmed, propertyId: IDS.properties.lhrPlot, projectId: IDS.projects.lahore, status: "Instalments in progress", bookedOn: "2025-03-12", totalPricePkr: 98000000, paidPkr: 76222222, outstandingPkr: 21777778, paymentsReceived: 7, paymentsRemaining: 2, nextPaymentDate: "2026-10-15", nextPaymentAmountPkr: 10888889 },
       { id: "bk2", userId: IDS.users.fatima, propertyId: IDS.properties.khiApt, projectId: IDS.projects.karachi, status: "Finishing linked payments", bookedOn: "2024-11-02", totalPricePkr: 54000000, paidPkr: 40500000, outstandingPkr: 13500000, paymentsReceived: 6, paymentsRemaining: 2, nextPaymentDate: "2026-10-01", nextPaymentAmountPkr: 6750000 },
-      { id: "bk3", userId: IDS.users.bilal, propertyId: IDS.properties.rykHouse, projectId: IDS.projects.ryk, status: "Civil-stage booking", bookedOn: "2025-08-20", totalPricePkr: 18500000, paidPkr: 5550000, outstandingPkr: 12950000, paymentsReceived: 3, paymentsRemaining: 9, nextPaymentDate: "2026-10-20", nextPaymentAmountPkr: 1387500 },
+      { id: "bk3", userId: IDS.users.bilal, propertyId: IDS.properties.rykHouse, projectId: IDS.projects.ryk, status: "Civil-stage booking", bookedOn: "2025-08-20", totalPricePkr: 18500000, paidPkr: 5550000, outstandingPkr: 12950000, paymentsReceived: 3, paymentsRemaining: 9, nextPaymentDate: "2026-11-20", nextPaymentAmountPkr: 1387500 },
     ],
   });
 
@@ -314,6 +315,7 @@ async function main() {
   await prisma.rolePermission.createMany({ data: DEFAULT_GRANTS });
 
   await applyRestructure(prisma);
+  await backfillPropertySlugs(prisma);
   console.log("Seed complete.");
 }
 

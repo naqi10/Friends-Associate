@@ -4,7 +4,7 @@ import { ContentTabs } from "@/components/admin/ContentTabs";
 import { CheckboxField, Field, Notice, TextAreaField } from "@/components/admin/Field";
 import { PhotoPicker } from "@/components/admin/PhotoPicker";
 import { saveHeroAction, saveHomeExtrasAction } from "@/lib/actions/content";
-import { getHeroContent, getHeroMedia, getHomeExtras, getTestimonialRows } from "@/lib/data";
+import { getHeroContent, getHeroMedia, getHomeExtras, getProjects, getTestimonialRows } from "@/lib/data";
 import { hasRealImage } from "@/lib/media";
 import { requireAdmin } from "@/lib/permissions";
 
@@ -24,12 +24,13 @@ function CardHeading({ title, help }: { title: string; help?: string }) {
 
 export default async function AdminContentPage({ searchParams }: Props) {
   await requireAdmin();
-  const [sp, hero, media, extras, testimonials] = await Promise.all([
+  const [sp, hero, media, extras, testimonials, projects] = await Promise.all([
     searchParams,
     getHeroContent(),
     getHeroMedia(),
     getHomeExtras(),
     getTestimonialRows(),
+    getProjects(),
   ]);
 
   return (
@@ -99,6 +100,18 @@ export default async function AdminContentPage({ searchParams }: Props) {
                   maxLength={160}
                   hint="A short description for Google and for visitors who cannot see images."
                 />
+                <label className="block text-sm">
+                  <span className="font-medium text-stone-700">Project in this photo</span>
+                  <select name="badge_project_id" defaultValue={media.badgeProjectId} className="mt-1 w-full rounded-xl border border-line-strong bg-white px-3 py-2.5">
+                    <option value="">None: no progress badge on the photo</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="mt-1 block text-xs text-muted">Shows that project&apos;s name and progress on the photo. Only choose the project the photo really shows.</span>
+                </label>
               </div>
               <div className="space-y-3">
                 <PhotoPicker

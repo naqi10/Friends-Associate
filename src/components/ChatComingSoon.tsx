@@ -20,7 +20,7 @@ export function ChatComingSoon() {
         className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-2xl text-paper shadow-lg ring-2 ring-paper hover:bg-body md:bottom-6"
         aria-label={open ? "Close assistant" : "Open assistant"}
         aria-expanded={open}
-        aria-controls="fa-chat-soon"
+        aria-controls={open ? "fa-chat-soon" : undefined}
       >
         {open ? "✕" : "💬"}
       </button>

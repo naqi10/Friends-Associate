@@ -7,6 +7,7 @@ import { PropertyForm } from "@/components/admin/PropertyForm";
 import { deletePropertyAction } from "@/lib/actions/lifecycle";
 import { getProjectById, getProjects, getPropertyById, propertyBlockers } from "@/lib/data";
 import { requireStaff } from "@/lib/permissions";
+import { propertyPath } from "@/lib/property-slug";
 
 export const metadata = { title: "Edit listing" };
 
@@ -37,7 +38,7 @@ export default async function EditPropertyPage({ params, searchParams }: Props) 
           {prop.archived_at && <span className="ml-2 rounded-full bg-stone-200 px-2 py-0.5 align-middle text-xs font-medium text-stone-700">Archived</span>}
         </h1>
         {prop.published && (
-          <Link href={`/properties/${prop.id}`} className="text-sm text-teal-800 hover:underline" target="_blank">
+          <Link href={propertyPath(prop)} className="text-sm text-teal-800 hover:underline" target="_blank">
             View on site ↗
           </Link>
         )}

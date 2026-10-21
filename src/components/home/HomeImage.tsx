@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { VisualPlaceholder } from "@/components/VisualPlaceholder";
 import { focalPosition, hasRealImage } from "@/lib/media";
 
 /**
@@ -28,11 +29,12 @@ export function HomeImage({
 }) {
   const real = hasRealImage(src);
   return (
-    <div className={`relative overflow-hidden ${real ? "bg-ph" : dark ? "stripes-dark" : "stripes"} ${className}`}>
+    <div className={`relative overflow-hidden ${real ? "bg-ph" : ""} ${className}`}>
       {real ? (
         <Image src={src} alt={alt} fill sizes={sizes} preload={preload} className="object-cover" style={{ objectPosition: focalPosition(src, position) }} />
       ) : (
-        <span role="img" aria-label={alt} className="absolute inset-0" />
+        // Decorative: the card's title already names the item, so screen readers do not hear it twice.
+        <VisualPlaceholder dark={dark} className="absolute inset-0" />
       )}
       {children && <div className="relative flex h-full w-full">{children}</div>}
     </div>

@@ -81,7 +81,7 @@ export async function getLead(id: string) {
     where: { id },
     include: {
       assignedTo: { select: { id: true, name: true } },
-      property: { select: { id: true, title: true } },
+      property: { select: { id: true, slug: true, title: true } },
       project: { select: { slug: true, name: true } },
       investment: { select: { slug: true, title: true } },
       convertedUser: { select: { id: true, name: true } },

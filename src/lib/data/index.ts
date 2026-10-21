@@ -17,6 +17,7 @@ import {
   mapSettings,
   mapUser,
 } from "./mappers";
+import { uniquePropertySlug } from "../property-slug";
 
 // cache() dedupes these within one request: header, footer and page all ask for the company.
 export const getCompany = cache(async () => {
@@ -68,6 +69,14 @@ export async function getProperties({ archived = false } = {}) {
   const rows = await prisma.property.findMany({ where: { archivedAt: archived ? { not: null } : null }, orderBy: { title: "asc" } });
   return rows.map(mapProperty);
 }
+
+/** A listing by its web address: the slug, or (old links) its id. */
+export const getPropertyBySlugOrId = cache(async (key: string) => {
+  const row =
+    (await prisma.property.findUnique({ where: { slug: key } })) ??
+    (/^[0-9a-f-]{36}$/i.test(key) ? await prisma.property.findUnique({ where: { id: key } }) : null);
+  return row ? mapProperty(row) : undefined;
+});
 
 export const getPropertyById = cache(async (id: string) => {
   const row = await prisma.property.findUnique({ where: { id } });
@@ -326,6 +335,7 @@ export async function upsertProperty(data: Partial<Property> & { id?: string; pr
   const row = await prisma.property.create({
     data: {
       ...fields,
+      slug: await uniquePropertySlug(prisma, data.title, fields.locality ?? ""),
       type: fields.type ?? "Plot",
       city: fields.city ?? "Lahore",
       size: fields.size ?? "5 Marla",

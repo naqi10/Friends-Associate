@@ -4,7 +4,7 @@ import { answerLabel, fieldLabel, type Answers, type Flow, type Lang } from "./f
 
 const CITY_NAMES: Record<string, string> = { rahim_yar_khan: "Rahim Yar Khan", lahore: "Lahore", karachi: "Karachi" };
 
-export type ListingResult = { id: string; title: string; price: number; listingType: string; size: string; locality: string; city: string };
+export type ListingResult = { id: string; slug: string | null; title: string; price: number; listingType: string; size: string; locality: string; city: string };
 export type InvestmentResult = { slug: string; title: string; minimum: number; duration: string };
 
 /** Listings or investment opportunities that match the visitor's answers (properties flow only). */
@@ -47,7 +47,7 @@ export async function matchResults(answers: Answers): Promise<{ listings: Listin
   const rows = narrow.length ? narrow : await getPropertiesWithProject(base, 4);
   return {
     investments: [],
-    listings: rows.map((p) => ({ id: p.id, title: p.title, price: p.price_pkr, listingType: p.listing_type, size: p.size, locality: p.locality, city: p.city })),
+    listings: rows.map((p) => ({ id: p.id, slug: p.slug, title: p.title, price: p.price_pkr, listingType: p.listing_type, size: p.size, locality: p.locality, city: p.city })),
   };
 }
 

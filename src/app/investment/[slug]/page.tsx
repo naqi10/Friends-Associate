@@ -8,7 +8,7 @@ import { investmentInterestAction } from "@/lib/actions/leads";
 import { INVESTMENT_STATUSES, INVESTMENT_TYPES, labelOf } from "@/lib/catalog";
 import { getInvestmentBySlug } from "@/lib/data";
 import { formatDate, formatPkr } from "@/lib/format";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, metaDescription } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ sent?: string; error?: string }> };
 
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!i || !i.published) return { title: "Investment" };
   return pageMetadata({
     title: `Invest in ${i.title}, ${i.city}`,
-    description: `${i.summary} Minimum investment ${formatPkr(i.minimumInvestmentPkr)}. ${i.expectedDuration}.`,
+    description: metaDescription(`${i.summary} Minimum investment ${formatPkr(i.minimumInvestmentPkr)}. ${i.expectedDuration}.`),
     path: `/investment/${i.slug}`,
   });
 }
@@ -55,7 +55,7 @@ export default async function InvestmentDetailPage({ params, searchParams }: Pro
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_360px]">
         <div>
-          <h1 className="font-display text-4xl font-semibold">{i.title}</h1>
+          <h1 className="font-serif text-5xl leading-none text-balance">{i.title}</h1>
           <p className="mt-3 text-lg text-stone-600">{i.summary}</p>
           <p className="mt-6 whitespace-pre-line leading-relaxed text-stone-700">{i.description}</p>
           <dl className="mt-8 grid gap-4 rounded-xl border border-stone-200 bg-white p-5 sm:grid-cols-2">

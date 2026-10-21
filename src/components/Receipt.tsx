@@ -1,6 +1,7 @@
 import { BRAND } from "@/lib/brand";
 import type { getPaymentReceipt } from "@/lib/data";
 import { formatDate, receiptLabel, rupeesInWords } from "@/lib/format";
+import { Logo } from "@/components/Logo";
 
 type ReceiptData = NonNullable<Awaited<ReturnType<typeof getPaymentReceipt>>>;
 
@@ -30,6 +31,7 @@ export function Receipt({ payment, headOffice }: { payment: ReceiptData; headOff
       )}
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-4">
         <div>
+          <Logo variant="full" className="mb-3 w-[150px]" />
           <p className="font-serif text-2xl text-ink">{BRAND.name}</p>
           <p className="text-xs text-muted">{BRAND.tagline}</p>
           <p className="mt-1 text-xs text-muted">

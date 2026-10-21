@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FacebookIcon, InstagramIcon, YouTubeIcon } from "@/components/home/icons";
 import { BRAND } from "@/lib/brand";
 import { getCompany, getHomeExtras, getOffices } from "@/lib/data";
+import { Logo } from "@/components/Logo";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   {
@@ -51,7 +52,8 @@ export async function SiteFooter() {
       <div className="mx-auto max-w-[1280px] px-6 pt-20 pb-8">
         <div className="grid gap-10 border-b border-line-dark pb-14 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-4">
-            <span className="font-serif text-[32px] leading-none">{company.name}</span>
+            <Logo variant="full" light className="w-[210px]" />
+            <span className="font-serif text-[26px] leading-none">{company.name}</span>
             <span className="text-sm text-dim">{company.tagline}</span>
             <div className="mt-2 flex flex-col gap-2 text-sm">
               <a href={`tel:${BRAND.phoneIntl.replace(/\s/g, "")}`} className={LINK}>

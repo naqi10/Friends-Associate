@@ -2,7 +2,7 @@ import Image from "next/image";
 import { VisualPlaceholder } from "@/components/VisualPlaceholder";
 import { focalPosition, hasRealImage } from "@/lib/media";
 
-/** Uploaded photo when one exists, otherwise a labelled placeholder of the same size. */
+/** Uploaded photo when one exists, otherwise a decorative placeholder of the same size. */
 export function CoverImage({
   src,
   alt,
@@ -16,7 +16,7 @@ export function CoverImage({
   sizes?: string;
   preload?: boolean;
 }) {
-  if (!hasRealImage(src)) return <VisualPlaceholder label={alt} className={`w-full rounded-none ${className}`} />;
+  if (!hasRealImage(src)) return <VisualPlaceholder className={`w-full ${className}`} />;
   return (
     <div className={`relative w-full overflow-hidden bg-stone-200 ${className}`}>
       <Image src={src} alt={alt} fill sizes={sizes} preload={preload} className="object-cover" style={{ objectPosition: focalPosition(src) }} />

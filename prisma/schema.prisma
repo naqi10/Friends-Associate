@@ -115,6 +115,9 @@ model ProjectListItem {
 
 model Property {
   id          String    @id @default(uuid())
+  /// Public web address: /properties/<slug>. Set once when created and kept when the title changes,
+  /// so shared links never break. Null only for rows created before slugs (the page then uses the id).
+  slug        String?   @unique
   /// Null for standalone listings (resale/rental) that are not part of a company project.
   projectId   String?   @map("project_id")
   title       String

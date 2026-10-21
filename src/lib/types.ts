@@ -103,6 +103,8 @@ export interface Project {
 
 export interface Property {
   id: string;
+  /** Web address part: /properties/<slug>. Null only on rows from before slugs. */
+  slug: string | null;
   /** Null for standalone resale/rental listings. */
   project_id: string | null;
   title: string;

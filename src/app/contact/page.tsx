@@ -30,7 +30,7 @@ export default async function ContactPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
+      <h1 className="font-serif text-5xl leading-none text-balance">{page.title}</h1>
       {page.intro && <p className="mt-2 text-stone-600">{page.intro}</p>}
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_1.3fr]">
@@ -130,7 +130,7 @@ export default async function ContactPage({ searchParams }: Props) {
               mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })),
             })}
           />
-          <h2 id="faq-heading" className="font-display text-3xl font-semibold">
+          <h2 id="faq-heading" className="font-serif text-4xl leading-tight text-balance">
             Frequently asked questions
           </h2>
           <div className="mt-6 divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white">

@@ -42,3 +42,53 @@ export function jsonLd(data: unknown) {
 export function isSafeLink(url: string) {
   return /^\/(?![/\\])/.test(url) || /^https:\/\/[^\s]+$/.test(url);
 }
+
+/**
+ * A search/link-preview description that never stops mid-word: whole text if it fits in 160 characters,
+ * else up to the last full sentence, else the last whole word followed by "…".
+ */
+export function metaDescription(text: string | null | undefined, fallback = ""): string {
+  const s = (text ?? "").replace(/\s+/g, " ").trim() || fallback;
+  if (s.length <= 160) return s;
+  const head = s.slice(0, 160);
+  const sentence = head.match(/^.*[.!?](?=\s|$)/)?.[0];
+  if (sentence && sentence.length >= 80) return sentence;
+  return `${head.slice(0, 157).replace(/[\s,;:·—-]+\S*$/, "")}…`;
+}
+
+/** Home page description: a complete sentence of about 150–160 characters (Google / WhatsApp previews). */
+export const HOME_DESCRIPTION =
+  "Friends Associates: architecture, naqsha and NOC approvals, turnkey construction and property sales in Rahim Yar Khan, Lahore and Karachi. Call 0312-6711828.";
+
+const DAY: Record<string, string> = { mon: "Mo", tue: "Tu", wed: "We", thu: "Th", fri: "Fr", sat: "Sa", sun: "Su" };
+const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
+function to24(t: string) {
+  const m = t.trim().toLowerCase().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+  if (!m) return null;
+  let h = Number(m[1]);
+  if (m[3] === "pm" && h < 12) h += 12;
+  if (m[3] === "am" && h === 12) h = 0;
+  return h > 23 ? null : `${String(h).padStart(2, "0")}:${m[2] ?? "00"}`;
+}
+
+/**
+ * Turns the admin's office-hours text ("Mon–Sat, 9am–6pm") into schema.org opening hours.
+ * Anything it cannot read safely returns undefined, so Google never gets wrong hours.
+ */
+export function openingHoursSpec(text: string) {
+  const m = text.toLowerCase().match(/^([a-z]{3})[a-z]*\s*[-–to ]+\s*([a-z]{3})[a-z]*[\s,:]+(.+?)\s*[-–]\s*(.+?)\s*$/);
+  if (!m || !DAY[m[1]] || !DAY[m[2]]) return undefined;
+  const opens = to24(m[3]);
+  const closes = to24(m[4]);
+  if (!opens || !closes) return undefined;
+  const from = DAYS.indexOf(DAY[m[1]]);
+  const to = DAYS.indexOf(DAY[m[2]]);
+  if (to < from) return undefined;
+  return {
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].slice(from, to + 1),
+    opens,
+    closes,
+  };
+}

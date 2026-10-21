@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { HOME_BLOCK_KEYS, getHeroContent, getHeroMedia, saveContentBlock, writeAuditLog } from "@/lib/data";
 import { ImageError, optionalImage, removeImage, saveImage } from "@/lib/images";
 import { MEDIA_PREFIX } from "@/lib/media";
+import { prisma } from "@/lib/db";
 import { HERO_DEFAULTS, HERO_MEDIA_DEFAULTS } from "@/lib/content-defaults";
 import { requireAdmin } from "@/lib/permissions";
 import { isSafeLink } from "@/lib/seo";
@@ -75,7 +76,8 @@ export async function saveHeroAction(formData: FormData) {
     title: text(formData, "image_alt", 160) || HERO_MEDIA_DEFAULTS.title,
     subtitle: text(formData, "image2_alt", 160) || HERO_MEDIA_DEFAULTS.subtitle,
     imagePath: small.path,
-    description: "",
+    // The large photo's project (for its progress badge). Only a real project id is stored.
+    description: (await prisma.project.findUnique({ where: { id: text(formData, "badge_project_id", 64) || "-" }, select: { id: true } }))?.id ?? "",
     buttonText: "",
     buttonUrl: "",
     secondaryButtonText: "",

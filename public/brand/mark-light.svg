@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 472 391" role="img" aria-label="FARYK">
+<defs>
+<radialGradient id="fa-roof" gradientUnits="userSpaceOnUse" cx="288" cy="178" r="330"><stop offset="0" stop-color="#d4a85a"/><stop offset=".55" stop-color="#bb8f4c"/><stop offset="1" stop-color="#a47c43"/></radialGradient>
+<linearGradient id="fa-t1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a47d43"/><stop offset="1" stop-color="#b48b49"/></linearGradient>
+<linearGradient id="fa-t2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ebc06e"/><stop offset=".5" stop-color="#d2a659"/><stop offset="1" stop-color="#bf934c"/></linearGradient>
+</defs>
+<path fill="#f5f5f3" d="M6 6L365 6L304.5 82L86 82L86 145L287.75 145L205.5 214L86 214L86 312L6 370Z"/>
+<path fill="url(#fa-roof)" d="M4.5 384L288 178L421 279L421 124L466.25 159L466.25 360.75L284 226.25L48.5 384Z"/>
+<path fill="url(#fa-t1)" d="M340 84L375 55.5L375 225L340 198Z"/>
+<path fill="url(#fa-t2)" d="M381 54.75L407 78.75L407 250.25L381 230.25Z"/>
+<path fill="#b68a48" d="M248 282h29v29h-29ZM288 282h29v29h-29ZM248 321h29v29h-29ZM288 321h29v29h-29Z"/>
+</svg>

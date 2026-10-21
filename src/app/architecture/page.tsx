@@ -5,7 +5,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Architecture, drawings & NOC consultancy",
   description:
-    "House planning, 2D/3D drawings, structural drawings, soil investigation, BOQ and NOC/approval consultancy for petrol pumps, LPG plants, mills and factories — Friends Associates, Rahim Yar Khan.",
+    "House plans, 2D/3D drawings, structural design, BOQ and NOC approvals for petrol pumps, LPG plants and factories by Friends Associates, Rahim Yar Khan.",
   path: "/architecture",
 });
 

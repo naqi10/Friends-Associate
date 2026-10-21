@@ -20,13 +20,14 @@ export const getHeroContent = cache(async (): Promise<ContentBlockData> => {
   return row ?? { ...HERO_DEFAULTS };
 });
 
-export type HeroMedia = { mainAlt: string; secondImage: string; secondAlt: string };
+/** `badgeProjectId`: the project the large photo shows; its progress badge is drawn on the photo. Empty = no badge. */
+export type HeroMedia = { mainAlt: string; secondImage: string; secondAlt: string; badgeProjectId: string };
 
 /** Second hero photo and the alt texts for both hero photos. */
 export const getHeroMedia = cache(async (): Promise<HeroMedia> => {
   const row = await prisma.contentBlock.findUnique({ where: { key: HERO_MEDIA_DEFAULTS.key } });
   const src = row ?? HERO_MEDIA_DEFAULTS;
-  return { mainAlt: src.title, secondImage: src.imagePath, secondAlt: src.subtitle };
+  return { mainAlt: src.title, secondImage: src.imagePath, secondAlt: src.subtitle, badgeProjectId: "description" in src ? src.description : "" };
 });
 
 export async function saveContentBlock(data: ContentBlockData) {
@@ -83,4 +84,10 @@ export async function getTestimonialRows() {
     const r = rows.find((x) => x.key === key);
     return { key, quote: r?.title ?? "", name: r?.subtitle ?? "", project: r?.description ?? "" };
   });
+}
+
+/** Name + progress for the hero photo badge; undefined if the project is hidden, archived or gone. */
+export async function getPublicProjectBadge(id: string) {
+  const p = await prisma.project.findFirst({ where: { id, published: true, archivedAt: null }, select: { name: true, progressPercent: true } });
+  return p ? { name: p.name, progress_percent: p.progressPercent } : undefined;
 }

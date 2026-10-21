@@ -7,6 +7,7 @@ import { CITIES } from "@/lib/constants";
 import { duplicateProject, propertiesWithActiveBooking, writeAuditLog } from "@/lib/data";
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/permissions";
+import { backfillPropertySlugs } from "@/lib/property-slug";
 
 function text(formData: FormData, key: string, max = 200) {
   return String(formData.get(key) ?? "").trim().slice(0, max);
@@ -221,6 +222,7 @@ export async function importPropertiesAction(_prev: ImportResult | null, formDat
 
   if (errors.length) return { ok: false, created: 0, errors: errors.slice(0, 50) };
   await prisma.$transaction(data.map((d) => prisma.property.create({ data: d })));
+  await backfillPropertySlugs(prisma);
   await writeAuditLog({ userId: user.id, action: "import", module: "properties", newValue: { rows: data.length, file: file.name } });
   revalidateSite();
   return { ok: true, created: data.length, errors: [] };

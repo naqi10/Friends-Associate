@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Properties — buy, rent or sell",
   description:
-    "Houses, plots, apartments, shops and offices for sale and rent in Rahim Yar Khan and beyond. Filter by budget, size in Marla and locality, or list your own property with Friends Associates.",
+    "Houses, plots, apartments, shops and offices for sale and rent in Rahim Yar Khan, Lahore and Karachi. Filter by budget, size and area, or list your own.",
   path: "/properties",
 });
 
@@ -37,7 +37,7 @@ export default async function PropertiesPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
+      <h1 className="font-serif text-5xl leading-none text-balance">{page.title}</h1>
       {page.intro && <p className="mt-3 max-w-2xl text-stone-600">{page.intro}</p>}
       <nav aria-label="Property listings" className="mt-6 flex gap-2 border-b border-stone-200">
         {TABS.map((t) => (
@@ -179,7 +179,7 @@ async function SellPanel({ sent, error }: { sent?: string; error?: string }) {
   return (
     <section id="enquiry" className="mt-8 grid scroll-mt-24 gap-10 lg:grid-cols-[1fr_1.2fr]">
       <div>
-        <h2 className="font-display text-3xl font-semibold">{sell.title}</h2>
+        <h2 className="font-serif text-4xl leading-tight text-balance">{sell.title}</h2>
         {sell.intro && <p className="mt-3 text-stone-600">{sell.intro}</p>}
         <ul className="mt-6 space-y-2 text-sm text-stone-700">
           <li>✓ Free initial consultation</li>

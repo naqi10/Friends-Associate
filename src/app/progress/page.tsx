@@ -20,7 +20,7 @@ export default async function ProgressPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
+      <h1 className="font-serif text-5xl leading-none text-balance">{page.title}</h1>
       {page.intro && <p className="mt-3 max-w-2xl text-stone-600">{page.intro}</p>}
 
       <nav aria-label="Jump to category" className="mt-6 flex flex-wrap gap-2 text-sm">

@@ -14,7 +14,7 @@ import {
   getPropertiesWithProject,
 } from "@/lib/data";
 import { formatPkr } from "@/lib/format";
-import { absoluteUrl, jsonLd, pageMetadata } from "@/lib/seo";
+import { absoluteUrl, jsonLd, pageMetadata, metaDescription } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ sent?: string; error?: string }> };
 
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!p || !p.published) return { title: "Project" };
   return pageMetadata({
     title: p.seo_title ?? `${p.name} — ${labelOf(PROJECT_CATEGORIES, p.category)} project, ${p.city}`,
-    description: p.seo_description ?? p.description.slice(0, 160),
+    description: metaDescription(p.seo_description || p.description, `${p.name} by Friends Associates.`),
     path: `/projects/${p.slug}`,
   });
 }
@@ -83,7 +83,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
           <p className="text-xs font-semibold uppercase tracking-wider text-teal-800">
             {division?.label} · {labelOf(PROJECT_CATEGORIES, project.category)}
           </p>
-          <h1 className="mt-1 font-display text-4xl font-semibold">{project.name}</h1>
+          <h1 className="mt-1 font-serif text-5xl leading-none text-balance">{project.name}</h1>
           <p className="mt-2 text-stone-600">
             {[project.location, project.city].filter(Boolean).join(", ")} · {project.developer}
           </p>

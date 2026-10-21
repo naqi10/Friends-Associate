@@ -5,7 +5,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Construction, waterproofing & construction chemicals",
   description:
-    "Grey structure and turnkey construction, renovation, waterproofing and construction chemicals for homes, commercial and industrial projects — Friends Associates, Rahim Yar Khan.",
+    "Grey structure and turnkey construction, renovation and waterproofing for homes, commercial and industrial buildings by Friends Associates, Rahim Yar Khan.",
   path: "/construction",
 });
 

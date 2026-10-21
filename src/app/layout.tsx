@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Instrument_Serif, Noto_Nastaliq_Urdu, Playfair_Display } from "next/font/google";
+import { Geist, Instrument_Serif, Noto_Nastaliq_Urdu } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ChatComingSoon } from "@/components/ChatComingSoon";
@@ -7,16 +7,11 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { isEnabled } from "@/lib/release";
 import { Providers } from "@/components/Providers";
 import { PublicChrome } from "@/components/PublicChrome";
-import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { DEFAULT_OG_IMAGE, HOME_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
@@ -37,14 +32,7 @@ const instrument = Instrument_Serif({
   display: "swap",
 });
 
-const display = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const description =
-  "Friends Associates (faryk.com) — architecture, construction, consultancy and properties in Rahim Yar Khan and across Pakistan.";
+const description = HOME_DESCRIPTION;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -79,19 +67,19 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1c1917",
+  themeColor: "#0e0e0e",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${display.variable} ${instrument.variable} ${urdu.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${instrument.variable} ${urdu.variable} h-full antialiased`}
       // Browser extensions (Grammarly, ColorZilla, translators) add attributes here before React loads.
       // This only ignores attribute differences on these two elements, not on anything inside them.
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col bg-stone-50 text-stone-900" suppressHydrationWarning>
+      <body className="flex min-h-full flex-col bg-canvas font-sans text-ink" suppressHydrationWarning>
         <Providers>
           <a
             href="#main"

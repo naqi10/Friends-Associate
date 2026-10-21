@@ -108,6 +108,7 @@ export function mapListItem(l: DbListItem): ProjectListItem {
 export function mapProperty(p: DbProperty): Property {
   return {
     id: p.id,
+    slug: p.slug,
     project_id: p.projectId,
     title: p.title,
     type: p.type as Property["type"],

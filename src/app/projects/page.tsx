@@ -28,7 +28,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
+        <h1 className="font-serif text-5xl leading-none text-balance">{page.title}</h1>
         <Link href="/progress" className="text-sm font-medium text-teal-800 hover:underline">
           See construction progress by category →
         </Link>

@@ -9,6 +9,7 @@ import { updateLeadAction } from "@/lib/actions/leads";
 import { LEAD_SOURCES, LEAD_STATUSES, labelOf } from "@/lib/catalog";
 import { getAssignableStaff, getLead } from "@/lib/data";
 import { requireStaff } from "@/lib/permissions";
+import { propertyPath } from "@/lib/property-slug";
 
 export const metadata: Metadata = { title: "Lead", robots: { index: false, follow: false } };
 
@@ -84,7 +85,7 @@ export default async function LeadPage({ params, searchParams }: Props) {
           )}
           <div className="mt-6 flex flex-wrap gap-4 text-sm">
             {lead.property && (
-              <Link href={`/properties/${lead.property.id}`} className="text-teal-800 underline" target="_blank">
+              <Link href={propertyPath(lead.property)} className="text-teal-800 underline" target="_blank">
                 Listing: {lead.property.title}
               </Link>
             )}

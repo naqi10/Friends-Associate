@@ -1,30 +1,36 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { CoverImage } from "@/components/public/CoverImage";
 import { CallbackForm } from "@/components/public/EnquiryForms";
 import { formatPkr } from "@/lib/format";
-import { getProjectById, getPropertyById } from "@/lib/data";
+import { getProjectById, getPropertyBySlugOrId } from "@/lib/data";
+import { propertyPath } from "@/lib/property-slug";
 import { pageMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ sent?: string; error?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const p = await getPropertyById(id);
+  const p = await getPropertyBySlugOrId(id);
   if (!p || !p.published) return { title: "Property" };
   const deal = p.listing_type === "rent" ? "for rent" : "for sale";
   return pageMetadata({
     title: `${p.title} ${deal}, ${p.locality || p.city}`,
     description: `${p.type} · ${p.size} ${deal} in ${[p.locality, p.city].filter(Boolean).join(", ")} — ${formatPkr(p.price_pkr)}${p.listing_type === "rent" ? " per month" : ""}. Contact Friends Associates.`,
-    path: `/properties/${p.id}`,
+    path: propertyPath(p),
   });
 }
 
 export default async function PropertyDetailPage({ params, searchParams }: Props) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const property = await getPropertyById(id);
+  const property = await getPropertyBySlugOrId(id);
   if (!property || !property.published) notFound();
+  // Old /properties/<uuid> links move permanently to the readable address (keeping ?sent= etc.).
+  if (property.slug && id !== property.slug) {
+    const qs = new URLSearchParams(Object.entries(sp).filter((e): e is [string, string] => typeof e[1] === "string")).toString();
+    permanentRedirect(`${propertyPath(property)}${qs ? `?${qs}` : ""}`);
+  }
   const project = property.project_id ? await getProjectById(property.project_id) : undefined;
   const rent = property.listing_type === "rent";
 
@@ -56,7 +62,7 @@ export default async function PropertyDetailPage({ params, searchParams }: Props
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px]">
         <div>
-          <h1 className="font-display text-4xl font-semibold">{property.title}</h1>
+          <h1 className="font-serif text-5xl leading-none text-balance">{property.title}</h1>
           <p className="mt-3 text-3xl font-semibold text-teal-900">
             {formatPkr(property.price_pkr)}
             {rent && <span className="text-lg font-normal text-stone-500"> / month</span>}
@@ -85,7 +91,7 @@ export default async function PropertyDetailPage({ params, searchParams }: Props
         </div>
         <aside>
           <CallbackForm
-            returnTo={`/properties/${property.id}`}
+            returnTo={propertyPath(property)}
             propertyId={property.id}
             sent={sp.sent}
             error={sp.error}

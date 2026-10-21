@@ -11,6 +11,7 @@ import {
   getHeroContent,
   getHeroMedia,
   getHomeExtras,
+  getPublicProjectBadge,
   getLatestNews,
   getOffices,
   getProjectCategoryCounts,
@@ -19,13 +20,13 @@ import {
   getSiteStats,
 } from "@/lib/data";
 import { formatDate, formatPKR, plural } from "@/lib/format";
-import { SITE_URL, absoluteUrl, jsonLd, pageMetadata } from "@/lib/seo";
+import { HOME_DESCRIPTION, SITE_URL, absoluteUrl, jsonLd, openingHoursSpec, pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const hero = await getHeroContent();
   return pageMetadata({
     title: `${BRAND.name} — Architecture, Construction & Properties in ${BRAND.city}`,
-    description: hero.description.slice(0, 160),
+    description: HOME_DESCRIPTION,
     path: "/",
   });
 }
@@ -62,7 +63,8 @@ const TRUST = [
   { title: "Three city offices", text: "Rahim Yar Khan head office, with teams in Lahore and Karachi." },
 ];
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ listing?: string }> }) {
+  const { listing } = await searchParams;
   // Independent queries in parallel; each fetches only the rows this page shows.
   const [company, offices, hero, heroMedia, stats, featured, forSale, forRent, latest, counts, investments, extras] = await Promise.all([
     getCompany(),
@@ -83,10 +85,12 @@ export default async function HomePage() {
   const otherCities = offices.filter((o) => o.id !== head?.id).map((o) => o.city);
   const whatsapp = `https://wa.me/${company.whatsapp.replace(/\D/g, "")}`;
   const tel = `tel:${BRAND.phoneIntl.replace(/\s/g, "")}`;
-  const [lead] = featured;
+  // The badge belongs to the photo: only the project the admin says the large photo shows, if it is public.
+  const lead = heroMedia.badgeProjectId ? await getPublicProjectBadge(heroMedia.badgeProjectId) : undefined;
 
   const toListing = (p: (typeof forSale)[number]): HomeListing => ({
     id: p.id,
+    slug: p.slug,
     title: p.title,
     locality: p.locality,
     city: p.city,
@@ -96,19 +100,36 @@ export default async function HomePage() {
     imagePath: p.image_path,
   });
 
+  const hours = openingHoursSpec(extras.hours);
+  const region = (city: string) => (city === "Karachi" ? "Sindh" : "Punjab");
+  // One entry per office: the head office is the main business, Lahore and Karachi are its branches.
+  const officeLd = (o: (typeof offices)[number]) => ({
+    "@type": ["GeneralContractor", "RealEstateAgent"],
+    name: `${company.name} — ${o.city}`,
+    telephone: o.phone,
+    address: { "@type": "PostalAddress", streetAddress: o.address, addressLocality: o.city, addressRegion: region(o.city), addressCountry: "PK" },
+    hasMap: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.name} ${o.address} ${o.city}`)}`,
+    ...(hours ? { openingHoursSpecification: [hours] } : {}),
+  });
   const organization = {
     "@context": "https://schema.org",
     "@type": ["Organization", "GeneralContractor", "RealEstateAgent"],
+    "@id": `${SITE_URL}/#organization`,
     name: company.name,
     alternateName: BRAND.domain,
     url: SITE_URL,
+    logo: absoluteUrl("/logo.png"),
     email: company.email,
     telephone: BRAND.phoneIntl,
     slogan: company.tagline,
-    description: hero.description,
+    description: HOME_DESCRIPTION,
     image: absoluteUrl("/images/og-default.jpg"),
-    address: { "@type": "PostalAddress", streetAddress: head?.address, addressLocality: BRAND.city, addressRegion: "Punjab", addressCountry: "PK" },
-    areaServed: ["Rahim Yar Khan", "Punjab", "Pakistan"],
+    priceRange: "PKR",
+    ...(head ? { address: officeLd(head).address, hasMap: officeLd(head).hasMap } : {}),
+    ...(hours ? { openingHoursSpecification: [hours] } : {}),
+    department: offices.filter((o) => o.id !== head?.id).map(officeLd),
+    areaServed: ["Rahim Yar Khan", "Lahore", "Karachi", "Punjab", "Sindh", "Pakistan"],
+    sameAs: Object.values(extras.social).filter(Boolean),
     knowsAbout: ["Architecture", "Construction", "Petrol pump NOC", "LPG plant consultancy", "Cost estimation", "Waterproofing", "Real estate"],
   };
 
@@ -180,7 +201,7 @@ export default async function HomePage() {
             >
               {lead && (
                 <div className="flex w-full items-end justify-end p-5">
-                  {/* Live data from the first featured project, named so it never reads as a caption for the photo. */}
+                  {/* Live progress of the project shown in this photo (Admin → Website content). */}
                   <Pill>
                     {lead.name} · {lead.progress_percent}%
                   </Pill>
@@ -208,11 +229,12 @@ export default async function HomePage() {
 
       {/* 4. Ticker */}
       <div className="overflow-hidden border-y border-ink" aria-label="What we do">
-        <ul className="flex flex-wrap justify-center gap-x-10 gap-y-2 px-6 py-[18px] font-serif text-[clamp(22px,2.6vw,28px)] italic">
+        {/* Stars only where the strip fits on one line; when it wraps, no line may start with a separator. */}
+        <ul className="flex flex-wrap justify-center gap-x-7 gap-y-1 px-6 py-[18px] font-serif text-[clamp(22px,2.6vw,28px)] italic 2xl:gap-x-10">
           {TICKER.map((item, i) => (
             <li key={item} className="flex items-center gap-10 whitespace-nowrap">
               {i > 0 && (
-                <span aria-hidden className="text-star not-italic">
+                <span aria-hidden className="hidden text-star not-italic 2xl:inline">
                   ✦
                 </span>
               )}
@@ -353,7 +375,7 @@ export default async function HomePage() {
       </section>
 
       {/* 9. Properties */}
-      <section aria-labelledby="properties-title" className={SECTION}>
+      <section id="properties" aria-labelledby="properties-title" className={`${SECTION} scroll-mt-24`}>
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-10">
           <div>
             <p className={`mb-4 ${EYEBROW} text-muted`}>Properties</p>
@@ -361,7 +383,7 @@ export default async function HomePage() {
               Find your next address
             </h2>
           </div>
-          <PropertiesToggle sale={forSale.map(toListing)} rent={forRent.map(toListing)} />
+          <PropertiesToggle sale={forSale.map(toListing)} rent={forRent.map(toListing)} initial={listing === "rent" ? "rent" : listing === "sale" ? "sale" : undefined} />
         </div>
       </section>
 

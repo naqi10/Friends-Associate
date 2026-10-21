@@ -16,6 +16,7 @@ import {
   type Lang,
 } from "@/lib/chatbot/flow";
 import { formatPkr } from "@/lib/format";
+import { propertyPath } from "@/lib/property-slug";
 
 type View = "lang" | "menu" | "flow" | "done";
 type Bubble = { role: "user" | "bot"; text: string };
@@ -196,7 +197,7 @@ export function ChatWidget() {
         className="fixed bottom-20 right-4 z-50 flex h-14 w-14 md:bottom-6 items-center justify-center rounded-full bg-ink text-2xl text-paper shadow-lg ring-2 ring-paper hover:bg-body"
         aria-label={open ? "Close assistant" : "Open assistant"}
         aria-expanded={open}
-        aria-controls="fa-chat"
+        aria-controls={open ? "fa-chat" : undefined}
       >
         {open ? "✕" : "💬"}
       </button>
@@ -461,7 +462,7 @@ function ResultsList({ results, loading, tx }: { results: Results | null; loadin
     <ul className="mt-3 space-y-2">
       {results.listings.map((l) => (
         <li key={l.id}>
-          <Link href={`/properties/${l.id}`} className="block rounded-lg border border-stone-200 p-2 hover:border-teal-500">
+          <Link href={propertyPath(l)} className="block rounded-lg border border-stone-200 p-2 hover:border-teal-500">
             <p className="text-sm font-medium">{l.title}</p>
             <p className="text-xs text-stone-500" dir="ltr">
               {l.size} · {[l.locality, l.city].filter(Boolean).join(", ")}

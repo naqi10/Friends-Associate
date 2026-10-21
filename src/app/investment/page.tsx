@@ -10,7 +10,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Investment opportunities",
   description:
-    "Invest in the development of commercial plazas, residential homes, shops and markets with Friends Associates, Rahim Yar Khan. Minimum investment, timelines and terms for each project.",
+    "Invest in commercial plazas, homes, shops and markets with Friends Associates, Rahim Yar Khan. See the minimum investment, timeline and terms of each project.",
   path: "/investment",
 });
 
@@ -18,7 +18,7 @@ export default async function InvestmentPage() {
   const [items, page] = await Promise.all([getPublishedInvestments(), getPageContent("page.investment")]);
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-display text-4xl font-semibold">{page.title}</h1>
+      <h1 className="font-serif text-5xl leading-none text-balance">{page.title}</h1>
       {page.intro && <p className="mt-3 max-w-2xl text-stone-600">{page.intro}</p>}
       <div className="mt-6">
         <InvestmentDisclosure />

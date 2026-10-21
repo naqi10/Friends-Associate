@@ -7,6 +7,7 @@ import { bulkPropertyAction, setPropertyStatusAction, togglePropertyPublishedAct
 import { countArchivedProperties, getPropertyDirectory, type PropertyRow } from "@/lib/data";
 import { formatPkr, formatPkrShort } from "@/lib/format";
 import { requireStaffAny } from "@/lib/permissions";
+import { propertyPath } from "@/lib/property-slug";
 
 export const metadata = { title: "Properties" };
 
@@ -111,7 +112,7 @@ export default async function AdminPropertiesPage({ searchParams }: Props) {
             </button>
           </form>
           {p.published && (
-            <Link href={`/properties/${p.id}`} target="_blank" className="block rounded-xl px-3 py-2 hover:bg-mist">
+            <Link href={propertyPath(p)} target="_blank" className="block rounded-xl px-3 py-2 hover:bg-mist">
               View on website ↗
             </Link>
           )}

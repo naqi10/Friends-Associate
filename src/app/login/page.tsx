@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Logo } from "@/components/Logo";
 import { loginAction } from "@/lib/actions/auth";
 import { DEMO_PASSWORD } from "@/lib/constants";
 
@@ -13,6 +14,7 @@ export default async function LoginPage({ searchParams }: Props) {
   const sp = await searchParams;
   return (
     <div className="mx-auto max-w-md px-4 py-16">
+      <Logo variant="full" priority className="mx-auto mb-8 w-[220px]" />
       <h1 className="text-2xl font-bold">Login</h1>
       {sp.error === "1" && <p className="mt-2 text-sm text-red-600">Invalid email or password.</p>}
       {sp.error === "soon" && (

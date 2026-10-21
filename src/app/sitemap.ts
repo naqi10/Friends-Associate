@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { absoluteUrl } from "@/lib/seo";
+import { propertyPath } from "@/lib/property-slug";
 
 // Rebuilt at most hourly so new projects, units and news appear without a deploy.
 export const revalidate = 3600;
@@ -25,7 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     rows = await Promise.all([
       prisma.project.findMany({ where: { published: true }, select: { slug: true } }),
-      prisma.property.findMany({ where: { published: true }, select: { id: true } }),
+      prisma.property.findMany({ where: { published: true, archivedAt: null }, select: { id: true, slug: true } }),
       prisma.news.findMany({ select: { slug: true, publishedOn: true } }),
       prisma.investmentOpportunity.findMany({ where: { published: true }, select: { slug: true, updatedAt: true } }),
     ]);
@@ -40,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticEntries,
     ...projects.map((p) => ({ url: absoluteUrl(`/projects/${p.slug}`), changeFrequency: "weekly" as const, priority: 0.8 })),
-    ...properties.map((p) => ({ url: absoluteUrl(`/properties/${p.id}`), changeFrequency: "weekly" as const, priority: 0.7 })),
+    ...properties.map((p) => ({ url: absoluteUrl(propertyPath(p)), changeFrequency: "weekly" as const, priority: 0.7 })),
     ...investments.map((i) => ({ url: absoluteUrl(`/investment/${i.slug}`), lastModified: i.updatedAt, priority: 0.7 })),
     ...news.map((n) => ({ url: absoluteUrl(`/news/${n.slug}`), lastModified: new Date(n.publishedOn), priority: 0.5 })),
   ];

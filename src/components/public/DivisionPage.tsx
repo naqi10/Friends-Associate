@@ -22,7 +22,7 @@ export async function DivisionPage({ division, category }: { division: Division;
       <section className="border-b border-stone-200 bg-gradient-to-br from-stone-100 to-teal-50">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{BRAND.name}</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold md:text-5xl">{page.title}</h1>
+          <h1 className="mt-2 font-serif text-5xl leading-none text-balance md:text-6xl">{page.title}</h1>
           {page.intro && <p className="mt-4 max-w-2xl text-lg text-stone-600">{page.intro}</p>}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/contact#enquiry" className="rounded-md bg-amber-500 px-5 py-2.5 text-sm font-semibold text-stone-950 hover:bg-amber-400">
@@ -42,7 +42,7 @@ export async function DivisionPage({ division, category }: { division: Division;
 
       {services.length > 0 && (
         <section aria-labelledby="services" className="mx-auto max-w-6xl px-4 py-14">
-          <h2 id="services" className="font-display text-3xl font-semibold">
+          <h2 id="services" className="font-serif text-4xl leading-tight text-balance">
             Services
           </h2>
           <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -98,7 +98,7 @@ export async function DivisionPage({ division, category }: { division: Division;
 
       <section aria-labelledby="categories" className="bg-white py-14">
         <div className="mx-auto max-w-6xl px-4">
-          <h2 id="categories" className="font-display text-3xl font-semibold">
+          <h2 id="categories" className="font-serif text-4xl leading-tight text-balance">
             Projects by category
           </h2>
           <nav aria-label="Project categories" className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

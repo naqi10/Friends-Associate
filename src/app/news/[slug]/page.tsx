@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, metaDescription } from "@/lib/seo";
 import { getNewsBySlug } from "@/lib/data";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!n) return { title: "News" };
   return pageMetadata({
     title: n.seo_title ?? n.title,
-    description: n.seo_description ?? n.excerpt,
+    description: metaDescription(n.seo_description || n.excerpt, n.title),
     path: `/news/${n.slug}`,
     type: "article",
   });

@@ -1,16 +1,9 @@
 @import "tailwindcss";
 
-:root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-playfair), Georgia, serif;
+  /* System monospace: only used for small codes (receipt numbers, URLs), so no web font is downloaded. */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-urdu: var(--font-nastaliq), "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", serif;
   --font-serif: var(--font-instrument), Georgia, serif;
 }
@@ -18,6 +11,7 @@
 /* Black & white design system (homepage-design-reference.html). Use these tokens, not raw hex. */
 @theme {
   --color-ink: #0e0e0e;
+  --color-canvas: #fafaf9; /* page background behind sections */
   --color-paper: #ffffff;
   --color-mist: #f4f4f2; /* light grey sections */
   --color-ph: #ecece8; /* light image placeholder */
@@ -47,10 +41,35 @@
   background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.06) 0 1px, transparent 1px 14px);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+@layer base {
+  /* Long headings wrap into even lines instead of leaving one word alone. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  /* Keyboard focus: a dark ring with a light halo, visible on white and on black sections alike. */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--color-paper);
+  }
+
+  /* Respect the device's "Reduce motion" setting: no hover lifts, pulses or smooth scrolling. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    .hover\:-translate-y-1:hover {
+      translate: none;
+    }
+  }
 }
 
 /* Printing (receipts): only the page content, no site header, footer or chat button. */

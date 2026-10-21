@@ -3,6 +3,7 @@ import { CoverImage } from "@/components/public/CoverImage";
 import { PROJECT_CATEGORIES, DIVISIONS, labelOf } from "@/lib/catalog";
 import { formatPkr } from "@/lib/format";
 import type { Project, Property } from "@/lib/types";
+import { propertyPath } from "@/lib/property-slug";
 
 export function ProjectCard({ p }: { p: Project }) {
   return (
@@ -52,7 +53,7 @@ export function PropertyCard({ p }: { p: Property & { project_name?: string | nu
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className="font-semibold">
-          <Link href={`/properties/${p.id}`} className="after:absolute after:inset-0 group-hover:text-teal-800">
+          <Link href={propertyPath(p)} className="after:absolute after:inset-0 group-hover:text-teal-800">
             {p.title}
           </Link>
         </h3>

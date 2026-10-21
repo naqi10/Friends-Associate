@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, metaDescription } from "@/lib/seo";
 import { getAboutLists, getCompany, getManagement, getPageContent } from "@/lib/data";
 import { focalPosition, hasRealImage } from "@/lib/media";
 
@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const page = await getPageContent("page.about");
   return pageMetadata({
     title: "About us",
-    description: page.intro || "Company profile, mission, vision and leadership at Friends Associates.",
+    description: metaDescription(page.intro, "Company profile, mission, vision and leadership at Friends Associates."),
     path: "/about",
   });
 }
