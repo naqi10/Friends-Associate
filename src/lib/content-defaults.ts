@@ -4,7 +4,7 @@ export const HERO_DEFAULTS = {
   subtitle: "Architecture · Construction · Properties",
   title: "Building landmarks, *from ideas* to execution.",
   description:
-    "Friends Associates plans, designs and builds homes, commercial and industrial projects — from drawings and NOC approvals to construction, waterproofing and property sales — based in Rahim Yar Khan.",
+    "Friends Associates plans, designs and builds homes, commercial and industrial projects, from drawings and NOC approvals to construction, waterproofing and property sales. Based in Rahim Yar Khan.",
   imagePath: "/images/home-hero-commercial-building.webp",
   buttonText: "Explore projects",
   buttonUrl: "/projects",

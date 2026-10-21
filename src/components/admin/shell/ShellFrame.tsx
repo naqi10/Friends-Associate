@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { logoutAction } from "@/lib/actions/auth";
 import { Icon } from "./icons";
+import { LinkPending } from "./LinkPending";
 import type { NavGroup, NavItem } from "./nav";
 import { Logo } from "@/components/Logo";
 
@@ -196,6 +197,7 @@ export function ShellFrame({
                     >
                       <Icon name={i.icon} className="h-5 w-5 shrink-0" />
                       <span className="truncate">{i.label}</span>
+                      <LinkPending className="ml-auto" />
                       {!on && (
                         <Badge
                           n={badgeFor(i)}
@@ -420,6 +422,7 @@ export function ShellFrame({
                       className={`relative flex h-9 w-14 items-center justify-center rounded-2xl ${on ? "bg-mist text-ink" : "text-muted"}`}
                     >
                       <Icon name={b.icon} />
+                      <LinkPending className="absolute -top-0.5 -right-0.5" />
                       {b.dot && (
                         <span className="absolute top-1 right-3 h-2 w-2 rounded-full bg-red-600" />
                       )}

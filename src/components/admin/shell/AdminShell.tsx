@@ -12,9 +12,9 @@ import { ShellFrame } from "./ShellFrame";
 export async function AdminShell({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
   if (!user || !isStaff(user.role)) return <>{children}</>;
-  const can = await permissionsFor(user);
+  // Permissions and badge counts do not depend on each other: one round trip instead of two.
+  const [can, badges] = await Promise.all([permissionsFor(user), getStaffBadges()]);
   const menu = menuFor(can, user);
-  const badges = await getStaffBadges();
 
   return (
     <ShellFrame

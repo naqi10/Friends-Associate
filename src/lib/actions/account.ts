@@ -38,7 +38,7 @@ export async function changeOwnPasswordAction(formData: FormData) {
   await setPasswordHash(user.id, await hashPassword(pw.password));
   // Sign out every other device, then start a fresh session here so this browser stays logged in.
   await deleteSessionsForUser(user.id);
-  await startSession(user.id);
+  await startSession(user);
   await writeAuditLog({ userId: user.id, action: "change-own-password", module: user.role === "buyer" ? "customers" : "staff", recordId: user.id });
 
   redirect(`${page}?saved=password`);

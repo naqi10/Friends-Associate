@@ -220,8 +220,10 @@ export async function createSessionRecord(userId: string, tokenHash: string, exp
   });
 }
 
+/** The session with its user (mapped), in one query. */
 export async function findSessionByToken(tokenHash: string) {
-  return prisma.session.findUnique({ where: { tokenHash } });
+  const row = await prisma.session.findUnique({ where: { tokenHash }, include: { user: true } });
+  return row ? { ...row, user: mapUser(row.user) } : null;
 }
 
 export async function deleteSessionByToken(tokenHash: string) {

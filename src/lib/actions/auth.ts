@@ -40,7 +40,7 @@ export async function loginAction(formData: FormData) {
   if (!isRoleEnabled(user!.role)) retry("soon");
 
   await Promise.all([deleteExpiredSessions(user!.id), pruneLoginAttempts(), recordLogin(user!.id)]);
-  await startSession(user!.id);
+  await startSession(user!);
 
   redirect(safeNext || homeForRole(user!.role));
 }
