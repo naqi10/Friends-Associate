@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 /** Public origin used for canonical URLs, Open Graph and the sitemap. Set SITE_URL in production. */
 export const SITE_URL = (process.env.SITE_URL ?? "https://www.faryk.com").replace(/\/+$/, "");
 export const SITE_NAME = "Friends Associates";
-export const DEFAULT_OG_IMAGE = { url: "/images/og-default.jpg", width: 1200, height: 630, alt: "Friends Associates — architecture, construction and properties" };
+export const DEFAULT_OG_IMAGE = { url: "/images/og-default-v2.jpg", width: 1200, height: 630, alt: "Friends Associates — architecture, construction and properties" };
 
 export function absoluteUrl(path: string) {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;

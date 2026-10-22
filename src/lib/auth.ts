@@ -50,7 +50,8 @@ export async function createSession(userId: string): Promise<{ token: string; ex
 export async function startSession(user: Pick<User, "id" | "role">): Promise<void> {
   const { token, expires } = await createSession(user.id);
   const jar = await cookies();
-  jar.set(PASS_COOKIE, makePass(hashToken(token), user.role, expires), passCookieOptions(expires));
+  // Session first: a client that keeps only one cookie still has a working login (the proxy then checks the
+  // database instead of the pass).
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -58,6 +59,7 @@ export async function startSession(user: Pick<User, "id" | "role">): Promise<voi
     path: "/",
     maxAge: 60 * 60 * 24 * SESSION_DAYS,
   });
+  jar.set(PASS_COOKIE, makePass(hashToken(token), user.role, expires), passCookieOptions(expires));
 }
 
 export async function destroySession(): Promise<void> {

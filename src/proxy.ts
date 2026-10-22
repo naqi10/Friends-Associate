@@ -52,7 +52,8 @@ export async function proxy(request: NextRequest) {
   if (!isRoleEnabled(role)) return toLogin();
 
   const withPass = (res: NextResponse) => {
-    if (newPass) res.cookies.set(PASS_COOKIE, newPass.value, passCookieOptions(newPass.expires));
+    // Only on page loads: a form post may set its own session cookies (e.g. after a password change).
+    if (newPass && (request.method === "GET" || request.method === "HEAD")) res.cookies.set(PASS_COOKIE, newPass.value, passCookieOptions(newPass.expires));
     return res;
   };
   const redirectTo = (path: string) => withPass(NextResponse.redirect(new URL(path, request.url)));

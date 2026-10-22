@@ -67,7 +67,7 @@ async function main() {
   for (const o of [
     { id: "o1", city: "Lahore", address: "Plaza 12, MM Alam Road, Gulberg III", phone: "+92 42 111 32795", sortOrder: 1 },
     { id: "o2", city: "Karachi", address: "Suite 5, The Forum, Clifton Block 9", phone: "+92 21 111 32795", sortOrder: 2 },
-    { id: "o3", city: "Rahim Yar Khan", address: "Canal Road Sales Office", phone: "+92 68 111 32795", sortOrder: 3 },
+    { id: "o3", city: "Rahim Yar Khan", address: "Abu Dhabi Dari, Sanghi Road, near Mian Pharmacy", phone: "+92 68 111 32795", sortOrder: 3 },
   ]) {
     await prisma.office.create({ data: o });
   }

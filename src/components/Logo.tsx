@@ -4,7 +4,7 @@ import { BRAND } from "@/lib/brand";
 /**
  * The FARYK logo (public/brand). The symbol is a vector redrawn from the designer's PNG; the full logo with words is the PNG.
  * - `mark`: the F + house symbol only, for tight spaces next to the company name.
- * - `full`: symbol + FARYK.COM + "Architecture | Construction | Real estate".
+ * - `full`: symbol + FARYK.COM + "Architecture | Construction | Properties".
  * Use `light` on dark backgrounds: the navy parts become white, the gold stays.
  */
 export function Logo({
@@ -30,6 +30,6 @@ export function Logo({
     );
   }
   return (
-    <Image src={`/brand/logo${light ? "-light" : ""}.png`} alt={alt} width={1200} height={669} priority={priority} sizes="320px" className={`h-auto ${className}`} />
+    <Image src={`/brand/logo${light ? "-light" : ""}-v2.png`} alt={alt} width={1200} height={669} priority={priority} sizes="320px" className={`h-auto ${className}`} />
   );
 }
