@@ -160,6 +160,8 @@ model User {
   documentDownloadPaidAt DateTime?         @map("document_download_paid_at")
   active                 Boolean           @default(true)
   lastLoginAt            DateTime?         @map("last_login_at")
+  /// Set when an admin deletes a staff account: login removed, email freed, name kept for history.
+  deletedAt              DateTime?         @map("deleted_at")
   sessions               Session[]
   auditLogs              AuditLog[]
   bookings               Booking[]

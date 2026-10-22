@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CONTAINER, PageHero } from "@/components/public/ui";
 import type { Metadata } from "next";
 import { StageBars } from "@/components/StageBars";
 import { DIVISIONS, PROJECT_CATEGORIES, labelOf } from "@/lib/catalog";
@@ -19,43 +20,41 @@ export default async function ProgressPage() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-serif text-5xl leading-none text-balance">{page.title}</h1>
-      {page.intro && <p className="mt-3 max-w-2xl text-stone-600">{page.intro}</p>}
-
-      <nav aria-label="Jump to category" className="mt-6 flex flex-wrap gap-2 text-sm">
+    <div className="bg-paper text-ink">
+      <PageHero title={page.title} intro={page.intro} eyebrow="Live progress">
         {groups.map((g) => (
-          <a key={g.key} href={`#${g.key}`} className="rounded-full border border-stone-200 bg-white px-3 py-1 hover:border-teal-400">
+          <a key={g.key} href={`#${g.key}`} className="rounded-full border-[1.5px] border-line-strong px-4 py-2 text-sm font-semibold hover:border-ink">
             {g.icon} {g.label} ({g.projects.length})
           </a>
         ))}
-      </nav>
+      </PageHero>
+      <div className={`${CONTAINER} pb-20`}>
 
-      {groups.length === 0 && <p className="mt-8 text-stone-500">No project updates have been published yet.</p>}
+      {groups.length === 0 && <p className="mx-auto mt-14 max-w-xl rounded-card border border-dashed border-line-strong p-8 text-center text-body">No project updates have been published yet.</p>}
 
       {groups.map((g) => (
-        <section key={g.key} id={g.key} aria-labelledby={`h-${g.key}`} className="mt-12 scroll-mt-24">
-          <h2 id={`h-${g.key}`} className="text-2xl font-semibold">
+        <section key={g.key} id={g.key} aria-labelledby={`h-${g.key}`} className="mt-16 scroll-mt-28">
+          <h2 id={`h-${g.key}`} className="text-center font-serif text-[clamp(32px,4vw,48px)] leading-none">
             <span aria-hidden className="mr-2">
               {g.icon}
             </span>
             {g.label}
           </h2>
-          <div className="mt-5 grid gap-6 md:grid-cols-2">
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
             {g.projects.map((p) => (
-              <article key={p.id} className="rounded-xl border border-stone-200 bg-white p-5">
+              <article key={p.id} className="rounded-card border border-line bg-paper p-6">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold">
-                      <Link href={`/projects/${p.slug}`} className="hover:text-teal-800">
+                      <Link href={`/projects/${p.slug}`} className="hover:text-muted">
                         {p.name}
                       </Link>
                     </h3>
-                    <p className="text-sm text-stone-500">
+                    <p className="text-sm text-muted">
                       {labelOf(DIVISIONS, p.division)} · {p.status} · {p.expected_completion}
                     </p>
                   </div>
-                  <span className="text-2xl font-bold text-teal-800">{p.progress_percent}%</span>
+                  <span className="font-serif text-[40px] leading-none">{p.progress_percent}%</span>
                 </div>
                 <div className="mt-4">
                   <StageBars stages={p.stages} />
@@ -65,6 +64,7 @@ export default async function ProgressPage() {
           </div>
         </section>
       ))}
+      </div>
     </div>
   );
 }

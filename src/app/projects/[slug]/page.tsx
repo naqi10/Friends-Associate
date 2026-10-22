@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/public/Cards";
+import { CONTAINER, PageHero } from "@/components/public/ui";
 import { CoverImage } from "@/components/public/CoverImage";
 import { CallbackForm } from "@/components/public/EnquiryForms";
 import { StageBars } from "@/components/StageBars";
@@ -61,52 +62,49 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
   ].filter((d) => d.value);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="bg-paper text-ink">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(breadcrumbs)} />
-      <nav aria-label="Breadcrumb" className="text-sm text-stone-500">
-        <Link href="/" className="hover:underline">
-          Home
-        </Link>{" "}
-        /{" "}
-        <Link href={division?.path ?? "/projects"} className="hover:underline">
-          {division?.label ?? "Projects"}
-        </Link>{" "}
-        / <span className="text-stone-700">{project.name}</span>
-      </nav>
+      <PageHero
+        title={project.name}
+        eyebrow={`${division?.label ?? "Project"} · ${labelOf(PROJECT_CATEGORIES, project.category)}`}
+        intro={[[project.location, project.city].filter(Boolean).join(", "), project.developer].filter(Boolean).join(" · ")}
+        crumbs={[{ href: "/", label: "Home" }, { href: division?.path ?? "/projects", label: division?.label ?? "Projects" }, { label: project.name }]}
+      >
+        <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-paper">
+          {project.status} · {project.progress_percent}%
+        </span>
+      </PageHero>
 
-      <div className="mt-4 overflow-hidden rounded-2xl">
-        <CoverImage src={project.image_path} alt={project.name} className="h-64 md:h-80" sizes="(min-width: 1024px) 1024px, 100vw" preload />
+      <div className={`${CONTAINER} py-12 md:py-16`}>
+      <div className="overflow-hidden rounded-tile">
+        <CoverImage src={project.image_path} alt={project.name} className="h-64 md:h-[460px]" sizes="(min-width: 1280px) 1232px, 100vw" preload />
       </div>
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px]">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-teal-800">
-            {division?.label} · {labelOf(PROJECT_CATEGORIES, project.category)}
-          </p>
-          <h1 className="mt-1 font-serif text-5xl leading-none text-balance">{project.name}</h1>
-          <p className="mt-2 text-stone-600">
-            {[project.location, project.city].filter(Boolean).join(", ")} · {project.developer}
-          </p>
-          <p className="mt-6 whitespace-pre-line leading-relaxed text-stone-700">{project.description}</p>
+      <div className="mt-12 grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0">
+          <p className="whitespace-pre-line text-[17px] leading-relaxed text-body">{project.description}</p>
 
           <section aria-labelledby="progress" className="mt-10">
             <div className="flex items-baseline justify-between">
-              <h2 id="progress" className="text-xl font-semibold">
+              <h2 id="progress" className="font-serif text-[36px] leading-none">
                 Project progress
               </h2>
-              <span className="text-2xl font-bold text-teal-800">{project.progress_percent}%</span>
+              <span className="font-serif text-[40px] leading-none">{project.progress_percent}%</span>
             </div>
-            <div className="mt-4 rounded-xl border border-stone-200 bg-white p-5">
+            <div className="mt-4 rounded-card border border-line bg-paper p-5">
               <StageBars stages={stages} />
             </div>
           </section>
 
           {lists.length > 0 && (
             <section className="mt-10">
-              <h2 className="text-xl font-semibold">Sizes, plans & amenities</h2>
-              <ul className="mt-3 grid list-inside list-disc gap-1 text-stone-700 sm:grid-cols-2">
+              <h2 className="font-serif text-[36px] leading-none">Sizes, plans & amenities</h2>
+              <ul className="mt-5 grid gap-x-6 gap-y-2.5 text-body sm:grid-cols-2">
                 {lists.map((l) => (
-                  <li key={l.id}>{l.label}</li>
+                  <li key={l.id} className="flex gap-2.5">
+                    <span aria-hidden className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-ink" />
+                    {l.label}
+                  </li>
                 ))}
               </ul>
             </section>
@@ -114,8 +112,8 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
 
           {units.length > 0 && (
             <section className="mt-10">
-              <h2 className="text-xl font-semibold">Units in this project</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <h2 className="font-serif text-[36px] leading-none">Units in this project</h2>
+              <div className="mt-6 grid gap-6 sm:grid-cols-2">
                 {units.map((u) => (
                   <PropertyCard key={u.id} p={u} />
                 ))}
@@ -124,22 +122,22 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
           )}
         </div>
 
-        <aside className="space-y-6">
+        <aside className="space-y-6 lg:sticky lg:top-28">
           {details.length > 0 && (
-            <dl className="space-y-3 rounded-xl border border-stone-200 bg-white p-5 text-sm">
+            <dl className="space-y-3 rounded-card border border-line bg-paper p-5 text-sm">
               {details.map((d) => (
                 <div key={d.label}>
-                  <dt className="text-stone-500">{d.label}</dt>
+                  <dt className="text-muted">{d.label}</dt>
                   <dd className="font-medium">{d.value}</dd>
                 </div>
               ))}
             </dl>
           )}
           {investments.length > 0 && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm">
-              <p className="font-semibold text-amber-900">Investment opportunity</p>
+            <div className="rounded-card bg-ink p-6 text-sm text-paper">
+              <p className="text-xs font-semibold tracking-[0.2em] text-dim uppercase">Investment opportunity</p>
               {investments.map((i) => (
-                <Link key={i.slug} href={`/investment/${i.slug}`} className="mt-2 block text-amber-900 underline">
+                <Link key={i.slug} href={`/investment/${i.slug}`} className="mt-3 block text-[15px] font-semibold underline underline-offset-4">
                   {i.title} — from {formatPkr(i.minimumInvestmentPkr)}
                 </Link>
               ))}
@@ -154,6 +152,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
             title="Talk to us about this project"
           />
         </aside>
+      </div>
       </div>
     </div>
   );

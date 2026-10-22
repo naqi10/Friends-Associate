@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   createStaff,
+  deleteStaff,
   deleteSessionsForUser,
   emailInUse,
   getStaffMember,
@@ -39,7 +40,9 @@ function readStaffProfile(formData: FormData) {
 
 export async function createStaffAction(formData: FormData) {
   const { user: actor } = await requireAdmin();
-  const back = (code: string) => redirect(`/admin/staff/new?error=${code}`);
+  // The Staff page has its own "Add staff member" panel; errors go back to it with the panel open.
+  const fromList = text(formData, "from") === "list";
+  const back = (code: string) => redirect(fromList ? `/admin/staff?add=1&error=${code}` : `/admin/staff/new?error=${code}`);
 
   const { profile, error } = readStaffProfile(formData);
   if (error || !profile) return back(error ?? "required");
@@ -51,7 +54,7 @@ export async function createStaffAction(formData: FormData) {
   await writeAuditLog({ userId: actor.id, action: "create", module: "staff", recordId: id, newValue: profile });
 
   revalidatePath("/admin/staff");
-  redirect(`/admin/staff/${id}?saved=created`);
+  redirect(fromList ? `/admin/staff?saved=created` : `/admin/staff/${id}?saved=created`);
 }
 
 export async function updateStaffAction(formData: FormData) {
@@ -102,4 +105,77 @@ export async function resetStaffPasswordAction(formData: FormData) {
   await writeAuditLog({ userId: actor.id, action: "reset-password", module: "staff", recordId: id });
 
   redirect(`/admin/staff/${id}?saved=password`);
+}
+
+const listBack = (code: string) => redirect(`/admin/staff?${code}`);
+
+/** ⋮ menu → Make Sales / Project manager / Admin. Same rules as the edit page; signs the person out. */
+export async function changeStaffRoleAction(formData: FormData) {
+  const { user: actor } = await requireAdmin();
+  const id = text(formData, "id");
+  const role = text(formData, "role") as StaffRole;
+  if (!(STAFF_ROLES as readonly string[]).includes(role)) return listBack("error=role");
+  if (id === actor.id) return listBack("error=self");
+  let failure = "";
+  let result: Awaited<ReturnType<typeof updateStaff>> | undefined;
+  try {
+    result = await updateStaff(id, { role });
+  } catch (e) {
+    if (e instanceof StaffRuleError) failure = e.code;
+    else throw e;
+  }
+  if (failure || !result) return listBack(`error=${failure || "missing"}`);
+  if (result.before.role !== role) {
+    await deleteSessionsForUser(id);
+    await writeAuditLog({ userId: actor.id, action: "change-role", module: "staff", recordId: id, oldValue: result.before, newValue: result.after });
+  }
+  revalidatePath("/admin/staff");
+  return listBack("saved=role");
+}
+
+/** ⋮ menu → Switch account off / on. Switching off signs them out at once. */
+export async function setStaffActiveAction(formData: FormData) {
+  const { user: actor } = await requireAdmin();
+  const id = text(formData, "id");
+  const active = text(formData, "active") === "1";
+  if (id === actor.id) return listBack("error=self");
+  let failure = "";
+  let result: Awaited<ReturnType<typeof updateStaff>> | undefined;
+  try {
+    result = await updateStaff(id, { active });
+  } catch (e) {
+    if (e instanceof StaffRuleError) failure = e.code;
+    else throw e;
+  }
+  if (failure || !result) return listBack(`error=${failure || "missing"}`);
+  if (!active) await deleteSessionsForUser(id);
+  await writeAuditLog({ userId: actor.id, action: active ? "activate" : "deactivate", module: "staff", recordId: id, oldValue: { active: result.before.active }, newValue: { active } });
+  revalidatePath("/admin/staff");
+  return listBack(active ? "saved=activated" : "saved=deactivated");
+}
+
+/** ⋮ menu → Delete account (see deleteStaff for what is kept). Never yourself, never the last admin. */
+export async function deleteStaffAction(formData: FormData) {
+  const { user: actor } = await requireAdmin();
+  const id = text(formData, "id");
+  let failure = "";
+  let result: Awaited<ReturnType<typeof deleteStaff>> | undefined;
+  try {
+    result = await deleteStaff(id, actor.id);
+  } catch (e) {
+    if (e instanceof StaffRuleError) failure = e.code;
+    else throw e;
+  }
+  if (failure || !result) return listBack(`error=${failure || "missing"}`);
+  await writeAuditLog({
+    userId: actor.id,
+    action: "delete",
+    module: "staff",
+    recordId: id,
+    oldValue: { name: result.before.name, email: result.before.email, role: result.before.role },
+    newValue: { unassignedLeads: result.unassignedLeads },
+  });
+  revalidatePath("/admin/staff");
+  revalidatePath("/sales");
+  return listBack(`saved=deleted&n=${result.unassignedLeads}`);
 }

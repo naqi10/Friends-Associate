@@ -25,7 +25,7 @@ const MESSAGES: Record<string, string> = {
   missing: "That record no longer exists.",
   "booking-buyer": "Choose an active buyer account.",
   role: "Choose Sales, Project manager or Admin.",
-  self: "You cannot remove your own admin role or disable your own account. Ask another admin.",
+  self: "You cannot remove your own admin role, or switch off or delete your own account. Ask another admin.",
   "self-password": "Change your own password from My account, which asks for your current password.",
   "last-admin": "This is the last active admin. Make someone else an admin first.",
   current: "Your current password is incorrect.",

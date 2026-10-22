@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
+import { CONTAINER, PageHero } from "@/components/public/ui";
 import { CoverImage } from "@/components/public/CoverImage";
 import { CallbackForm } from "@/components/public/EnquiryForms";
 import { formatPkr } from "@/lib/format";
@@ -44,52 +45,50 @@ export default async function PropertyDetailPage({ params, searchParams }: Props
   ].filter((f) => f.value);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <nav aria-label="Breadcrumb" className="text-sm text-stone-500">
-        <Link href="/" className="hover:underline">
-          Home
-        </Link>{" "}
-        /{" "}
-        <Link href={`/properties?tab=${rent ? "rent" : "buy"}`} className="hover:underline">
-          {rent ? "Rent" : "Buy"}
-        </Link>{" "}
-        / <span className="text-stone-700">{property.title}</span>
-      </nav>
+    <div className="bg-paper text-ink">
+      <PageHero
+        title={property.title}
+        eyebrow={`${rent ? "For rent" : "For sale"} · ${property.type}`}
+        intro={[property.size, [property.locality, property.city].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
+        crumbs={[{ href: "/", label: "Home" }, { href: `/properties?tab=${rent ? "rent" : "buy"}`, label: rent ? "Rent" : "Buy" }, { label: property.title }]}
+      >
+        <p className="font-serif text-[clamp(40px,5vw,56px)] leading-none">
+          {formatPkr(property.price_pkr)}
+          {rent && <span className="font-sans text-lg text-muted"> / month</span>}
+        </p>
+      </PageHero>
 
-      <div className="mt-4 overflow-hidden rounded-2xl">
-        <CoverImage src={property.image_path} alt={property.title} className="h-64 md:h-80" sizes="(min-width: 1024px) 1024px, 100vw" preload />
+      <div className={`${CONTAINER} py-12 md:py-16`}>
+      <div className="overflow-hidden rounded-tile">
+        <CoverImage src={property.image_path} alt={property.title} className="h-64 md:h-[460px]" sizes="(min-width: 1280px) 1232px, 100vw" preload />
       </div>
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px]">
-        <div>
-          <h1 className="font-serif text-5xl leading-none text-balance">{property.title}</h1>
-          <p className="mt-3 text-3xl font-semibold text-teal-900">
-            {formatPkr(property.price_pkr)}
-            {rent && <span className="text-lg font-normal text-stone-500"> / month</span>}
-          </p>
-          {property.description && <p className="mt-6 whitespace-pre-line leading-relaxed text-stone-700">{property.description}</p>}
-          <dl className="mt-8 grid gap-4 rounded-xl border border-stone-200 bg-white p-5 sm:grid-cols-3">
+      <div className="mt-12 grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0">
+          <h2 className="font-serif text-[36px] leading-none">Details</h2>
+          <dl className="mt-6 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-3">
             {facts.map((f) => (
-              <div key={f.label}>
-                <dt className="text-xs text-stone-500">{f.label}</dt>
-                <dd className="font-medium">{f.value}</dd>
+              <div key={f.label} className="bg-paper p-5">
+                <dt className="text-xs tracking-[0.12em] text-muted uppercase">{f.label}</dt>
+                <dd className="mt-1.5 text-[17px] font-semibold">{f.value}</dd>
               </div>
             ))}
           </dl>
+          {property.description && <p className="mt-8 whitespace-pre-line text-[17px] leading-relaxed text-body">{property.description}</p>}
           {project && project.published && (
-            <div className="mt-6 rounded-xl border border-stone-200 bg-white p-5 text-sm">
+            <div className="mt-8 rounded-card bg-mist p-6 text-[15px]">
               <p>
                 Part of{" "}
-                <Link href={`/projects/${project.slug}`} className="font-medium text-teal-800 hover:underline">
+                <Link href={`/projects/${project.slug}`} className="font-semibold text-ink underline underline-offset-4">
                   {project.name}
                 </Link>{" "}
                 — {project.progress_percent}% complete.
               </p>
-              {project.payment_plan && <p className="mt-2 text-stone-600">Payment plan: {project.payment_plan}</p>}
+              {project.payment_plan && <p className="mt-2 text-body">Payment plan: {project.payment_plan}</p>}
             </div>
           )}
         </div>
-        <aside>
+        <aside className="lg:sticky lg:top-28">
           <CallbackForm
             returnTo={propertyPath(property)}
             propertyId={property.id}
@@ -98,6 +97,7 @@ export default async function PropertyDetailPage({ params, searchParams }: Props
             title={rent ? "Interested in renting?" : "Interested in buying?"}
           />
         </aside>
+      </div>
       </div>
     </div>
   );

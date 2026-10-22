@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { CONTAINER, PageHero } from "@/components/public/ui";
+import { formatDate } from "@/lib/format";
 import type { Metadata } from "next";
 import { pageMetadata, metaDescription } from "@/lib/seo";
 import { getNewsBySlug } from "@/lib/data";
@@ -22,10 +24,16 @@ export default async function NewsDetailPage({ params }: Props) {
   const item = await getNewsBySlug(slug);
   if (!item) notFound();
   return (
-    <article className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-bold">{item.title}</h1>
-      <p className="mt-2 text-sm text-stone-500">{item.published_on}</p>
-      <p className="mt-8 whitespace-pre-wrap text-stone-700">{item.body}</p>
+    <article className="bg-paper text-ink">
+      <PageHero
+        title={item.title}
+        eyebrow={formatDate(item.published_on)}
+        intro={item.excerpt}
+        crumbs={[{ href: "/", label: "Home" }, { href: "/news", label: "News" }, { label: item.title }]}
+      />
+      <div className={`${CONTAINER} py-14 md:py-20`}>
+        <p className="mx-auto max-w-[720px] whitespace-pre-wrap text-[18px] leading-[1.8] text-body">{item.body}</p>
+      </div>
     </article>
   );
 }

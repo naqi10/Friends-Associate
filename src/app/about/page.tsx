@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { CONTAINER, PageHero, SectionHead } from "@/components/public/ui";
 import { pageMetadata, metaDescription } from "@/lib/seo";
 import { getAboutLists, getCompany, getManagement, getPageContent } from "@/lib/data";
 import { focalPosition, hasRealImage } from "@/lib/media";
@@ -21,77 +22,73 @@ export default async function AboutPage() {
     getManagement(),
   ]);
 
+  const intro = [
+    { id: "profile", title: "Company profile", text: company.experience },
+    { id: "mission", title: "Mission", text: company.mission },
+    { id: "vision", title: "Vision", text: company.vision },
+  ].filter((b) => b.text);
+  const filled = lists.filter((l) => l.items.length > 0);
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-bold">{page.title}</h1>
-      {page.intro && <p className="mt-4 text-lg text-stone-600">{page.intro}</p>}
+    <div className="bg-paper text-ink">
+      <PageHero title={page.title} intro={page.intro} eyebrow="About us" />
 
-      {company.experience && (
-        <section aria-labelledby="profile" className="mt-10">
-          <h2 id="profile" className="text-xl font-semibold">
-            Company profile
-          </h2>
-          <p className="mt-2 whitespace-pre-line text-stone-700">{company.experience}</p>
-        </section>
-      )}
-      {company.mission && (
-        <section aria-labelledby="mission" className="mt-8">
-          <h2 id="mission" className="text-xl font-semibold">
-            Mission
-          </h2>
-          <p className="mt-2 whitespace-pre-line text-stone-700">{company.mission}</p>
-        </section>
-      )}
-      {company.vision && (
-        <section aria-labelledby="vision" className="mt-8">
-          <h2 id="vision" className="text-xl font-semibold">
-            Vision
-          </h2>
-          <p className="mt-2 whitespace-pre-line text-stone-700">{company.vision}</p>
+      {intro.length > 0 && (
+        <section className={`${CONTAINER} py-16 md:py-20`}>
+          <div className={`grid gap-6 ${intro.length === 3 ? "lg:grid-cols-3" : intro.length === 2 ? "md:grid-cols-2" : "mx-auto max-w-[760px]"}`}>
+            {intro.map((b) => (
+              <section key={b.id} aria-labelledby={b.id} className="flex flex-col gap-4 border-t-2 border-ink pt-6">
+                <h2 id={b.id} className="font-serif text-[34px] leading-none">
+                  {b.title}
+                </h2>
+                <p className="whitespace-pre-line text-[16px] leading-relaxed text-body">{b.text}</p>
+              </section>
+            ))}
+          </div>
         </section>
       )}
 
-      {lists
-        .filter((l) => l.items.length > 0)
-        .map((l) => (
-          <section key={l.key} aria-labelledby={l.key} className="mt-8">
-            <h2 id={l.key} className="text-xl font-semibold">
-              {l.title}
-            </h2>
-            <ul className="mt-3 space-y-2 text-stone-700">
-              {l.items.map((item) => (
-                <li key={item} className="flex gap-2">
-                  <span aria-hidden className="text-teal-800">
-                    ✓
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+      {filled.length > 0 && (
+        <section className="bg-mist">
+          <div className={`${CONTAINER} grid gap-6 py-16 md:py-20 ${filled.length > 1 ? "md:grid-cols-2" : "mx-auto max-w-[760px]"}`}>
+            {filled.map((l) => (
+              <section key={l.key} aria-labelledby={l.key} className="rounded-card border border-line bg-paper p-7">
+                <h2 id={l.key} className="font-serif text-[30px] leading-none">
+                  {l.title}
+                </h2>
+                <ul className="mt-5 space-y-3 text-[15px] text-body">
+                  {l.items.map((item) => (
+                    <li key={item} className="flex gap-3">
+                      <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink text-xs text-paper">
+                        ✓
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       {management.length > 0 && (
-        <section aria-labelledby="management" className="mt-10">
-          <h2 id="management" className="text-xl font-semibold">
-            Management
-          </h2>
-          <ul className="mt-4 grid gap-4 sm:grid-cols-2">
+        <section aria-labelledby="management" className={`${CONTAINER} py-16 md:py-20`}>
+          <SectionHead id="management" eyebrow="Our people" title="Management" />
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {management.map((m) => (
-              <li key={m.id} className="flex gap-4 rounded-lg border border-stone-200 bg-white p-4">
+              <li key={m.id} className="flex flex-col items-center rounded-card border border-line bg-paper p-7 text-center">
                 {hasRealImage(m.photo_path) ? (
-                  <Image src={m.photo_path} alt={m.name} width={72} height={72} className="h-18 w-18 shrink-0 rounded-full object-cover" style={{ objectPosition: focalPosition(m.photo_path) }} />
+                  <Image src={m.photo_path} alt={m.name} width={112} height={112} className="h-28 w-28 rounded-full object-cover" style={{ objectPosition: focalPosition(m.photo_path) }} />
                 ) : (
-                  <span aria-hidden className="flex h-18 w-18 shrink-0 items-center justify-center rounded-full bg-stone-100 text-xl font-semibold text-stone-500">
+                  <span aria-hidden className="flex h-28 w-28 items-center justify-center rounded-full bg-mist font-serif text-4xl text-muted">
                     {m.name.charAt(0)}
                   </span>
                 )}
-                <div>
-                  <p className="font-medium">{m.name}</p>
-                  <p className="text-sm text-teal-800">{m.title}</p>
-                  {m.experience && <p className="mt-1 text-xs text-stone-500">{m.experience}</p>}
-                  {m.bio && <p className="mt-2 text-sm text-stone-600">{m.bio}</p>}
-                </div>
+                <p className="mt-5 text-[19px] font-semibold">{m.name}</p>
+                <p className="text-sm text-muted">{m.title}</p>
+                {m.experience && <p className="mt-2 text-xs tracking-[0.12em] text-muted uppercase">{m.experience}</p>}
+                {m.bio && <p className="mt-3 text-[15px] leading-relaxed text-body">{m.bio}</p>}
               </li>
             ))}
           </ul>

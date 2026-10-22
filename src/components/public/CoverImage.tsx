@@ -18,7 +18,7 @@ export function CoverImage({
 }) {
   if (!hasRealImage(src)) return <VisualPlaceholder className={`w-full ${className}`} />;
   return (
-    <div className={`relative w-full overflow-hidden bg-stone-200 ${className}`}>
+    <div className={`relative w-full overflow-hidden bg-ph ${className}`}>
       <Image src={src} alt={alt} fill sizes={sizes} preload={preload} className="object-cover" style={{ objectPosition: focalPosition(src) }} />
     </div>
   );

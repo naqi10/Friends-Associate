@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ProjectCard } from "@/components/public/Cards";
+import { BTN_OUTLINE, CONTAINER, PageHero } from "@/components/public/ui";
 import { DIVISIONS, PROJECT_CATEGORIES, isKey } from "@/lib/catalog";
 import { CITIES } from "@/lib/constants";
 import { getPageContent, getProjectsFiltered } from "@/lib/data";
@@ -23,20 +24,19 @@ export default async function ProjectsPage({ searchParams }: Props) {
   };
   const [projects, page] = await Promise.all([getProjectsFiltered({ ...filter, publishedOnly: true }), getPageContent("page.projects")]);
   const filtered = Object.values(filter).some(Boolean);
-  const select = "rounded-md border border-stone-300 px-3 py-2";
+  const select = "min-w-[170px] rounded-xl border-[1.5px] border-line-strong bg-paper px-3 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-serif text-5xl leading-none text-balance">{page.title}</h1>
-        <Link href="/progress" className="text-sm font-medium text-teal-800 hover:underline">
-          See construction progress by category →
+    <div className="bg-paper text-ink">
+      <PageHero title={page.title} intro={page.intro} eyebrow="Our work">
+        <Link href="/progress" className={BTN_OUTLINE}>
+          See construction progress <span aria-hidden className="ml-1">→</span>
         </Link>
-      </div>
-      {page.intro && <p className="mt-3 max-w-2xl text-stone-600">{page.intro}</p>}
-      <form method="get" className="mt-6 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4 text-sm">
+      </PageHero>
+      <div className={`${CONTAINER} pb-20`}>
+      <form method="get" className="mx-auto mt-10 flex max-w-[900px] flex-wrap items-end justify-center gap-4 rounded-card border border-line bg-paper p-5 text-sm">
         <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-stone-500">Division</span>
+          <span className="text-xs font-medium text-muted">Division</span>
           <select name="division" defaultValue={filter.division ?? ""} className={select}>
             <option value="">All</option>
             {DIVISIONS.map((d) => (
@@ -47,7 +47,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-stone-500">Category</span>
+          <span className="text-xs font-medium text-muted">Category</span>
           <select name="category" defaultValue={filter.category ?? ""} className={select}>
             <option value="">All</option>
             {PROJECT_CATEGORIES.map((c) => (
@@ -58,7 +58,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-stone-500">City</span>
+          <span className="text-xs font-medium text-muted">City</span>
           <select name="city" defaultValue={filter.city ?? ""} className={select}>
             <option value="">All</option>
             {CITIES.map((c) => (
@@ -66,27 +66,28 @@ export default async function ProjectsPage({ searchParams }: Props) {
             ))}
           </select>
         </label>
-        <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 font-medium text-white hover:bg-teal-900">
+        <button type="submit" className="rounded-full bg-ink px-6 py-2.5 font-semibold text-paper hover:bg-body">
           Apply filters
         </button>
         {filtered && (
-          <Link href="/projects" className="px-2 py-2 text-stone-600 hover:underline">
+          <Link href="/projects" className="rounded-full border-[1.5px] border-line-strong px-5 py-2.5 font-semibold text-ink hover:bg-mist">
             Clear
           </Link>
         )}
       </form>
-      <p className="mt-4 text-sm text-stone-500" aria-live="polite">
+      <p className="mt-8 mb-6 text-center text-sm text-muted" aria-live="polite">
         {projects.length} {projects.length === 1 ? "project" : "projects"}
       </p>
       {projects.length === 0 ? (
-        <p className="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center text-stone-500">No projects match these filters.</p>
+        <p className="mx-auto max-w-xl rounded-card border border-dashed border-line-strong p-8 text-center text-body">No projects match these filters.</p>
       ) : (
-        <div className="mt-4 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
             <ProjectCard key={p.id} p={p} />
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

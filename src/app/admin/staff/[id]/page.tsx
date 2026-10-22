@@ -87,7 +87,7 @@ export default async function StaffMemberPage({ params, searchParams }: Props) {
         </form>
       </section>
 
-      <section className="mt-6 admin-card p-6">
+      <section id="password" className="mt-6 scroll-mt-6 admin-card p-6">
         <h2 className="font-semibold">Reset password</h2>
         {isSelf ? (
           <p className="mt-2 text-sm text-stone-600">
