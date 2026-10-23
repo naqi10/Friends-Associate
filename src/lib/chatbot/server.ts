@@ -1,10 +1,12 @@
 import { BUDGET_BANDS, SIZE_BANDS } from "../catalog";
-import { createLead, getPropertiesWithProject, getPublishedInvestments } from "../data";
+import { after } from "next/server";
+import { createLead, getPropertiesWithProject, getPublishedInvestments, type NewLead } from "../data";
+import { sendNewLeadEmails } from "../email";
 import { answerLabel, fieldLabel, type Answers, type Flow, type Lang } from "./flow";
 
 const CITY_NAMES: Record<string, string> = { rahim_yar_khan: "Rahim Yar Khan", lahore: "Lahore", karachi: "Karachi" };
 
-export type ListingResult = { id: string; slug: string | null; title: string; price: number; listingType: string; size: string; locality: string; city: string };
+export type ListingResult = { id: string; slug: string | null; image: string; projectName: string | null; title: string; price: number; listingType: string; size: string; locality: string; city: string };
 export type InvestmentResult = { slug: string; title: string; minimum: number; duration: string };
 
 /** Listings or investment opportunities that match the visitor's answers (properties flow only). */
@@ -47,7 +49,7 @@ export async function matchResults(answers: Answers): Promise<{ listings: Listin
   const rows = narrow.length ? narrow : await getPropertiesWithProject(base, 4);
   return {
     investments: [],
-    listings: rows.map((p) => ({ id: p.id, slug: p.slug, title: p.title, price: p.price_pkr, listingType: p.listing_type, size: p.size, locality: p.locality, city: p.city })),
+    listings: rows.map((p) => ({ id: p.id, slug: p.slug, image: p.image_path, projectName: p.project_name ?? null, title: p.title, price: p.price_pkr, listingType: p.listing_type, size: p.size, locality: p.locality, city: p.city })),
   };
 }
 
@@ -74,7 +76,7 @@ export async function saveChatLead(flow: Flow, answers: Answers, lang: Lang, sho
   }
   if (shownListingIds.length) details["Listings shown"] = String(shownListingIds.length);
 
-  return createLead({
+  const input: NewLead = {
     name: String(answers.name),
     phone: String(answers.phone),
     city,
@@ -87,5 +89,8 @@ export async function saveChatLead(flow: Flow, answers: Answers, lang: Lang, sho
     message: `Preferred contact: ${a("contact_method")}`,
     details,
     propertyId: shownListingIds.length === 1 ? shownListingIds[0] : null,
-  });
+  };
+  const row = await createLead(input);
+  after(() => sendNewLeadEmails({ ...input, id: row.id }));
+  return row;
 }

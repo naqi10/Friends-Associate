@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { after } from "next/server";
+import { sendNewLeadEmails } from "@/lib/email";
 import { redirect } from "next/navigation";
 import {
   createLead,
@@ -58,7 +60,9 @@ async function guardPublicForm(formData: FormData, returnTo: string) {
 }
 
 async function submit(lead: NewLead, returnTo: string) {
-  await createLead(lead);
+  const row = await createLead(lead);
+  // Office alert + client confirmation, sent after the response so a slow email never delays the visitor.
+  after(() => sendNewLeadEmails({ ...lead, id: row.id }));
   revalidatePath("/sales");
   redirect(withParam(returnTo, "sent=1") + "#enquiry");
 }
