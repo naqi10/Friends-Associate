@@ -126,6 +126,16 @@ export async function createBookingAction(formData: FormData) {
   }
   if (failure) back(failure);
 
+  const booked = await getBooking(bookingId);
+  if (booked) {
+    await notifyCustomer(userId, {
+      type: "announcement",
+      title: `Booking confirmed: ${booked.property.title}`,
+      message: `Your booking of ${booked.property.title}${booked.project ? ` in ${booked.project.name}` : ""} is now in your customer portal, with its payment plan.`,
+      link: "/portal/properties",
+    });
+  }
+
   revalidateBookingViews(userId);
   redirect(`/admin/bookings/${bookingId}?saved=created`);
 }

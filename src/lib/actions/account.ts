@@ -2,6 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { getSessionUser, startSession } from "@/lib/auth";
 import {
   countRecentFailures,
@@ -10,6 +11,7 @@ import {
   setPasswordHash,
   writeAuditLog,
 } from "@/lib/data";
+import { sendPasswordChangedEmail } from "@/lib/email";
 import { hashPassword, readNewPassword } from "@/lib/passwords";
 
 const LOCK_WINDOW_MS = 15 * 60 * 1000;
@@ -40,6 +42,10 @@ export async function changeOwnPasswordAction(formData: FormData) {
   await deleteSessionsForUser(user.id);
   await startSession(user);
   await writeAuditLog({ userId: user.id, action: "change-own-password", module: user.role === "buyer" ? "customers" : "staff", recordId: user.id });
+  if (user.role === "buyer" && user.email) {
+    const email = user.email;
+    after(() => sendPasswordChangedEmail({ name: user.name, email }, false));
+  }
 
   redirect(`${page}?saved=password`);
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import {
   createCustomer,
   deleteSessionsForUser,
@@ -17,6 +18,7 @@ import {
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/permissions";
 import { CITIES } from "@/lib/constants";
+import { sendPasswordChangedEmail, sendWelcomeEmail } from "@/lib/email";
 import { hashPassword, readNewPassword } from "@/lib/passwords";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -67,6 +69,10 @@ export async function createCustomerAction(formData: FormData) {
   const passwordHash = await hashPassword(pw.password);
   const { id } = await createCustomer({ ...profile, passwordHash });
   await writeAuditLog({ userId: actor.id, action: "create", module: "customers", recordId: id, newValue: profile });
+  if (profile.email) {
+    const email = profile.email;
+    after(() => sendWelcomeEmail({ name: profile.name, email, username: profile.username }));
+  }
 
   // Converted from a lead: close the loop on the Sales desk.
   const lead = leadId && can("leads", "update") ? await getLead(leadId) : null;
@@ -128,7 +134,8 @@ export async function setCustomerActiveAction(formData: FormData) {
 export async function resetCustomerPasswordAction(formData: FormData) {
   const { user: actor } = await requireStaff("users", "update");
   const id = text(formData, "id");
-  if (!(await getCustomer(id))) redirect("/admin/customers?error=missing");
+  const customer = await getCustomer(id);
+  if (!customer) redirect("/admin/customers?error=missing");
   const back = (code: string) => redirect(`/admin/customers/${id}?error=${code}`);
 
   const pw = readNewPassword(formData);
@@ -138,6 +145,10 @@ export async function resetCustomerPasswordAction(formData: FormData) {
   // Sign the customer out everywhere so the old password's sessions stop working.
   await deleteSessionsForUser(id);
   await writeAuditLog({ userId: actor.id, action: "reset-password", module: "customers", recordId: id });
+  if (customer!.email) {
+    const email = customer!.email;
+    after(() => sendPasswordChangedEmail({ name: customer!.name, email }, true));
+  }
 
   redirect(`/admin/customers/${id}?saved=password`);
 }
