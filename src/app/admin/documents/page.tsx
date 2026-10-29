@@ -95,6 +95,7 @@ export default async function AdminDocumentsPage({ searchParams }: Props) {
     }
     return (
       <FilePickForm
+        audience={d.audience === "buyer" ? "buyer" : "public"}
         action={setDocumentFileAction}
         id={d.id}
         returnTo={returnTo}
@@ -121,9 +122,9 @@ export default async function AdminDocumentsPage({ searchParams }: Props) {
             </a>
           )}
           {d.storagePath && canUpdate && (
-            <FilePickForm action={setDocumentFileAction} id={d.id} returnTo={returnTo} className="block rounded-xl px-3 py-2 hover:bg-mist" label="Replace with a new version…" />
+            <FilePickForm audience={d.audience === "buyer" ? "buyer" : "public"} action={setDocumentFileAction} id={d.id} returnTo={returnTo} className="block rounded-xl px-3 py-2 hover:bg-mist" label="Replace with a new version…" />
           )}
-          {!d.storagePath && <FilePickForm action={setDocumentFileAction} id={d.id} returnTo={returnTo} className="block rounded-xl px-3 py-2 hover:bg-mist" label="Attach file…" />}
+          {!d.storagePath && <FilePickForm audience={d.audience === "buyer" ? "buyer" : "public"} action={setDocumentFileAction} id={d.id} returnTo={returnTo} className="block rounded-xl px-3 py-2 hover:bg-mist" label="Attach file…" />}
           <Link href={href(base, { versions: d.id })} className="block rounded-xl px-3 py-2 hover:bg-mist">
             Version history{d._count.versions ? ` (${d._count.versions} older)` : ""}
           </Link>

@@ -44,16 +44,21 @@ export default async function LeadPage({ params, searchParams }: Props) {
     { label: "Size", value: lead.size },
     { label: "Budget / amount", value: lead.budget },
     { label: "Received", value: lead.createdAt.toLocaleString("en-GB", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }) },
-    ...detailsList(lead.details).map(([k, v]) => ({ label: k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()), value: String(v) })),
+    ...detailsList(lead.details).map(([k, v]) => {
+      const label = k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
+      // Links into this app (e.g. "Customer page" from a portal request) open the page instead of showing a long URL.
+      const inApp = String(v).match(/^https?:\/\/[^/]+(\/(?:admin|sales|pm)\/[^\s]*)$/)?.[1];
+      return inApp ? { label, value: `Open ${label.toLowerCase()} →`, href: inApp } : { label, value: String(v) };
+    }),
   ].filter((f) => f.value);
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <Link href="/sales" className="text-sm text-stone-600 hover:underline">
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <Link href="/sales" className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-sm font-medium text-body hover:border-ink hover:text-ink">
         ← All leads
       </Link>
-      <h1 className="mt-2 text-2xl font-bold">{lead.name}</h1>
-      <p className="text-sm text-stone-600">
+      <h1 className="mt-5 text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">{lead.name}</h1>
+      <p className="mt-1.5 text-[15px] text-muted">
         {lead.interest} · {labelOf(LEAD_STATUSES, lead.status)}
       </p>
       <Notice message={sp.saved === "created" ? "Lead added." : sp.saved ? "Lead updated." : undefined} />

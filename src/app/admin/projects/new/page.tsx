@@ -10,8 +10,8 @@ export default async function NewProjectPage({ searchParams }: Props) {
   await requireStaff("projects", "add");
   const { error } = await searchParams;
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <h1 className="text-2xl font-bold">Add project</h1>
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">Add project</h1>
       <FormError code={error} />
       <ProjectForm />
     </div>

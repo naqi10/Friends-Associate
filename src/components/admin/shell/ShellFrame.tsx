@@ -45,7 +45,9 @@ function activeItem(path: string, menu: NavGroup[], extra: NavItem[]) {
         ? "Administration"
         : i.href === "/account"
           ? "Account"
-          : "Overview",
+          : i.href === "/admin/reminders"
+            ? "Sales"
+            : "Overview",
     );
   return best as { item: NavItem; group: string } | null;
 }
@@ -148,7 +150,8 @@ export function ShellFrame({
               Friends Associates
             </span>
             <span className="mt-2 block text-[10px] tracking-[0.28em] text-muted uppercase">
-              faryk.com · admin
+              {/* The role, so Sales and PM staff never see "Admin" on their own screens. */}
+              faryk.com · {user.role}
             </span>
           </span>
         </Link>
@@ -346,7 +349,7 @@ export function ShellFrame({
                   Friends Associates
                 </span>
                 <span className="block text-[10px] tracking-[0.28em] text-muted uppercase">
-                  Admin
+                  {user.role}
                 </span>
               </span>
             </Link>

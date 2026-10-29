@@ -17,8 +17,8 @@ export default async function PageHeadingsPage({ searchParams }: Props) {
   const savedLabel = sp.saved && sp.saved in PAGE_CONTENT ? PAGE_CONTENT[sp.saved as PageContentKey].label : null;
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <h1 className="text-2xl font-bold">Website content</h1>
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">Website content</h1>
       <ContentTabs active="/admin/content/pages" />
       <p className="mt-4 text-sm text-stone-600">
         The heading and short introduction at the top of each page. Changes go live as soon as you save. Leave the introduction empty to hide it.

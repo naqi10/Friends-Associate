@@ -6,7 +6,7 @@ import {
   createSessionRecord,
   deleteSessionByToken,
   findSessionByToken,
-  getUserByEmail,
+  getUserByLogin,
 } from "@/lib/data";
 import { isRoleEnabled } from "./release";
 import { PASS_COOKIE, hashSessionToken, makePass, passCookieOptions } from "./session-pass";
@@ -70,8 +70,9 @@ export async function destroySession(): Promise<void> {
   jar.delete(PASS_COOKIE);
 }
 
-export async function verifyLogin(email: string, password: string): Promise<User | null> {
-  const user = await getUserByEmail(email.trim());
+/** `login` is an email address or a customer's user ID. */
+export async function verifyLogin(login: string, password: string): Promise<User | null> {
+  const user = await getUserByLogin(login);
   const ok = await bcrypt.compare(password, user?.password_hash ?? DUMMY_HASH);
   return ok && user && user.active ? user : null;
 }

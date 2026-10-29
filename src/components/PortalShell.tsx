@@ -1,51 +1,81 @@
 import Link from "next/link";
-import { logoutAction } from "@/lib/actions/auth";
+import { Icon } from "@/components/admin/shell/icons";
+import { PortalBottomNav, PortalTabs } from "@/components/portal/PortalNav";
+import { BRAND } from "@/lib/brand";
+import { getPortal, initials } from "@/lib/portal";
 
-const links = [
-  { href: "/portal", label: "Home" },
-  { href: "/portal/properties", label: "Properties" },
-  { href: "/portal/payments", label: "Payments" },
-  { href: "/portal/documents", label: "Documents" },
-  { href: "/portal/profile", label: "Account" },
-];
+/**
+ * Frame of every customer-portal page.
+ * Desktop: the site header stays on top, with the portal tabs under it.
+ * Phones: the site header is replaced by a slim portal bar (or a back bar on inner pages) and a bottom tab bar.
+ */
+export async function PortalShell({
+  children,
+  title,
+  subtitle,
+  back = "/portal",
+}: {
+  children: React.ReactNode;
+  /** Inner pages: the page heading, also shown in a back bar on phones. The home page has its own greeting. */
+  title?: string;
+  subtitle?: string;
+  back?: string;
+}) {
+  const { user, unread, overdue } = await getPortal();
 
-export function PortalShell({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
-    <div className="pb-20 md:pb-8">
-      <div className="border-b border-stone-200 bg-white print:hidden">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <div>
-            <p className="text-xs font-medium uppercase text-teal-800">Customer portal</p>
-            {title && <h1 className="text-lg font-semibold">{title}</h1>}
-          </div>
-          <form action={logoutAction}>
-            <button type="submit" className="text-sm text-stone-600 hover:text-stone-900">
-              Logout
-            </button>
-          </form>
-        </div>
-        <nav className="mx-auto hidden max-w-4xl gap-4 px-4 pb-3 text-sm font-medium md:flex">
-          {links.map((l) => (
-            <Link key={l.href} href={l.href} className="text-teal-900 hover:underline">
-              {l.label}
+    <div className="bg-canvas pb-28 md:pb-16 print:bg-white print:p-0">
+      <PortalTabs unread={unread} overdue={overdue} />
+
+      {/* Phone header */}
+      {title ? (
+        <div className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur md:hidden print:hidden">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <Link href={back} aria-label="Back" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mist">
+              <Icon name="back" className="h-5 w-5" />
             </Link>
-          ))}
-          <Link href="/portal/progress" className="text-teal-900 hover:underline">
-            Progress
-          </Link>
-          <Link href="/portal/notifications" className="text-teal-900 hover:underline">
-            Notifications
-          </Link>
-        </nav>
+            <div className="min-w-0">
+              <h1 className="truncate text-[20px] leading-tight font-semibold">{title}</h1>
+              {subtitle && <p className="truncate text-[14px] text-muted">{subtitle}</p>}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur md:hidden print:hidden">
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <Link href="/" className="leading-none">
+              <span className="block font-serif text-[24px]">{BRAND.name}</span>
+              <span className="mt-1 block text-[10px] tracking-[0.3em] text-muted uppercase">My portal</span>
+            </Link>
+            <div className="flex items-center gap-2.5">
+              <Link
+                href="/portal/notifications"
+                aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
+                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-line bg-paper"
+              >
+                <Icon name="bell" className="h-5 w-5" />
+                {unread > 0 && <span className="absolute top-2 right-2.5 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-paper" />}
+              </Link>
+              <Link href="/portal/profile" aria-label="My account" className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-[15px] font-semibold text-paper">
+                {initials(user.name)}
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mx-auto max-w-[1280px] px-4 pt-6 sm:px-6 md:px-10 md:pt-10 print:p-0">
+        {title && (
+          <div className="mb-8 hidden md:block print:hidden">
+            <p className="text-[13px] font-semibold tracking-[0.12em] text-amber-800 uppercase">Customer portal</p>
+            <h1 className="mt-2 font-serif text-[48px] leading-[1.05]">{title}</h1>
+            {subtitle && <p className="mt-2 text-[17px] text-muted">{subtitle}</p>}
+          </div>
+        )}
+        {children}
       </div>
-      <div className="mx-auto max-w-4xl px-4 py-8">{children}</div>
-      <nav className="fixed bottom-0 left-0 right-0 flex border-t border-stone-200 bg-white text-xs md:hidden print:hidden">
-        {links.map((l) => (
-          <Link key={l.href} href={l.href} className="flex flex-1 flex-col items-center py-2 text-stone-700">
-            {l.label}
-          </Link>
-        ))}
-      </nav>
+
+      <PortalBottomNav unread={unread} overdue={overdue} />
     </div>
   );
 }

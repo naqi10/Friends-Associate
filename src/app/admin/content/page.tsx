@@ -34,11 +34,11 @@ export default async function AdminContentPage({ searchParams }: Props) {
   ]);
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Website content</h1>
-          <p className="mt-1 text-sm text-muted">Change the website&apos;s text and photos. Changes go live as soon as you press Save.</p>
+          <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">Website content</h1>
+          <p className="mt-1.5 text-[15px] text-muted">Change the website&apos;s text and photos. Changes go live as soon as you press Save.</p>
         </div>
         <Link href="/" target="_blank" className="rounded-full border-[1.5px] border-line-strong bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-mist">
           Open home page ↗

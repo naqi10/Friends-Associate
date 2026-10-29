@@ -30,7 +30,7 @@ export async function getStaffRows(): Promise<StaffRow[]> {
     orderBy: [{ active: "desc" }, { name: "asc" }],
     select: staffSelect,
   });
-  return rows.map((u) => ({ ...u, role: u.role as StaffRole, lastLoginAt: u.lastLoginAt?.toISOString() ?? null }));
+  return rows.map((u) => ({ ...u, email: u.email ?? "", role: u.role as StaffRole, lastLoginAt: u.lastLoginAt?.toISOString() ?? null }));
 }
 
 export async function getStaffMember(id: string) {

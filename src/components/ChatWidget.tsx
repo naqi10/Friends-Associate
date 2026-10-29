@@ -11,7 +11,7 @@ import {
   answerLabel,
   getFlow,
   isVisible,
-  stepProblem,
+  firstProblem,
   type Answers,
   type Field,
   type FlowKey,
@@ -76,6 +76,7 @@ const COPY = {
     "Bhejne se pehle apni details check karein. Kuch badalna ho to Edit dabayein.",
   ),
   edit: t("Edit", "ترمیم", "Edit"),
+  missing: t("Please fill in:", "براہ کرم یہ بھریں:", "Meharbani kar ke ye bharein:"),
   yourDetails: t("Your details", "آپ کی تفصیلات", "Aap ki details"),
 };
 
@@ -152,6 +153,8 @@ export function ChatWidget() {
   const [stepIdx, setStepIdx] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [problem, setProblem] = useState<string | null>(null);
+  /** The field the visitor still has to fill in (highlighted in red). */
+  const [missing, setMissing] = useState<string | null>(null);
   const [log, setLog] = useState<Bubble[]>([]);
   const [input, setInput] = useState("");
   const [results, setResults] = useState<Results | null>(null);
@@ -236,6 +239,7 @@ export function ChatWidget() {
     setAnswers(prefill);
     setStepIdx(0);
     setProblem(null);
+    setMissing(null);
     setResults(null);
     setView("flow");
   }
@@ -245,6 +249,7 @@ export function ChatWidget() {
     setAnswers({});
     setStepIdx(0);
     setProblem(null);
+    setMissing(null);
     setResults(null);
     setLog([]);
     setView("menu");
@@ -265,6 +270,7 @@ export function ChatWidget() {
 
   function setAnswer(field: Field, value: string) {
     setProblem(null);
+    if (field.key === missing) setMissing(null);
     setAnswers((prev) => {
       if (field.kind === "choice" && field.multiple) {
         const cur = Array.isArray(prev[field.key]) ? (prev[field.key] as string[]) : [];
@@ -280,11 +286,22 @@ export function ChatWidget() {
 
   function next() {
     if (!flow || !step) return;
-    const p = stepProblem(step, answers);
+    const p = firstProblem(step, answers);
     if (p) {
-      setProblem(tx(p === "phone" ? UI.phoneInvalid : UI.required));
+      // Name the exact field, mark it red, and bring it into view, so nobody has to hunt for it.
+      // A card with one question has a generic field label ("Choose one"), so name the question itself.
+      const shown = step.fields.filter((f) => isVisible(f, answers));
+      const what = shown.length === 1 ? step.title : p.field.label;
+      setProblem(p.problem === "phone" ? tx(UI.phoneInvalid) : `${tx(COPY.missing)} ${tx(what)}`);
+      setMissing(p.field.key);
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`chat-f-${p.field.key}`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (el instanceof HTMLInputElement) el.focus({ preventScroll: true });
+      });
       return;
     }
+    setMissing(null);
     if (stepIdx === flow.steps.length - 1) {
       // Last card: show everything for a final check before anything is sent.
       setView("review");
@@ -300,6 +317,7 @@ export function ChatWidget() {
 
   function back() {
     setProblem(null);
+    setMissing(null);
     if (view === "review") setView("flow");
     else if (view !== "flow" || stepIdx === 0) reset();
     else setStepIdx(stepIdx - 1);
@@ -503,7 +521,7 @@ export function ChatWidget() {
 
                   <div className="mt-4 space-y-5">
                     {visibleFields.map((f) => (
-                      <FieldInput key={f.key} field={f} value={answers[f.key]} onChange={(v) => setAnswer(f, v)} tx={tx} />
+                      <FieldInput key={f.key} field={f} value={answers[f.key]} onChange={(v) => setAnswer(f, v)} tx={tx} invalid={missing === f.key} />
                     ))}
                   </div>
                   <input ref={honeypot} type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden className="absolute -left-[9999px] h-0 w-0" />
@@ -756,7 +774,19 @@ function PersonCard({ tx }: { tx: Tx }) {
   );
 }
 
-function FieldInput({ field, value, onChange, tx }: { field: Field; value: string | string[] | undefined; onChange: (v: string) => void; tx: Tx }) {
+function FieldInput({
+  field,
+  value,
+  onChange,
+  tx,
+  invalid = false,
+}: {
+  field: Field;
+  value: string | string[] | undefined;
+  onChange: (v: string) => void;
+  tx: Tx;
+  invalid?: boolean;
+}) {
   const id = `chat-f-${field.key}`;
   if (field.kind === "text") {
     return (
@@ -775,15 +805,16 @@ function FieldInput({ field, value, onChange, tx }: { field: Field; value: strin
           dir={field.inputMode === "tel" ? "ltr" : "auto"}
           placeholder={field.placeholder ? tx(field.placeholder) : undefined}
           autoComplete={field.key === "name" ? "name" : field.key === "phone" ? "tel" : "off"}
-          className="mt-1.5 w-full rounded-2xl border-[1.5px] border-line-strong bg-paper px-4 py-3 text-[15px] text-ink outline-none focus:border-ink"
+          aria-invalid={invalid || undefined}
+          className={`mt-1.5 w-full rounded-2xl border-[1.5px] bg-paper px-4 py-3 text-[15px] text-ink outline-none ${invalid ? "border-red-600 ring-2 ring-red-100 focus:border-red-600" : "border-line-strong focus:border-ink"}`}
         />
       </label>
     );
   }
   const selected = Array.isArray(value) ? value : value ? [value] : [];
   return (
-    <fieldset>
-      <legend className="text-sm text-muted">
+    <fieldset id={id} aria-invalid={invalid || undefined} className={invalid ? "-m-2 rounded-2xl p-2 ring-2 ring-red-200" : ""}>
+      <legend className={`text-sm ${invalid ? "font-semibold text-red-700" : "text-muted"}`}>
         {tx(field.label)}
         {field.required && <span className="text-red-600"> *</span>}
       </legend>

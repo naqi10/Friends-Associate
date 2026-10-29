@@ -2,13 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { DOCUMENT_TYPES } from "@/lib/catalog";
 import { prisma } from "@/lib/db";
-import { createDocumentRecord, getUserById, notifyUser, setDocumentFile, writeAuditLog } from "@/lib/data";
+import { canSeeDocuments, createDocumentRecord, getUserById, notifyUser, setDocumentFile, writeAuditLog } from "@/lib/data";
+import { BUYER_FILE_EXT, BUYER_FILE_MAX_BYTES } from "@/lib/document-access";
 import { documentsReturn, withParam } from "@/lib/documents-return";
-import { saveDocumentFile } from "@/lib/files";
+import { sendNewDocumentEmail } from "@/lib/email";
+import { isDocumentKey, newDocumentKey, saveDocumentFile } from "@/lib/files";
 import { requireStaff } from "@/lib/permissions";
-import { contentTypeFor } from "@/lib/storage";
+import { contentTypeFor, storage } from "@/lib/storage";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_UPLOAD_EXT = /\.(pdf|jpe?g|png|webp|docx?|xlsx?)$/i;
@@ -17,13 +20,57 @@ function text(formData: FormData, key: string, max = 200): string {
   return String(formData.get(key) ?? "").trim().slice(0, max);
 }
 
-/** Returns the file or the error code that rejects it. */
-function checkFile(formData: FormData): File | string {
+type Audience = "public" | "buyer";
+type Stored = { storagePath: string; fileName: string; size: number };
+
+/** File-type rule for an audience: customers get drawings, images and ZIPs; public documents office files. */
+function typeError(audience: Audience, name: string) {
+  if (audience === "buyer") return BUYER_FILE_EXT.test(name) ? null : "buyer-type";
+  return ALLOWED_UPLOAD_EXT.test(name) ? null : "type";
+}
+
+/**
+ * The form's file, stored. Either the browser already sent it straight to the bucket (large files, see
+ * startDocumentUploadAction) and the form carries its key, or the file comes in the form and is saved here.
+ * Returns the stored file or the error code that rejects it.
+ */
+async function readUpload(formData: FormData, audience: Audience): Promise<Stored | string> {
+  const key = text(formData, "uploaded_key", 300);
+  if (key) {
+    if (!isDocumentKey(audience, key)) return "upload-missing";
+    const fileName = key.slice(key.lastIndexOf("/") + 38);
+    const bad = typeError(audience, fileName);
+    if (bad) return bad;
+    const size = await storage().size(key);
+    if (!size) return "upload-missing";
+    if (size > BUYER_FILE_MAX_BYTES) {
+      await storage().remove(key).catch(() => undefined);
+      return "size";
+    }
+    return { storagePath: key, fileName, size };
+  }
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return "required";
   if (file.size > MAX_UPLOAD_BYTES) return "size";
-  if (!ALLOWED_UPLOAD_EXT.test(file.name)) return "type";
-  return file;
+  const bad = typeError(audience, file.name);
+  if (bad) return bad;
+  const saved = await saveDocumentFile(audience, file.name, Buffer.from(await file.arrayBuffer()), contentTypeFor(file.name));
+  return { ...saved, size: file.size };
+}
+
+/**
+ * Step 1 of a direct upload: a short-lived link the browser PUTs the file to, straight into the bucket.
+ * Null when storage cannot sign links (local development); the form then sends the file itself.
+ */
+export async function startDocumentUploadAction(input: { fileName: string; size: number; audience: Audience }) {
+  await requireStaff("documents", "add");
+  const audience: Audience = input.audience === "buyer" ? "buyer" : "public";
+  if (typeError(audience, input.fileName)) return { error: audience === "buyer" ? "Customer files must be PDF, DWG, an image or ZIP." : "Unsupported file type." };
+  if (!(input.size > 0) || input.size > BUYER_FILE_MAX_BYTES) return { error: "This file is larger than 200 MB." };
+  const { storagePath } = newDocumentKey(audience, input.fileName);
+  const contentType = contentTypeFor(storagePath);
+  const url = await storage().signedUploadUrl(storagePath, contentType);
+  return url ? { key: storagePath, url, contentType } : null;
 }
 
 function revalidateDocuments() {
@@ -42,9 +89,7 @@ export async function uploadDocumentAction(formData: FormData) {
   const category = text(formData, "category");
   const projectId = text(formData, "project_id") || null;
   const userId = audience === "buyer" ? text(formData, "user_id") || null : null;
-  const file = checkFile(formData);
   if (!name) fail("required");
-  if (typeof file === "string") return fail(file);
   if (!(DOCUMENT_TYPES as readonly string[]).includes(category)) fail("doc-type");
   if (projectId && !(await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } }))) fail("missing");
   if (audience === "buyer") {
@@ -52,8 +97,9 @@ export async function uploadDocumentAction(formData: FormData) {
     if (!buyer || buyer.role !== "buyer") fail("buyer");
   }
 
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const { storagePath, fileName } = await saveDocumentFile(audience, file.name, bytes, contentTypeFor(file.name));
+  const file = await readUpload(formData, audience);
+  if (typeof file === "string") return fail(file);
+  const { storagePath, fileName } = file;
   const doc = await createDocumentRecord({
     audience,
     userId,
@@ -71,8 +117,13 @@ export async function uploadDocumentAction(formData: FormData) {
     recordId: doc.id,
     newValue: { name, category, audience, userId, projectId, fileName, sizeBytes: file.size },
   });
-  if (userId) {
+  // Only a customer who can see their documents is told about one (see canSeeDocuments).
+  if (userId && (await canSeeDocuments(userId))) {
     await notifyUser(userId, { type: "document", title: `New document: ${name}`, message: "A new document has been added to your portal.", link: "/portal/documents" });
+    after(async () => {
+      const buyer = await getUserById(userId);
+      if (buyer) await sendNewDocumentEmail(buyer, name);
+    });
   }
   revalidateDocuments();
   redirect(withParam(back, "saved=1"));
@@ -89,12 +140,10 @@ export async function setDocumentFileAction(formData: FormData) {
   if (!current) redirect(withParam(back, "error=missing"));
   // Attaching to an empty record is part of adding; replacing an existing file changes it.
   const { user: actor } = await requireStaff("documents", current.storagePath ? "update" : "add");
-  const file = checkFile(formData);
-  if (typeof file === "string") redirect(withParam(back, `error=${file}`));
-
-  const bytes = Buffer.from(await file.arrayBuffer());
   const audience = current.audience === "buyer" ? "buyer" : "public";
-  const { storagePath, fileName } = await saveDocumentFile(audience, file.name, bytes, contentTypeFor(file.name));
+  const file = await readUpload(formData, audience);
+  if (typeof file === "string") redirect(withParam(back, `error=${file}`));
+  const { storagePath, fileName } = file;
   const result = await setDocumentFile({ docId: id, storagePath, fileName, actorId: actor.id });
   if (!result) redirect(withParam(back, "error=missing"));
   await writeAuditLog({
@@ -105,14 +154,32 @@ export async function setDocumentFileAction(formData: FormData) {
     oldValue: { fileName: result.before.fileName, version: result.before.version, storagePath: result.before.storagePath },
     newValue: { fileName, version: result.after.version, sizeBytes: file.size },
   });
-  if (result.after.audience === "buyer" && result.after.userId) {
+  if (result.after.audience === "buyer" && result.after.userId && (await canSeeDocuments(result.after.userId))) {
     await notifyUser(result.after.userId, {
       type: "document",
       title: result.replaced ? `Updated document: ${result.after.name} (${result.after.version})` : `Document ready: ${result.after.name}`,
       message: result.replaced ? "A newer version of this document is in your portal." : "The file for this document is now in your portal.",
       link: "/portal/documents",
     });
+    const buyerId = result.after.userId;
+    after(async () => {
+      const buyer = await getUserById(buyerId);
+      if (buyer) await sendNewDocumentEmail(buyer, result.after.name, result.replaced);
+    });
   }
   revalidateDocuments();
   redirect(withParam(back, `saved=${result.replaced ? "version" : "attached"}`));
+}
+
+/** A payment proof the customer sent from their portal: staff mark it checked once the payment is recorded. */
+export async function markDocumentCheckedAction(formData: FormData) {
+  const { user: actor } = await requireStaff("documents", "update");
+  const id = text(formData, "id");
+  const back = documentsReturn(formData);
+  const doc = await prisma.document.findUnique({ where: { id }, select: { status: true, audience: true } });
+  if (!doc || doc.audience !== "buyer") redirect(withParam(back, "error=missing"));
+  await prisma.document.update({ where: { id }, data: { status: "Approved" } });
+  await writeAuditLog({ userId: actor.id, action: "update", module: "documents", recordId: id, oldValue: { status: doc.status }, newValue: { status: "Approved" } });
+  revalidateDocuments();
+  redirect(withParam(back, "saved=checked"));
 }

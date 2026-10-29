@@ -28,11 +28,27 @@ const esc = (s: unknown) =>
 
 type Mail = { to: string[]; subject: string; html: string; text: string; replyTo?: { email: string; name?: string } };
 
+/** What is set up, for the admin's email check (never includes the key itself). */
+export function emailSetup() {
+  return {
+    enabled: emailEnabled(),
+    hasKey: !!process.env.BREVO_API_KEY,
+    from: process.env.EMAIL_FROM ?? "",
+    fromName: process.env.EMAIL_FROM_NAME || BRAND.name,
+    alertTo: process.env.LEAD_ALERT_TO ?? "",
+  };
+}
+
 /** Sends one email. Returns true when Brevo accepted it; logs and returns false otherwise. */
 export async function sendEmail(mail: Mail): Promise<boolean> {
-  if (!emailEnabled()) return false;
+  return (await deliver(mail)).ok;
+}
+
+/** Like sendEmail, but also returns Brevo's reason when it refuses (shown to the admin on a test email). */
+async function deliver(mail: Mail): Promise<{ ok: boolean; error?: string }> {
+  if (!emailEnabled()) return { ok: false, error: "Email is switched off: BREVO_API_KEY or a valid EMAIL_FROM is missing." };
   const to = [...new Set(mail.to.map((t) => t.trim().toLowerCase()).filter((t) => EMAIL_RE.test(t)))];
-  if (to.length === 0) return false;
+  if (to.length === 0) return { ok: false, error: "No valid recipient address." };
   try {
     const res = await fetch(API, {
       method: "POST",
@@ -49,13 +65,21 @@ export async function sendEmail(mail: Mail): Promise<boolean> {
     });
     if (!res.ok) {
       // Brevo's error body explains the problem (unverified sender, bad key…); it never contains the key.
-      console.error("[email] Brevo refused the email:", res.status, (await res.text()).slice(0, 300));
-      return false;
+      const body = (await res.text()).slice(0, 300);
+      console.error("[email] Brevo refused the email:", res.status, body);
+      let reason = body;
+      try {
+        reason = (JSON.parse(body) as { message?: string }).message ?? body;
+      } catch {
+        // not JSON: keep the raw text
+      }
+      return { ok: false, error: `Brevo refused it (${res.status}): ${reason}` };
     }
-    return true;
+    return { ok: true };
   } catch (e) {
-    console.error("[email] could not reach Brevo:", e instanceof Error ? e.message : e);
-    return false;
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[email] could not reach Brevo:", msg);
+    return { ok: false, error: `Could not reach Brevo: ${msg}` };
   }
 }
 
@@ -92,7 +116,7 @@ const button = (href: string, label: string) =>
  * A new website enquiry: an alert to the office (with Reply-To set to the client) and, when the client left an
  * email address, a short "we received your message" reply.
  */
-export async function sendNewLeadEmails(lead: NewLead & { id: string }) {
+export async function sendNewLeadEmails(lead: NewLead & { id: string }, opts: { confirm?: boolean } = {}) {
   if (!emailEnabled()) return;
   const company = await getCompany();
   const office = (process.env.LEAD_ALERT_TO || company.email).split(",");
@@ -128,7 +152,7 @@ export async function sendNewLeadEmails(lead: NewLead & { id: string }) {
       .join("\n")}\n\nOpen on Sales desk: ${deskUrl}`,
   });
 
-  if (lead.email && EMAIL_RE.test(lead.email)) {
+  if (opts.confirm !== false && lead.email && EMAIL_RE.test(lead.email)) {
     const whatsapp = `https://wa.me/${company.whatsapp.replace(/\D/g, "")}`;
     await sendEmail({
       to: [lead.email],
@@ -141,4 +165,68 @@ export async function sendNewLeadEmails(lead: NewLead & { id: string }) {
       text: `Thank you, ${lead.name}.\n\nWe received your enquiry about ${lead.interest}. Our team will contact you soon on ${lead.phone}.\nUrgent? Call ${BRAND.phone} or WhatsApp ${whatsapp}\n\n${BRAND.name} · ${BRAND.domain}`,
     });
   }
+}
+
+/** Tells a customer that a document was added to (or updated in) their portal. Sent after the response. */
+export async function sendNewDocumentEmail(customer: { name: string; email: string }, docName: string, updated = false) {
+  if (!emailEnabled() || !EMAIL_RE.test(customer.email)) return;
+  const url = absoluteUrl("/portal/documents");
+  const what = updated ? "A newer version of a document" : "A new document";
+  await sendEmail({
+    to: [customer.email],
+    subject: `${updated ? "Updated document" : "New document"}: ${docName} · ${BRAND.name}`,
+    html: layout(
+      `Assalam-o-Alaikum, ${customer.name.split(" ")[0]}`,
+      `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${what} is now in your customer portal:</p><p style="margin:0;padding:14px 16px;background:#f4f4f2;border-radius:12px;font-size:15px"><b>${esc(docName)}</b></p>${button(url, "Open my documents")}<p style="margin:18px 0 0;font-size:13px;color:#5f5f5a">Sign in with your email address. Questions? Call ${esc(BRAND.phone)}.</p>`,
+    ),
+    text: `Assalam-o-Alaikum ${customer.name},
+
+${what} is now in your customer portal: ${docName}
+
+Open it here: ${url}
+
+${BRAND.name} · ${BRAND.phone}`,
+  });
+}
+
+/**
+ * The email copy of a customer's portal notification (payment received, instalment reminder, construction
+ * progress…): the same title and message, with a button to the page it links to.
+ */
+export async function sendNotificationEmail(customer: { name: string; email: string }, n: { title: string; message?: string; link?: string }) {
+  if (!emailEnabled() || !EMAIL_RE.test(customer.email)) return;
+  const url = absoluteUrl(n.link && n.link.startsWith("/portal") ? n.link : "/portal");
+  await sendEmail({
+    to: [customer.email],
+    subject: `${n.title} · ${BRAND.name}`,
+    html: layout(
+      n.title,
+      `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">Assalam-o-Alaikum ${esc(customer.name.split(" ")[0])},</p>${n.message ? `<p style="margin:0;font-size:15px;line-height:1.6">${esc(n.message)}</p>` : ""}${button(url, "Open my portal")}<p style="margin:18px 0 0;font-size:13px;color:#5f5f5a">Sign in with your email address. Questions? Call ${esc(BRAND.phone)}.</p>`,
+    ),
+    text: `Assalam-o-Alaikum ${customer.name},
+
+${n.title}
+${n.message ?? ""}
+
+Open your portal: ${url}
+
+${BRAND.name} · ${BRAND.phone}`,
+  });
+}
+
+/** Admin → "Send test email": proves the key, the sender and the domain's DNS records all work. */
+export async function sendTestEmail(to: string) {
+  const setup = emailSetup();
+  return deliver({
+    to: [to],
+    subject: `Test email · ${BRAND.name}`,
+    html: layout(
+      "Email is working",
+      `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">This test was sent from the ${esc(BRAND.domain)} admin through Brevo.</p>${rows([
+        ["Sender", `${setup.fromName} <${setup.from}>`],
+        ["Enquiry alerts go to", setup.alertTo || "the company email (Contact & footer)"],
+      ])}<p style="margin:16px 0 0;font-size:13px;color:#5f5f5a">If this landed in spam, check the domain's SPF, DKIM and DMARC records in Brevo → Senders, domains &amp; dedicated IPs.</p>`,
+    ),
+    text: `Email is working. Sender: ${setup.fromName} <${setup.from}>.`,
+  });
 }

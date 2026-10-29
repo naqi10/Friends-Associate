@@ -126,7 +126,10 @@ export interface Property {
 export interface User {
   id: string;
   name: string;
+  /** "" when the customer has no email (they sign in with their user ID). */
   email: string;
+  /** Customer user ID for sign-in; "" when they sign in with their email. */
+  username: string;
   password_hash: string;
   role: UserRole;
   city: string;

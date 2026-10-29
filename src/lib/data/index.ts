@@ -118,9 +118,17 @@ export async function getDocumentRowById(id: string) {
 export async function getDocumentsForUser(userId: string) {
   const rows = await prisma.document.findMany({
     where: { audience: "buyer", userId },
-    orderBy: { name: "asc" },
+    orderBy: [{ issuedOn: "desc" }, { name: "asc" }],
   });
   return rows.map(mapDocument);
+}
+
+/** Sign-in lookup: an email address, or a customer's user ID when there is no "@". */
+export async function getUserByLogin(login: string) {
+  const key = login.trim().toLowerCase();
+  if (!key) return undefined;
+  const row = key.includes("@") ? await prisma.user.findUnique({ where: { email: key } }) : await prisma.user.findUnique({ where: { username: key } });
+  return row ? mapUser(row) : undefined;
 }
 
 export async function getUserByEmail(email: string) {
@@ -373,6 +381,8 @@ export async function createDocumentRecord(input: {
   issuedOn: string;
   fileName: string;
   storagePath: string;
+  /** Buyer documents default to "Issued"; a payment proof the customer sent starts as "Pending" (to be checked). */
+  status?: "Issued" | "Pending" | "Approved";
 }) {
   return prisma.document.create({
     data: {
@@ -385,7 +395,7 @@ export async function createDocumentRecord(input: {
       fileName: input.fileName,
       storagePath: input.storagePath,
       version: input.audience === "buyer" ? "v1.0" : null,
-      status: input.audience === "buyer" ? "Issued" : null,
+      status: input.audience === "buyer" ? (input.status ?? "Issued") : null,
     },
   });
 }
@@ -397,7 +407,7 @@ export async function createDocumentRecord(input: {
 const projectSummary = { select: { id: true, name: true, slug: true, progressPercent: true, status: true } } as const;
 
 export type BookingWithRelations = ReturnType<typeof mapBooking> & {
-  property: { id: string; title: string; type: string; size: string };
+  property: { id: string; title: string; type: string; size: string; city: string; locality: string; imagePath: string; slug: string | null };
   project: { id: string; name: string; slug: string; progress_percent: number; status: string };
 };
 
@@ -406,7 +416,7 @@ export async function getBookingsForUserDetailed(userId: string): Promise<Bookin
     where: { userId },
     orderBy: { bookedOn: "desc" },
     include: {
-      property: { select: { id: true, title: true, type: true, size: true } },
+      property: { select: { id: true, title: true, type: true, size: true, city: true, locality: true, imagePath: true, slug: true } },
       project: projectSummary,
     },
   });
@@ -575,3 +585,4 @@ export * from "./inventory";
 export * from "./leads";
 export * from "./investments";
 export * from "./documents";
+export * from "./products";

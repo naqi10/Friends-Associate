@@ -12,9 +12,9 @@ export default async function NewLeadPage({ searchParams }: Props) {
   await requireStaff("leads", "add");
   const { error } = await searchParams;
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <h1 className="text-2xl font-bold">Add lead</h1>
-      <p className="mt-1 text-sm text-stone-600">For walk-in, phone or referral enquiries.</p>
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">Add lead</h1>
+      <p className="mt-1.5 text-[15px] text-muted">For walk-in, phone or referral enquiries.</p>
       <FormError code={error} />
       <form action={addLeadAction} className="mt-6 grid gap-4 admin-card p-6 sm:grid-cols-2">
         <Field label="Name" name="name" required minLength={2} maxLength={120} />

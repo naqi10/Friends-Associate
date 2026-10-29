@@ -578,12 +578,17 @@ export function isVisible(field: Field, answers: Answers): boolean {
 
 /** Validates one card. Returns the first problem ("required" | "phone"), or null when the card is complete. */
 export function stepProblem(step: Step, answers: Answers): "required" | "phone" | null {
+  return firstProblem(step, answers)?.problem ?? null;
+}
+
+/** Like stepProblem, but also says which field is wrong, so the chat can point the visitor to it. */
+export function firstProblem(step: Step, answers: Answers): { problem: "required" | "phone"; field: Field } | null {
   for (const f of step.fields) {
     if (!isVisible(f, answers)) continue;
     const v = answers[f.key];
     const empty = v === undefined || (Array.isArray(v) ? v.length === 0 : v.trim() === "");
-    if (f.required && empty) return "required";
-    if (f.kind === "text" && f.key === "phone" && !empty && !PHONE_RE.test(String(v).trim())) return "phone";
+    if (f.required && empty) return { problem: "required", field: f };
+    if (f.kind === "text" && f.key === "phone" && !empty && !PHONE_RE.test(String(v).trim())) return { problem: "phone", field: f };
   }
   return null;
 }

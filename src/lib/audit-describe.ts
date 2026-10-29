@@ -16,6 +16,7 @@ export const AREAS: Record<string, { label: string; chip: string }> = {
   permissions: { label: "Permissions", chip: "bg-violet-50 text-violet-800" },
   content: { label: "Website content", chip: "bg-amber-50 text-amber-800" },
   services: { label: "Services", chip: "bg-amber-50 text-amber-800" },
+  products: { label: "Products", chip: "bg-amber-50 text-amber-800" },
   projects: { label: "Projects", chip: "bg-mist text-ink" },
   properties: { label: "Properties", chip: "bg-mist text-ink" },
   investments: { label: "Investments", chip: "bg-mist text-ink" },
@@ -139,6 +140,8 @@ export function recordLink(e: { action: string; module: string; recordId: string
       return id?.startsWith("page.") ? "/admin/content/pages" : "/admin/content";
     case "services":
       return id && e.action !== "delete" ? `/admin/services/${id}` : "/admin/services";
+    case "products":
+      return id && e.action !== "delete" ? `/admin/products/${id}` : "/admin/products";
     case "projects":
       return id && e.action !== "delete" ? `/admin/projects/${id}` : "/admin/projects";
     case "properties":

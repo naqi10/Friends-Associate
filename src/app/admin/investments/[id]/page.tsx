@@ -27,12 +27,12 @@ export default async function EditInvestmentPage({ params, searchParams }: Props
   const projects = own ? [...active, { ...own, name: `${own.name} (archived)` }] : active;
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <Link href={inv.archivedAt ? "/admin/investments?archived=1" : "/admin/investments"} className="text-sm text-stone-600 hover:underline">
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <Link href={inv.archivedAt ? "/admin/investments?archived=1" : "/admin/investments"} className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-sm font-medium text-body hover:border-ink hover:text-ink">
         ← {inv.archivedAt ? "Archived opportunities" : "All opportunities"}
       </Link>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">
           Edit investment opportunity
           {inv.archivedAt && <span className="ml-2 rounded-full bg-stone-200 px-2 py-0.5 align-middle text-xs font-medium text-stone-700">Archived</span>}
         </h1>

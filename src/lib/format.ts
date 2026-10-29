@@ -40,6 +40,29 @@ export function formatPKR(amount: number): string {
   return `PKR ${amount.toLocaleString("en-PK")}`;
 }
 
+/** Customer-portal amounts without "PKR": 5550000 → "55.5 Lac", 12950000 → "1.29 Cr", 45000 → "45,000". */
+export function formatLacCr(amount: number): string {
+  if (amount >= 10_000_000) return `${compact(Math.floor(amount / 100_000) / 100)} Cr`;
+  if (amount >= 100_000) return `${compact(Math.floor(amount / 10_000) / 10)} Lac`;
+  return amount.toLocaleString("en-PK");
+}
+
+const MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** "20 October 2026", or "Tuesday, 20 October 2026" with `weekday`. */
+export function formatLongDate(iso: string, weekday = false): string {
+  const d = new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const date = `${d.getUTCDate()} ${MONTHS_LONG[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  return weekday ? `${DAYS[d.getUTCDay()]}, ${date}` : date;
+}
+
+/** Whole days from `from` to `to` (both YYYY-MM-DD); negative when `to` is earlier. */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+}
+
 /** "1 project" / "2 projects". */
 export function plural(count: number, one: string, many = `${one}s`): string {
   return `${count} ${count === 1 ? one : many}`;

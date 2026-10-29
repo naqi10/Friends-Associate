@@ -2,6 +2,15 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
 
+// Admins upload large customer files (DWG, ZIP) straight to the storage bucket, so the browser may connect to it.
+const bucketOrigin = (() => {
+  try {
+    return process.env.STORAGE_DRIVER === "s3" && process.env.S3_ENDPOINT ? new URL(process.env.S3_ENDPOINT).origin : "";
+  } catch {
+    return "";
+  }
+})();
+
 // Next.js injects inline scripts for hydration, so script-src needs 'unsafe-inline' without a nonce setup.
 const csp = [
   "default-src 'self'",
@@ -9,7 +18,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+  `connect-src 'self'${bucketOrigin ? ` ${bucketOrigin}` : ""}${isDev ? " ws: wss:" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

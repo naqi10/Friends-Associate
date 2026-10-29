@@ -20,7 +20,7 @@ export default async function AdminReceiptPage({ params }: Props) {
   return (
     <div className="px-5 py-10 sm:px-[30px] print:max-w-none print:p-0">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <Link href={`/admin/bookings/${id}`} className="text-sm text-stone-600 hover:underline">
+        <Link href={`/admin/bookings/${id}`} className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-sm font-medium text-body hover:border-ink hover:text-ink">
           ← Back to booking
         </Link>
         <PrintButton />

@@ -7,7 +7,6 @@ import {
   deleteStage,
   getProjectById,
   getStage,
-  notifyProjectBuyers,
   publishPm,
   savePmDraft,
   updateProjectProgress,
@@ -15,6 +14,7 @@ import {
   writeAuditLog,
 } from "@/lib/data";
 import { ImageError, saveImage } from "@/lib/images";
+import { notifyProjectCustomers } from "@/lib/notify";
 import { requireStaff } from "@/lib/permissions";
 
 export async function updateProgressAction(formData: FormData) {
@@ -150,7 +150,7 @@ export async function savePmDeskAction(formData: FormData) {
     oldValue: { status: result.before.status, progress: result.before.progressPercent, stages: result.before.stages.map((s) => ({ name: s.name, percent: s.percent })) },
     newValue: { status, progress: result.overall, stages: result.stages.map((s) => ({ name: s.name, percent: s.percent })), update: !!result.update },
   });
-  const notified = await notifyProjectBuyers(projectId, {
+  const notified = await notifyProjectCustomers(projectId, {
     type: "progress",
     title: `${project!.name} is now ${result.overall}% complete`,
     message: text || (result.current ? `Current stage: ${result.current.name} (${result.current.percent}%).` : "All stages are complete."),

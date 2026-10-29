@@ -26,6 +26,7 @@ const MENU: { label: string; items: (NavItem & { show: Rule })[] }[] = [
       { href: "/admin/projects", label: "Projects", icon: "folder", show: projectsAdmin },
       { href: "/admin/properties", label: "Properties", icon: "building", show: (can) => can("properties", "update") || can("properties", "add") },
       { href: "/admin/investments", label: "Investments", icon: "dollar", show: projectsAdmin },
+      { href: "/admin/products", label: "Products", icon: "shop", show: admin },
       { href: "/admin/documents", label: "Documents", icon: "file", show: (can) => can("documents", "add") },
     ],
   },

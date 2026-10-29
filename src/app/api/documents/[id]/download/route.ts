@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
-import { getDocumentRowById, getCompany } from "@/lib/data";
+import { canSeeDocuments, getDocumentRowById } from "@/lib/data";
 import { contentTypeFor, normalizeKey, storage } from "@/lib/storage";
 import { permissionsFor } from "@/lib/permissions";
 
@@ -25,16 +25,20 @@ export async function GET(_req: Request, { params }: Props) {
   if (doc.audience === "buyer" && !isStaffViewer) {
     // Ownership check first: a buyer can never fetch another buyer's file by changing the id.
     if (!user || user.role !== "buyer" || doc.userId !== user.id || !can("documents", "view")) return denied();
-    if (!user.document_download_paid_at) {
-      const company = await getCompany();
-      return NextResponse.json(
-        { error: `Paid feature. It needs a payment of ${company.document_download_fee_pkr / 1000}K once.` },
-        { status: 402 },
-      );
+    if (!(await canSeeDocuments(user.id))) {
+      return NextResponse.json({ error: "Your documents become available once your booking has its first payment. Please contact our office." }, { status: 403 });
     }
   }
 
   const key = normalizeKey(doc.storagePath);
+  // Bucket storage: hand the browser a one-minute signed link, so large drawings and ZIPs never pass through
+  // the app (the host caps responses at about 4.5 MB). The permission checks above have already passed.
+  try {
+    const signed = await storage().signedDownloadUrl(key, doc.fileName);
+    if (signed) return NextResponse.redirect(signed, { status: 303, headers: { "Cache-Control": "private, no-store" } });
+  } catch {
+    // fall back to sending the file ourselves
+  }
   let data: Buffer | null = null;
   try {
     data = await storage().get(key);

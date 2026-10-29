@@ -20,6 +20,7 @@ import {
   getAllPageContent,
 } from "@/lib/data";
 import { ImageError, optionalImage, removeImage, saveImage } from "@/lib/images";
+import { sendTestEmail } from "@/lib/email";
 import { requireAdmin } from "@/lib/permissions";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -218,3 +219,19 @@ export async function deleteFaqAction(formData: FormData) {
   redirect("/admin/content/faqs?saved=faq-deleted");
 }
 
+
+/* ---------- Email check ---------- */
+
+/** Sends a test email through Brevo and shows the admin whether it worked, or Brevo's reason if not. */
+export async function sendTestEmailAction(formData: FormData) {
+  const { user: actor } = await requireAdmin();
+  const to = text(formData, "to", 200).toLowerCase() || actor.email;
+  if (!EMAIL_RE.test(to)) redirect("/admin/content/contact?error=email#email");
+  const result = await sendTestEmail(to);
+  await writeAuditLog({ userId: actor.id, action: "test-email", module: "content", recordId: "email", newValue: { to, ok: result.ok } });
+  redirect(
+    result.ok
+      ? `/admin/content/contact?test=sent&to=${encodeURIComponent(to)}#email`
+      : `/admin/content/contact?test=failed&why=${encodeURIComponent((result.error ?? "").slice(0, 300))}#email`,
+  );
+}

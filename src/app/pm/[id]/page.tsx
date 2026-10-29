@@ -27,12 +27,12 @@ export default async function ProjectStagesPage({ params, searchParams }: Props)
   const input = "rounded-md border border-stone-300 px-2 py-1.5 text-sm";
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <Link href="/pm" className="text-sm text-stone-600 hover:underline">
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <Link href="/pm" className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-sm font-medium text-body hover:border-ink hover:text-ink">
         ← All projects
       </Link>
-      <h1 className="mt-2 text-2xl font-bold">{project.name}</h1>
-      <p className="text-sm text-stone-600">
+      <h1 className="mt-5 text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">{project.name}</h1>
+      <p className="mt-1.5 text-[15px] text-muted">
         {labelOf(PROJECT_CATEGORIES, project.category)} · {project.status} · Overall {project.progress_percent}%
       </p>
       <Notice message={sp.saved ? SAVED[sp.saved] : undefined} />

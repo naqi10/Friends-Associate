@@ -6,6 +6,7 @@ import {
   createCustomer,
   deleteSessionsForUser,
   emailInUse,
+  usernameInUse,
   addLeadActivity,
   getCustomer,
   getLead,
@@ -26,16 +27,25 @@ function text(formData: FormData, key: string) {
 }
 
 /** Shared profile validation. Returns an error code, or the cleaned values. */
+/** Customer user ID: 3–40 characters, lowercase letters, numbers, dot, dash or underscore (no "@"). */
+const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{2,39}$/;
+
 function readProfile(formData: FormData) {
+  const email = text(formData, "email").toLowerCase();
+  const username = text(formData, "username").toLowerCase();
   const profile = {
     name: text(formData, "name"),
-    email: text(formData, "email").toLowerCase(),
+    email: email || null,
+    username: username || null,
     phone: text(formData, "phone"),
     city: text(formData, "city"),
     cnic: text(formData, "cnic"),
   };
   if (profile.name.length < 2 || profile.name.length > 120) return { error: "name" as const };
-  if (!EMAIL_RE.test(profile.email) || profile.email.length > 200) return { error: "email" as const };
+  // Signs in with the user ID, the email, or either: at least one is needed.
+  if (!profile.email && !profile.username) return { error: "login-needed" as const };
+  if (profile.username && !USERNAME_RE.test(profile.username)) return { error: "username" as const };
+  if (profile.email && (!EMAIL_RE.test(profile.email) || profile.email.length > 200)) return { error: "email" as const };
   if (!(CITIES as readonly string[]).includes(profile.city)) return { error: "city" as const };
   if (profile.cnic && !CNIC_RE.test(profile.cnic)) return { error: "cnic" as const };
   return { profile };
@@ -48,7 +58,8 @@ export async function createCustomerAction(formData: FormData) {
 
   const { profile, error } = readProfile(formData);
   if (error || !profile) return back(error ?? "required");
-  if (await emailInUse(profile.email)) return back("email-taken");
+  if (profile.email && (await emailInUse(profile.email))) return back("email-taken");
+  if (profile.username && (await usernameInUse(profile.username))) return back("username-taken");
 
   const pw = readNewPassword(formData);
   if ("error" in pw) return back(pw.error);
@@ -80,7 +91,8 @@ export async function updateCustomerAction(formData: FormData) {
 
   const { profile, error } = readProfile(formData);
   if (error || !profile) return back(error ?? "required");
-  if (await emailInUse(profile.email, id)) return back("email-taken");
+  if (profile.email && (await emailInUse(profile.email, id))) return back("email-taken");
+  if (profile.username && (await usernameInUse(profile.username, id))) return back("username-taken");
 
   const active = formData.get("active") === "on";
   const after = await updateCustomer(id, { ...profile, active });
@@ -90,29 +102,6 @@ export async function updateCustomerAction(formData: FormData) {
 
   revalidatePath("/admin/customers");
   redirect(`/admin/customers/${id}?saved=profile`);
-}
-
-export async function setDownloadFeeAction(formData: FormData) {
-  const { user: actor } = await requireStaff("users", "update");
-  const id = text(formData, "id");
-  const before = await getCustomer(id);
-  if (!before) redirect("/admin/customers?error=missing");
-
-  const paid = text(formData, "paid") === "1";
-  const after = await updateCustomer(id, { documentDownloadPaidAt: paid ? new Date() : null });
-  await writeAuditLog({
-    userId: actor.id,
-    action: paid ? "unlock-downloads" : "lock-downloads",
-    module: "customers",
-    recordId: id,
-    oldValue: { documentDownloadPaidAt: before.documentDownloadPaidAt },
-    newValue: { documentDownloadPaidAt: after.documentDownloadPaidAt },
-  });
-
-  revalidatePath(`/admin/customers/${id}`);
-  revalidatePath("/admin/customers");
-  revalidatePath("/portal/documents");
-  redirect(listReturn(formData, "saved=fee") ?? `/admin/customers/${id}?saved=fee`);
 }
 
 /** Back to the customers list with its filters, when the change was made from the list. */

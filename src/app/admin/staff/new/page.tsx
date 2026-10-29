@@ -14,9 +14,9 @@ export default async function NewStaffPage({ searchParams }: Props) {
   const { error } = await searchParams;
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <h1 className="text-2xl font-bold">Add staff member</h1>
-      <p className="mt-1 text-sm text-stone-600">
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">Add staff member</h1>
+      <p className="mt-1.5 text-[15px] text-muted">
         Give the person their temporary password privately and ask them to change it from My account after first login.
       </p>
       <FormError code={error} />

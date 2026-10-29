@@ -472,7 +472,7 @@ export default async function BookingsDeskPage({ searchParams }: Props) {
                   <label className="flex cursor-pointer items-center gap-3 rounded-xl border-[1.5px] border-dashed border-line-strong bg-white px-4 py-3 text-[15px] text-body hover:bg-mist">
                     <Icon name="upload" className="h-5 w-5" />
                     <span className="min-w-0 flex-1">Attach receipt (PDF or image)</span>
-                    <input name="receipt_file" type="file" accept=".pdf,image/jpeg,image/png,image/webp" className="w-28 text-xs file:hidden" />
+                    <input name="receipt_file" type="file" accept=".pdf,.jpg,.jpeg,.png" className="w-28 text-xs file:hidden" />
                   </label>
                   <button type="submit" className="w-full rounded-full bg-ink py-3.5 text-base font-semibold text-paper hover:bg-body">
                     Save payment

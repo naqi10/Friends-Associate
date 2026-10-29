@@ -37,8 +37,8 @@ export default async function FaqContentPage({ searchParams }: Props) {
   const [sp, faqs] = await Promise.all([searchParams, getFaqs({ includeHidden: true })]);
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <h1 className="text-2xl font-bold">Website content</h1>
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">Website content</h1>
       <ContentTabs active="/admin/content/faqs" />
       <p className="mt-4 text-sm text-stone-600">
         Frequently asked questions appear on the{" "}

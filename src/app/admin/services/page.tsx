@@ -21,8 +21,8 @@ export default async function AdminServicesPage({ searchParams }: Props) {
   const [sp, services] = await Promise.all([searchParams, getAllServices()]);
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <h1 className="text-2xl font-bold">Website content</h1>
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">Website content</h1>
       <ContentTabs active="/admin/services" />
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-stone-600">Services on the Architecture and Construction pages, and in the contact form&apos;s service list.</p>

@@ -3,7 +3,7 @@ import { FormError } from "@/components/FormError";
 import { Icon } from "@/components/admin/shell/icons";
 import { AutoSelect } from "@/components/sales/AutoSubmit";
 import { initials } from "@/components/sales/ui";
-import { setCustomerActiveAction, setDownloadFeeAction } from "@/lib/actions/customers";
+import { setCustomerActiveAction } from "@/lib/actions/customers";
 import { getCustomerDirectory, getCustomerStats, type CustomerFilter, type DirectoryRow } from "@/lib/data";
 import { formatDate, formatPkr, formatPkrShort, todayPk } from "@/lib/format";
 import { requireStaff } from "@/lib/permissions";
@@ -15,7 +15,6 @@ type Props = { searchParams: Promise<Search> };
 
 const SAVED: Record<string, string> = {
   deleted: "Customer deleted.",
-  fee: "Document download access updated.",
   enabled: "Account switched on. The customer can sign in again.",
   disabled: "Account switched off. The customer was signed out everywhere.",
 };
@@ -26,22 +25,6 @@ function dueBadge(r: DirectoryRow) {
   if (d < 0) return { text: `${-d} day${d === -1 ? "" : "s"} overdue`, cls: "text-red-700 font-semibold", chip: "bg-red-50 text-red-700" };
   const date = formatDate(r.next.date).replace(/ \d{4}$/, "");
   return { text: `Next due ${date}`, cls: "text-muted", chip: "bg-amber-50 text-amber-800", short: `Due ${date}` };
-}
-
-/** On/off switch that submits its own little form (works without JavaScript). */
-function Switch({ on, label, disabled }: { on: boolean; label: string; disabled?: boolean }) {
-  return (
-    <button
-      type="submit"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      disabled={disabled}
-      className={`relative h-8 w-14 shrink-0 rounded-full transition ${on ? "bg-teal-700" : "bg-line-strong"} disabled:opacity-50`}
-    >
-      <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all ${on ? "left-7" : "left-1"}`} />
-    </button>
-  );
 }
 
 export default async function AdminCustomersPage({ searchParams }: Props) {
@@ -75,19 +58,13 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
   const href = (over: Record<string, string | undefined> = {}) => (query(over) ? `/admin/customers?${query(over)}` : "/admin/customers");
   const returnTo = href(page > 1 ? { page: String(page) } : {});
 
+  // Documents show in the portal automatically once the customer has a booking with a payment received.
   const toggles = (r: DirectoryRow, compact = false) => (
-    <form action={setDownloadFeeAction} className="flex items-center gap-3">
-      <input type="hidden" name="id" value={r.id} />
-      <input type="hidden" name="paid" value={r.unlocked ? "0" : "1"} />
-      <input type="hidden" name="return" value={returnTo} />
-      {compact && (
-        <span className="flex-1 text-[15px]">
-          Document downloads · <span className="text-muted">{r.unlocked ? "Unlocked" : "Locked"}</span>
-        </span>
-      )}
-      <Switch on={r.unlocked} label={`Document downloads for ${r.name}: ${r.unlocked ? "unlocked" : "locked"}`} disabled={!canEdit} />
-      {!compact && <span className="hidden text-[15px] 2xl:inline">{r.unlocked ? "Unlocked" : "Locked"}</span>}
-    </form>
+    <span className="flex items-center gap-2 text-[15px]" title={r.unlocked ? "Has a booking with a payment, so their documents show in the portal" : "Documents show once a booking has a payment"}>
+      {compact && <span className="flex-1">Documents · </span>}
+      <span className={`h-2.5 w-2.5 rounded-full ${r.unlocked ? "bg-teal-700" : "bg-line-strong"}`} aria-hidden />
+      <span className={r.unlocked ? "" : "text-muted"}>{r.unlocked ? "Visible" : "Not yet"}</span>
+    </span>
   );
 
   return (
@@ -98,7 +75,7 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
           <h1 className="text-[32px] font-semibold tracking-tight lg:text-[44px]">Customers</h1>
           <p className="mt-1 text-[15px] text-muted">
             <span className="lg:hidden">Buyer accounts and document access</span>
-            <span className="hidden lg:inline">Buyer accounts, document download access and passwords.</span>
+            <span className="hidden lg:inline">Buyer accounts, bookings, documents and passwords.</span>
           </p>
         </div>
         <div className="flex shrink-0 gap-3">
@@ -123,7 +100,7 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
           { l: "Customers", v: String(stats.customers) },
           { l: "Active bookings", v: String(stats.activeBookings), desk: true },
           { l: "Total outstanding", m: "Outstanding", v: formatPkr(stats.outstandingPkr), short: formatPkr(stats.outstandingPkr).replace("PKR ", "") },
-          { l: "Downloads locked", m: "Locked", v: String(stats.locked), warn: stats.locked > 0 },
+          { l: "No payment yet", m: "Unpaid", v: String(stats.locked), warn: stats.locked > 0 },
         ].map((s) => (
           <div key={s.l} className={`flex flex-col-reverse justify-end p-4 lg:p-7 ${s.desk ? "hidden lg:flex" : ""}`}>
             <dt className="mt-1 text-sm text-muted lg:mt-0 lg:mb-2">
@@ -148,7 +125,7 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
         <div className="hidden flex-wrap gap-3 lg:flex">
           {[
             { name: "city", label: "City", value: filter.city ?? "", options: [["", "All"], ...stats.cities.map((c) => [c, c])] },
-            { name: "downloads", label: "Downloads", value: filter.downloads ?? "", options: [["", "All"], ["unlocked", "Unlocked"], ["locked", "Locked"]] },
+            { name: "downloads", label: "Documents", value: filter.downloads ?? "", options: [["", "All"], ["unlocked", "Visible"], ["locked", "Not yet"]] },
             { name: "account", label: "Account", value: filter.account ?? "active", options: [["active", "Active"], ["disabled", "Disabled"], ["all", "All"]] },
           ].map((f) => (
             <label key={f.name} className="flex items-center gap-2 rounded-full border-[1.5px] border-line-strong bg-white py-1 pr-2 pl-5 text-[15px]">
@@ -190,7 +167,7 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
                         Outstanding{filter.sort !== "name" && " ↓"}
                       </Link>
                     </th>
-                    <th className="px-3 py-3.5 font-medium">Downloads</th>
+                    <th className="px-3 py-3.5 font-medium">Documents</th>
                     <th className="px-3 py-3.5 font-medium">Account</th>
                     <th className="py-3.5 pr-7 pl-3" />
                   </tr>

@@ -46,8 +46,8 @@ export default async function AboutContentPage({ searchParams }: Props) {
   const [sp, company, lists, team] = await Promise.all([searchParams, getCompany(), getAboutLists(), getManagement({ includeHidden: true })]);
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <h1 className="text-2xl font-bold">Website content</h1>
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">Website content</h1>
       <ContentTabs active="/admin/content/about" />
       <p className="mt-4 text-sm text-stone-600">
         Text and team shown on the{" "}

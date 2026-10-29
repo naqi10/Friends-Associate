@@ -9,13 +9,14 @@ import {
   getBooking,
   createDocumentRecord,
   lastPaymentReminder,
-  notifyUser,
   recordBookingPayment,
   reverseBookingPayment,
   updateBooking,
   writeAuditLog,
 } from "@/lib/data";
 import { prisma } from "@/lib/db";
+import { notifyCustomer } from "@/lib/notify";
+import { PROOF_FILE_EXT } from "@/lib/document-access";
 import { saveDocumentFile } from "@/lib/files";
 import { contentTypeFor } from "@/lib/storage";
 import { PAYMENT_METHODS } from "@/lib/catalog";
@@ -170,7 +171,8 @@ export async function updateBookingAction(formData: FormData) {
   redirect(`/admin/bookings/${id}?saved=updated`);
 }
 
-const RECEIPT_EXT = /\.(pdf|jpe?g|png|webp)$/i;
+// The slip becomes the buyer's document, and buyers are only given PDF, JPG or PNG files.
+const RECEIPT_EXT = PROOF_FILE_EXT;
 const MAX_RECEIPT_BYTES = 15 * 1024 * 1024;
 
 /** Back to the Bookings & payments desk (with its filters) when the form came from there. */
@@ -288,7 +290,7 @@ export async function recordPaymentAction(formData: FormData) {
       receiptStored = false;
     }
   }
-  await notifyUser(userId, {
+  await notifyCustomer(userId, {
     type: "payment_received",
     title: `Payment received: ${formatPkr(amount!)}`,
     message: `Thank you. Your payment of ${formatPkr(amount!)} dated ${formatDate(paidOn)} has been recorded. You can print the receipt from Payments.`,
@@ -313,7 +315,7 @@ export async function sendPaymentReminderAction(formData: FormData) {
     redirect(withParam(desk, "error=reminder-sent"));
   const amount = Math.min(b!.nextPaymentAmountPkr, b!.outstandingPkr);
   const overdue = b!.nextPaymentDate < todayPk();
-  await notifyUser(b!.user.id, {
+  await notifyCustomer(b!.user.id, {
     type: "payment_due",
     title: overdue
       ? `Instalment overdue: ${formatPkr(amount)}`

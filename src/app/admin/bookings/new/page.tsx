@@ -18,8 +18,8 @@ export default async function NewBookingPage({ searchParams }: Props) {
 
   if (eligible.length === 0 || properties.length === 0) {
     return (
-      <div className="px-5 py-10 sm:px-[30px]">
-        <h1 className="text-2xl font-bold">New booking</h1>
+      <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+        <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">New booking</h1>
         <p className="mt-4 rounded-md bg-amber-50 p-4 text-sm text-amber-900">
           {eligible.length === 0 ? (
             <>
@@ -36,9 +36,9 @@ export default async function NewBookingPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <h1 className="text-2xl font-bold">New booking</h1>
-      <p className="mt-1 text-sm text-stone-600">
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">New booking</h1>
+      <p className="mt-1.5 text-[15px] text-muted">
         The total price is copied from the property. Outstanding is calculated as total minus paid. The unit is marked Booked.
       </p>
       <FormError code={sp.error} />

@@ -1,3 +1,5 @@
+import { PasswordInput } from "@/components/PasswordInput";
+
 type FieldProps = React.InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string };
 
 export function Field({ label, hint, className = "", ...input }: FieldProps) {
@@ -7,7 +9,12 @@ export function Field({ label, hint, className = "", ...input }: FieldProps) {
         {label}
         {input.required && <span className="text-red-600"> *</span>}
       </span>
-      <input {...input} className={`mt-1 w-full rounded-xl border border-line-strong bg-white px-3.5 py-2.5 focus:border-ink focus:ring-2 focus:ring-ink/10 focus:outline-none ${className}`} />
+      {input.type === "password" ? (
+        // Password fields get an eye button so the admin can check what they typed.
+        <PasswordInput {...input} className={`mt-1 w-full rounded-xl border border-line-strong bg-white py-2.5 pr-12 pl-3.5 focus:border-ink focus:ring-2 focus:ring-ink/10 focus:outline-none ${className}`} />
+      ) : (
+        <input {...input} className={`mt-1 w-full rounded-xl border border-line-strong bg-white px-3.5 py-2.5 focus:border-ink focus:ring-2 focus:ring-ink/10 focus:outline-none ${className}`} />
+      )}
       {hint && <span className="mt-1 block text-xs text-stone-500">{hint}</span>}
     </label>
   );

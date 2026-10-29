@@ -123,6 +123,7 @@ export const LEAD_SOURCES = [
   { key: "sell", label: "Sell my property" },
   { key: "investment", label: "Investor interest" },
   { key: "chatbot", label: "Chatbot" },
+  { key: "portal", label: "Customer portal" },
   { key: "manual", label: "Added by staff" },
 ] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number]["key"];
@@ -229,3 +230,13 @@ export const DOCUMENT_TYPES = [
   "Brochure",
   "Other",
 ] as const;
+
+/** Product categories, in the order of the catalog cover. */
+export const PRODUCT_CATEGORIES = [
+  { key: "waterproofing", label: "Waterproofing" },
+  { key: "heatproofing", label: "Heatproofing" },
+  { key: "termite", label: "Termite protection" },
+  { key: "concrete_repair", label: "Concrete repair" },
+  { key: "accessories", label: "Construction accessories" },
+] as const;
+export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number]["key"];

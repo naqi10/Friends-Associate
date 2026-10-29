@@ -5,11 +5,13 @@ import { BRAND } from "@/lib/brand";
 import { getCompany } from "@/lib/data";
 import { homeForRole } from "@/lib/permissions";
 import { Logo } from "@/components/Logo";
+import { initials } from "@/lib/portal";
 
 /** Kept short on purpose: About, Progress and News live in the footer. */
 const nav = [
   { href: "/architecture", label: "Architecture" },
   { href: "/construction", label: "Construction" },
+  { href: "/products", label: "Products" },
   { href: "/properties", label: "Properties" },
   { href: "/projects", label: "Projects" },
   { href: "/investment", label: "Investment" },
@@ -20,7 +22,7 @@ const TEL = `tel:${BRAND.phoneIntl.replace(/\s/g, "")}`;
 export async function SiteHeader() {
   const [user, company] = await Promise.all([getSessionUser(), getCompany()]);
   const dash = user ? homeForRole(user.role) : "/login";
-  const account = user ? "Dashboard" : "Customer login";
+  const account = user ? (user.role === "buyer" ? "My account" : "Dashboard") : "Customer login";
   const whatsapp = `https://wa.me/${company.whatsapp.replace(/\D/g, "")}`;
 
   return (
@@ -51,9 +53,11 @@ export async function SiteHeader() {
             >
               WhatsApp
             </a>
-            <Link href={dash} className="hover:text-faint">
-              {account} <span aria-hidden>→</span>
-            </Link>
+            {!user && (
+              <Link href={dash} className="hover:text-faint">
+                {account} <span aria-hidden>→</span>
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -92,12 +96,22 @@ export async function SiteHeader() {
             ))}
           </nav>
 
-          <Link
-            href="/contact"
-            className="hidden min-h-11 items-center rounded-full bg-ink px-[22px] text-sm font-semibold text-paper hover:bg-body lg:inline-flex"
-          >
-            Contact us
-          </Link>
+          {user ? (
+            <Link
+              href={dash}
+              className="hidden min-h-12 items-center gap-3 rounded-full border border-line bg-paper py-1.5 pr-1.5 pl-5 text-[15px] font-semibold text-ink hover:border-ink lg:inline-flex"
+            >
+              {user.role === "buyer" ? "My account" : "Dashboard"}
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-[13px] text-paper">{initials(user.name)}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/contact"
+              className="hidden min-h-11 items-center rounded-full bg-ink px-[22px] text-sm font-semibold text-paper hover:bg-body lg:inline-flex"
+            >
+              Contact us
+            </Link>
+          )}
 
           {/* Mobile: native disclosure menu (works without JavaScript). */}
           <MobileMenu

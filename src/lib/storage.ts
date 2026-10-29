@@ -15,6 +15,14 @@ export interface StorageDriver {
   put(key: string, bytes: Buffer, contentType: string): Promise<void>;
   get(key: string): Promise<Buffer | null>;
   remove(key: string): Promise<void>;
+  /** Size in bytes, or null if the object does not exist. */
+  size(key: string): Promise<number | null>;
+  /**
+   * Short-lived links so large files (DWG, ZIP) go straight between the browser and the bucket: the hosting
+   * platform caps a request or response passing through the app at about 4.5 MB. Null when not supported (local).
+   */
+  signedUploadUrl(key: string, contentType: string): Promise<string | null>;
+  signedDownloadUrl(key: string, fileName: string): Promise<string | null>;
 }
 
 const KEY_RE = /^(public|private)\/[A-Za-z0-9._\-/]+$/;
@@ -56,6 +64,23 @@ class LocalDriver implements StorageDriver {
   async remove(key: string) {
     await fs.rm(this.full(key), { force: true });
   }
+
+  async size(key: string) {
+    try {
+      return (await fs.stat(this.full(key))).size;
+    } catch {
+      return null;
+    }
+  }
+
+  // Local development has no request size cap, so files go through the app as usual.
+  async signedUploadUrl() {
+    return null;
+  }
+
+  async signedDownloadUrl() {
+    return null;
+  }
 }
 
 class S3Driver implements StorageDriver {
@@ -95,6 +120,39 @@ class S3Driver implements StorageDriver {
     const { DeleteObjectCommand } = await import("@aws-sdk/client-s3");
     await (await this.clientPromise).send(new DeleteObjectCommand({ Bucket: this.bucket, Key: assertKey(key) }));
   }
+
+  async size(key: string) {
+    const { HeadObjectCommand } = await import("@aws-sdk/client-s3");
+    try {
+      const res = await (await this.clientPromise).send(new HeadObjectCommand({ Bucket: this.bucket, Key: assertKey(key) }));
+      return res.ContentLength ?? 0;
+    } catch (e) {
+      const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+      if (status === 404 || (e as { name?: string }).name === "NotFound") return null;
+      throw e;
+    }
+  }
+
+  async signedUploadUrl(key: string, contentType: string) {
+    const [{ PutObjectCommand }, { getSignedUrl }] = await Promise.all([import("@aws-sdk/client-s3"), import("@aws-sdk/s3-request-presigner")]);
+    return getSignedUrl(await this.clientPromise, new PutObjectCommand({ Bucket: this.bucket, Key: assertKey(key), ContentType: contentType }), {
+      expiresIn: 15 * 60,
+    });
+  }
+
+  async signedDownloadUrl(key: string, fileName: string) {
+    const [{ GetObjectCommand }, { getSignedUrl }] = await Promise.all([import("@aws-sdk/client-s3"), import("@aws-sdk/s3-request-presigner")]);
+    // A minute is enough to start the download; the link is useless to anyone it is forwarded to afterwards.
+    return getSignedUrl(
+      await this.clientPromise,
+      new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: assertKey(key),
+        ResponseContentDisposition: `attachment; filename="${fileName.replace(/["\r\n]/g, "")}"`,
+      }),
+      { expiresIn: 60 },
+    );
+  }
 }
 
 function required(name: string) {
@@ -121,6 +179,9 @@ export const CONTENT_TYPES: Record<string, string> = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   xls: "application/vnd.ms-excel",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  dwg: "application/acad",
+  dxf: "application/dxf",
+  zip: "application/zip",
 };
 
 export function contentTypeFor(key: string) {

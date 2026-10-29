@@ -3,12 +3,12 @@ import { FormError } from "@/components/FormError";
 import { changeOwnPasswordAction } from "@/lib/actions/account";
 import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
 
-/** "Change my password" for any logged-in user. Shared by /account (staff) and /portal/profile (buyers). */
+/** "Change my password" for any logged-in user. Shared by /account (staff) and /portal/profile (buyers); the page supplies the card. */
 export function ChangePasswordForm({ saved, error }: { saved?: string; error?: string }) {
   return (
-    <section className="rounded-xl border bg-white p-6">
-      <h2 className="font-semibold">Change password</h2>
-      <p className="mt-1 text-sm text-stone-600">You will stay signed in here; all your other devices will be signed out.</p>
+    <section>
+      <h2 className="text-[20px] font-semibold">Change password</h2>
+      <p className="mt-1 text-sm text-muted">You will stay signed in here; all your other devices will be signed out.</p>
       <Notice message={saved === "password" ? "Password changed. Other devices have been signed out." : undefined} />
       <FormError code={error} />
       <form action={changeOwnPasswordAction} className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -26,7 +26,7 @@ export function ChangePasswordForm({ saved, error }: { saved?: string; error?: s
         />
         <Field label="Confirm new password" name="confirm" type="password" required autoComplete="new-password" />
         <div className="sm:col-span-2">
-          <button type="submit" className="rounded-md bg-teal-800 px-4 py-2 text-sm font-medium text-white hover:bg-teal-900">
+          <button type="submit" className="min-h-11 rounded-full bg-ink px-6 text-[15px] font-semibold text-paper hover:bg-body">
             Change password
           </button>
         </div>

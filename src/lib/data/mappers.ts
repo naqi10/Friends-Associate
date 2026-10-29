@@ -130,7 +130,8 @@ export function mapUser(u: DbUser): User {
   return {
     id: u.id,
     name: u.name,
-    email: u.email,
+    email: u.email ?? "",
+    username: u.username ?? "",
     password_hash: u.passwordHash,
     role: u.role as UserRole,
     city: u.city,

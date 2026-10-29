@@ -68,6 +68,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#0e0e0e",
+  // The site has one (light) design. "only light" stops Chrome's automatic dark mode from re-colouring it.
+  colorScheme: "only light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -87,16 +89,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Skip to content
           </a>
-          <PublicChrome>
+          <PublicChrome desktopOnInPortal>
             <SiteHeader />
           </PublicChrome>
           <main id="main" className="flex-1">
             {children}
           </main>
-          <PublicChrome>
+          <PublicChrome desktopOnInPortal>
             <SiteFooter />
-            {isEnabled("chatbot") ? <ChatWidget /> : <ChatComingSoon />}
           </PublicChrome>
+          <PublicChrome>{isEnabled("chatbot") ? <ChatWidget /> : <ChatComingSoon />}</PublicChrome>
         </Providers>
       </body>
     </html>

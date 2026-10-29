@@ -26,14 +26,14 @@ export default async function StaffMemberPage({ params, searchParams }: Props) {
   const isSelf = member.id === actor.id;
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <Link href="/admin/staff" className="text-sm text-stone-600 hover:underline">
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <Link href="/admin/staff" className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-sm font-medium text-body hover:border-ink hover:text-ink">
         ← All staff
       </Link>
-      <h1 className="mt-2 text-2xl font-bold">
+      <h1 className="mt-5 text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">
         {member.name} {isSelf && <span className="text-base font-normal text-stone-500">(you)</span>}
       </h1>
-      <p className="text-sm text-stone-600">
+      <p className="mt-1.5 text-[15px] text-muted">
         {ROLE_LABELS[member.role]} · {member.active ? "Active" : "Disabled"} · Last login{" "}
         {member.lastLoginAt
           ? member.lastLoginAt.toLocaleString("en-GB", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" })
@@ -54,7 +54,7 @@ export default async function StaffMemberPage({ params, searchParams }: Props) {
           <div className="sm:col-span-2">
             <Field label="Full name" name="name" defaultValue={member.name} required />
           </div>
-          <Field label="Work email (login)" name="email" type="email" defaultValue={member.email} required />
+          <Field label="Work email (login)" name="email" type="email" defaultValue={member.email ?? ""} required />
           <Field label="Phone" name="phone" type="tel" defaultValue={member.phone} />
           <SelectField label="Office" name="city" options={CITIES} defaultValue={member.city} required />
           {isSelf ? (

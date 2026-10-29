@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   return csvResponse(
     `customers-${today}.csv`,
     toCsv(
-      ["Name", "Email", "Phone", "City", "Property", "Bookings", "Outstanding (PKR)", "Next due", "Overdue days", "Downloads", "Account"],
+      ["Name", "Email", "Phone", "City", "Property", "Bookings", "Outstanding (PKR)", "Next due", "Overdue days", "Documents", "Account"],
       rows.map((c) => [
         c.name,
         c.email,
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
         c.outstandingPkr,
         c.next?.date ?? "",
         c.next && c.next.daysUntil < 0 ? -c.next.daysUntil : "",
-        c.unlocked ? "Unlocked" : "Locked",
+        c.unlocked ? "Visible" : "Not yet",
         c.active ? "Active" : "Disabled",
       ]),
     ),

@@ -17,6 +17,11 @@ export async function GET(_req: Request, { params }: Props) {
   const v = await getDocumentVersionFile(id, versionId);
   if (!v) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const key = normalizeKey(v.storagePath);
+  // Large files: a one-minute signed bucket link (see the main download route).
+  const signed = await storage()
+    .signedDownloadUrl(key, v.fileName)
+    .catch(() => null);
+  if (signed) return NextResponse.redirect(signed, { status: 303, headers: { "Cache-Control": "private, no-store" } });
   const data = await storage()
     .get(key)
     .catch(() => null);

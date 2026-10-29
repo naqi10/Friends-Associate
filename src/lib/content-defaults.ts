@@ -56,6 +56,13 @@ export const PAGE_CONTENT = {
     intro:
       "Share a few details and our property team will contact you to value, list and market it — plots, houses, apartments, shops and commercial buildings.",
   },
+  "page.products": {
+    label: "Products",
+    path: "/products",
+    title: "Construction chemicals & building materials",
+    intro:
+      "Waterproofing, heatproofing, termite protection, concrete repair and construction accessories, with prices. Order on WhatsApp or ask us for the right product for your job.",
+  },
   "page.investment": {
     label: "Investment",
     path: "/investment",

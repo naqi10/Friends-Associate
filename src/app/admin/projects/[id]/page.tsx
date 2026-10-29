@@ -25,12 +25,12 @@ export default async function EditProjectPage({ params, searchParams }: Props) {
   if (!p || !blockers) notFound();
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <Link href={p.archived_at ? "/admin/projects?archived=1" : "/admin/projects"} className="text-sm text-stone-600 hover:underline">
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <Link href={p.archived_at ? "/admin/projects?archived=1" : "/admin/projects"} className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-sm font-medium text-body hover:border-ink hover:text-ink">
         ← {p.archived_at ? "Archived projects" : "All projects"}
       </Link>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">
           Edit project
           {p.archived_at && <span className="ml-2 rounded-full bg-stone-200 px-2 py-0.5 align-middle text-xs font-medium text-stone-700">Archived</span>}
         </h1>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/admin/shell/icons";
 import { notFound } from "next/navigation";
 import { FormError } from "@/components/FormError";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
@@ -39,12 +40,12 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
   const pct = b.totalPricePkr > 0 ? Math.round((b.paidPkr / b.totalPricePkr) * 100) : 0;
 
   return (
-    <div className="px-5 py-10 sm:px-[30px]">
-      <Link href="/admin/bookings" className="text-sm text-stone-600 hover:underline">
+    <div className="px-4 py-6 sm:px-[30px] lg:py-10">
+      <Link href="/admin/bookings" className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-sm font-medium text-body hover:border-ink hover:text-ink">
         ← All bookings
       </Link>
-      <h1 className="mt-2 text-2xl font-bold">{b.property.title}</h1>
-      <p className="text-sm text-stone-600">
+      <h1 className="mt-5 text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">{b.property.title}</h1>
+      <p className="mt-1.5 text-[15px] text-muted">
         {b.project.name} · Buyer{" "}
         <Link href={`/admin/customers/${b.user.id}`} className="text-teal-800 hover:underline">
           {b.user.name}
@@ -68,23 +69,32 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
         </p>
       )}
 
-      <dl className="mt-6 grid gap-4 sm:grid-cols-4">
+      {/* Same stat cards as the Bookings & payments list. */}
+      <dl className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
-          { label: "Total price", value: formatPkr(b.totalPricePkr) },
-          { label: "Paid", value: formatPkr(b.paidPkr) },
-          { label: "Outstanding", value: formatPkr(b.outstandingPkr) },
-          { label: "Paid so far", value: `${pct}%` },
+          { label: "Total price", value: formatPkr(b.totalPricePkr), tone: "" },
+          { label: "Paid", value: formatPkr(b.paidPkr), tone: "" },
+          { label: "Outstanding", value: formatPkr(b.outstandingPkr), tone: "dark" },
+          { label: "Paid so far", value: `${pct}%`, tone: "", bar: true },
         ].map((s) => (
-          <div key={s.label} className="admin-card p-4">
-            <dt className="text-xs text-stone-500">{s.label}</dt>
-            <dd className="mt-1 font-semibold">{s.value}</dd>
+          <div key={s.label} className={`rounded-[24px] p-5 lg:p-6 ${s.tone === "dark" ? "bg-ink text-paper" : "admin-card"}`}>
+            <dt className={`text-sm ${s.tone === "dark" ? "text-faint" : "text-muted"}`}>{s.label}</dt>
+            <dd className="mt-2 text-[22px] leading-none font-semibold tracking-tight whitespace-nowrap sm:text-[28px]">{s.value}</dd>
+            {s.bar && (
+              <span className="mt-3 block h-1.5 overflow-hidden rounded-full bg-mist" aria-hidden>
+                <span className="block h-full rounded-full bg-teal-700" style={{ width: `${pct}%` }} />
+              </span>
+            )}
           </div>
         ))}
       </dl>
 
       {overdue > 0 && (
-        <p className="mt-4 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
-          Overdue: {formatPkr(overdue)} was due on {formatDate(b.nextPaymentDate)}.
+        <p className="mt-4 flex items-center gap-3 rounded-[20px] border border-red-200 bg-red-50 px-5 py-4 text-[15px] text-red-800">
+          <Icon name="alert" className="h-5 w-5 shrink-0" />
+          <span>
+            <b>Overdue:</b> {formatPkr(overdue)} was due on {formatDate(b.nextPaymentDate)}.
+          </span>
         </p>
       )}
 

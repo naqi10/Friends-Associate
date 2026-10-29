@@ -151,7 +151,10 @@ model Property {
 model User {
   id                     String            @id @default(uuid())
   name                   String
-  email                  String            @unique
+  /// Optional for customers (a naqsha client may have none); staff always have one. Used for sign-in and emails.
+  email                  String?           @unique
+  /// Customer "user ID": signs in with this instead of an email. Lowercase letters, numbers, dot, dash, underscore.
+  username               String?           @unique
   passwordHash           String            @map("password_hash")
   role                   String
   city                   String
@@ -300,7 +303,7 @@ model Lead {
   interest        String
   /// new | contacted | requirement_received | quotation_pending | quotation_sent | follow_up | converted | closed
   status          String
-  /// contact | callback | sell | investment | chatbot | manual
+  /// contact | callback | sell | investment | chatbot | portal | manual
   source          String                 @default("manual")
   service         String                 @default("")
   location        String                 @default("")
@@ -406,6 +409,36 @@ model Service {
   updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@index([division, published, sortOrder])
+}
+
+/// Construction chemicals and building materials sold by the company (Website → /products).
+model Product {
+  id          String   @id @default(uuid())
+  /// Public address: /products/<slug>. Set when created, kept when the name changes.
+  slug        String   @unique
+  name        String
+  /// waterproofing | heatproofing | termite | concrete_repair | accessories (see PRODUCT_CATEGORIES)
+  category    String
+  brand       String   @default("")
+  /// Main use, one or two sentences (shown on cards).
+  summary     String   @default("")
+  /// One price option per line: "label | price in rupees | unit", e.g. "9 inch | 3800 | per roll".
+  options     String   @default("")
+  /// Lowest price, for "From Rs …" and sorting. Kept in step with options.
+  pricePkr    Int?     @map("price_pkr")
+  /// One benefit per line.
+  benefits    String   @default("")
+  /// Technical data, one item per line.
+  specs       String   @default("")
+  /// Small print under the price, e.g. "Prices without bilty (transport not included)".
+  note        String   @default("")
+  imagePath   String   @default("") @map("image_path")
+  published   Boolean  @default(true)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([published, category, sortOrder])
 }
 
 model ContentBlock {

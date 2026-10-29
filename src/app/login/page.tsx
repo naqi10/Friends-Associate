@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Logo } from "@/components/Logo";
+import { PasswordInput } from "@/components/PasswordInput";
 import { loginAction } from "@/lib/actions/auth";
 import { DEMO_PASSWORD } from "@/lib/constants";
 
@@ -16,7 +17,7 @@ export default async function LoginPage({ searchParams }: Props) {
     <div className="mx-auto max-w-md px-4 py-16">
       <Logo variant="full" priority className="mx-auto mb-8 w-[220px]" />
       <h1 className="text-2xl font-bold">Login</h1>
-      {sp.error === "1" && <p className="mt-2 text-sm text-red-600">Invalid email or password.</p>}
+      {sp.error === "1" && <p className="mt-2 text-sm text-red-600">Wrong user ID / email or password.</p>}
       {sp.error === "soon" && (
         <p className="mt-2 rounded-md bg-stone-100 p-3 text-sm text-stone-800">
           The staff portal is <strong>coming soon</strong>. Your account is ready; you will be able to sign in once it opens.
@@ -28,12 +29,26 @@ export default async function LoginPage({ searchParams }: Props) {
       <form action={loginAction} className="mt-8 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
         <input type="hidden" name="next" value={sp.next ?? ""} />
         <div>
-          <label className="text-sm font-medium">Email</label>
-          <input name="email" type="email" required className="mt-1 w-full rounded-md border px-3 py-2 text-sm" />
+          {/* The field keeps the name "email"; customers may type their user ID instead. */}
+          <label htmlFor="login-id" className="text-sm font-medium">
+            Email or user ID
+          </label>
+          <input
+            id="login-id"
+            name="email"
+            type="text"
+            required
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            className="mt-1 w-full rounded-md border px-3 py-2.5 text-[16px]"
+          />
         </div>
         <div>
-          <label className="text-sm font-medium">Password</label>
-          <input name="password" type="password" required className="mt-1 w-full rounded-md border px-3 py-2 text-sm" />
+          <label htmlFor="login-password" className="text-sm font-medium">
+            Password
+          </label>
+          <PasswordInput id="login-password" name="password" required autoComplete="current-password" className="mt-1 w-full rounded-md border py-2.5 pr-12 pl-3 text-[16px]" />
         </div>
         <button type="submit" className="w-full rounded-md bg-teal-800 py-2 text-sm font-medium text-white">
           Sign in
