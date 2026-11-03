@@ -74,6 +74,7 @@ export default async function PortalDocumentsPage() {
                           {formatLongDate(d.issued_on)}
                           {!d.storage_path && <span className="sm:hidden"> · being prepared</span>}
                         </p>
+                        {d.note && <p className="mt-1 text-[15px] text-body">{d.note}</p>}
                       </div>
                       {!d.storage_path ? (
                         <span className="hidden shrink-0 text-[14px] text-muted sm:inline">Being prepared</span>

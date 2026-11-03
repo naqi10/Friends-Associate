@@ -13,7 +13,7 @@ export default async function ImportPropertiesPage() {
     ["title", "Listing name, e.g. 5 Marla House, Model Town (required)"],
     ["type", `${PROPERTY_TYPES.join(", ")} (required)`],
     ["listing", "sale or rent (required)"],
-    ["city", `${CITIES.join(", ")} (required)`],
+    ["city", `Any city, e.g. ${CITIES.join(", ")} (required)`],
     ["locality", "Area, e.g. Model Town"],
     ["size", "e.g. 5 Marla, 1 Kanal, 220 sq ft"],
     ["price_pkr", "Whole rupees. For rent: the monthly rent (required)"],

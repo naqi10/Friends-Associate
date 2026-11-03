@@ -17,10 +17,12 @@ import { hashPassword, readNewPassword } from "@/lib/passwords";
 const LOCK_WINDOW_MS = 15 * 60 * 1000;
 const MAX_WRONG_CURRENT = 5;
 
-/** Change your own password. Works for every role; the form lives on /account and /portal/profile. */
+/** Change your own password: staff on /account, and customers the office allowed to (on /portal/profile). */
 export async function changeOwnPasswordAction(formData: FormData) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  // Customers' passwords are set by the office, unless the office allowed this customer to change their own.
+  if (user.role === "buyer" && !user.can_change_password) redirect("/portal/profile");
   const page = user.role === "buyer" ? "/portal/profile" : "/account";
   const back = (code: string) => redirect(`${page}?error=${code}`);
 

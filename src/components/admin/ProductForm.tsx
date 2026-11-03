@@ -2,6 +2,7 @@ import { PRODUCT_CATEGORIES } from "@/lib/catalog";
 import { saveProductAction } from "@/lib/actions/products";
 import { formatOptions, type ProductRow } from "@/lib/data";
 import { CheckboxField, Field, SelectField, TextAreaField } from "./Field";
+import { GalleryField } from "./GalleryField";
 import { ImageField } from "./ImageField";
 
 /** Add / edit form for one product (Admin → Products). */
@@ -34,7 +35,17 @@ export function ProductForm({ product }: { product?: ProductRow }) {
         <TextAreaField label="Benefits" name="benefits" defaultValue={product?.benefits.join("\n")} rows={6} hint="One per line, up to 15." />
         <TextAreaField label="Technical data" name="specs" defaultValue={product?.specs.join("\n")} rows={6} hint="One per line, e.g. “Coverage: 50–60 sq ft per kit”." />
       </div>
-      <ImageField current={product?.imagePath} label="Product photo (optional)" removeName="remove_image" shape="square" />
+      <ImageField current={product?.imagePath} label="Cover photo (optional)" removeName="remove_image" shape="square" />
+      <GalleryField current={product?.gallery ?? []} />
+      <Field
+        label="Product video (optional)"
+        name="video_url"
+        type="url"
+        defaultValue={product?.videoUrl}
+        maxLength={500}
+        placeholder="https://www.youtube.com/watch?v=…"
+        hint="Paste a YouTube or Facebook video link, or a direct link to an .mp4 file. It plays on the product page."
+      />
       <CheckboxField label="Published (shown on the website)" name="published" defaultChecked={product ? product.published : true} />
       <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
         {product ? "Save product" : "Add product"}

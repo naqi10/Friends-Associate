@@ -1,8 +1,8 @@
+import { CityField } from "@/components/admin/CityField";
 import { Field, SelectField } from "@/components/admin/Field";
 import { ImageField } from "@/components/admin/ImageField";
 import { saveInvestmentAction } from "@/lib/actions/investments";
 import { INVESTMENT_STATUSES, INVESTMENT_TYPES } from "@/lib/catalog";
-import { CITIES } from "@/lib/constants";
 
 type Investment = {
   id: string;
@@ -40,7 +40,7 @@ export function InvestmentForm({ inv, projects }: { inv?: Investment; projects: 
         defaultValue={inv?.investmentType ?? "plaza"}
         options={INVESTMENT_TYPES.map((t) => ({ value: t.key, label: t.label }))}
       />
-      <SelectField label="City" name="city" options={CITIES} defaultValue={inv?.city ?? "Rahim Yar Khan"} />
+      <CityField defaultValue={inv?.city ?? "Rahim Yar Khan"} required />
       <Field label="Location" name="location" defaultValue={inv?.location} />
       <SelectField
         label="Linked project (optional)"

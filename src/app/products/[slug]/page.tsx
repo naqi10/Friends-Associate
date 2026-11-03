@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CallbackForm } from "@/components/public/EnquiryForms";
+import { hasRealImage } from "@/lib/media";
+import { PhotoCarousel } from "@/components/public/PhotoCarousel";
 import { ProductCard, ProductImage } from "@/components/public/ProductCard";
+import { ProductVideo } from "@/components/public/ProductVideo";
 import { BTN_DARK, BTN_OUTLINE, CARD, CONTAINER } from "@/components/public/ui";
 import { BRAND } from "@/lib/brand";
 import { PRODUCT_CATEGORIES, labelOf } from "@/lib/catalog";
@@ -40,7 +43,19 @@ export default async function ProductPage({ params, searchParams }: Props) {
             </Link>
           </nav>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
-            <ProductImage p={p} sizes="(min-width: 1024px) 600px, 100vw" className="aspect-square rounded-box lg:aspect-[4/3.4]" />
+            <div className="min-w-0 space-y-5">
+              {p.gallery.length ? (
+                <PhotoCarousel
+                  photos={[p.imagePath, ...p.gallery].filter((x) => hasRealImage(x))}
+                  alt={p.name}
+                  sizes="(min-width: 1024px) 600px, 100vw"
+                  className="aspect-square rounded-box lg:aspect-[4/3.4]"
+                />
+              ) : (
+                <ProductImage p={p} sizes="(min-width: 1024px) 600px, 100vw" className="aspect-square rounded-box lg:aspect-[4/3.4]" />
+              )}
+              <ProductVideo url={p.videoUrl} title={p.name} />
+            </div>
             <div>
               <p className="text-xs font-semibold tracking-[0.18em] text-muted uppercase">
                 {category}

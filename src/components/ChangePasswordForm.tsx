@@ -3,7 +3,7 @@ import { FormError } from "@/components/FormError";
 import { changeOwnPasswordAction } from "@/lib/actions/account";
 import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
 
-/** "Change my password" for any logged-in user. Shared by /account (staff) and /portal/profile (buyers); the page supplies the card. */
+/** "Change my password" for any logged-in user. Used on /account (staff) and /portal/profile (customers the office allowed to); the page supplies the card. */
 export function ChangePasswordForm({ saved, error }: { saved?: string; error?: string }) {
   return (
     <section>

@@ -1,9 +1,10 @@
+import { CityField } from "@/components/admin/CityField";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FormError } from "@/components/FormError";
 import { Field, Notice, SelectField } from "@/components/admin/Field";
 import { resetStaffPasswordAction, updateStaffAction } from "@/lib/actions/staff";
-import { CITIES, MIN_PASSWORD_LENGTH } from "@/lib/constants";
+import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
 import { getStaffMember } from "@/lib/data";
 import { ROLE_LABELS, ROLE_SUMMARIES, STAFF_ROLES } from "@/lib/permission-catalog";
 import { requireAdmin } from "@/lib/permissions";
@@ -56,7 +57,7 @@ export default async function StaffMemberPage({ params, searchParams }: Props) {
           </div>
           <Field label="Work email (login)" name="email" type="email" defaultValue={member.email ?? ""} required />
           <Field label="Phone" name="phone" type="tel" defaultValue={member.phone} />
-          <SelectField label="Office" name="city" options={CITIES} defaultValue={member.city} required />
+          <CityField label="Office" defaultValue={member.city} required />
           {isSelf ? (
             <>
               {/* Locked for yourself; the server enforces this too. */}

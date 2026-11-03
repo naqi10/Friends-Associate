@@ -41,6 +41,7 @@ export default async function DocumentsPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{d.name}</p>
+                  {d.note && <p className="text-sm text-body">{d.note}</p>}
                   <p className="text-sm text-muted">{formatDate(d.issued_on)}</p>
                 </div>
                 {d.storage_path ? (

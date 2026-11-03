@@ -128,6 +128,8 @@ model Property {
   pricePkr    Int       @map("price_pkr")
   status      String
   imagePath   String    @map("image_path")
+  /// Extra photos after the cover (imagePath), shown as a swipeable gallery on the listing.
+  gallery     String[]  @default([])
   /// "sale" | "rent"
   listingType String    @default("sale") @map("listing_type")
   locality    String    @default("")
@@ -162,6 +164,8 @@ model User {
   cnic                   String
   documentDownloadPaidAt DateTime?         @map("document_download_paid_at")
   active                 Boolean           @default(true)
+  /// Customers only: the office may let one change their own password (off by default; staff always can).
+  canChangePassword      Boolean           @default(false) @map("can_change_password")
   lastLoginAt            DateTime?         @map("last_login_at")
   /// Set when an admin deletes a staff account: login removed, email freed, name kept for history.
   deletedAt              DateTime?         @map("deleted_at")
@@ -206,7 +210,8 @@ model Booking {
   id                   String    @id @default(uuid())
   userId               String    @map("user_id")
   propertyId           String    @map("property_id")
-  projectId            String    @map("project_id")
+  /// Null for a standalone listing (a property that is not part of a company project).
+  projectId            String?   @map("project_id")
   status               String
   bookedOn             String    @map("booked_on")
   totalPricePkr        Int       @map("total_price_pkr")
@@ -220,7 +225,7 @@ model Booking {
   cancelReason         String    @default("") @map("cancel_reason")
   user                 User      @relation(fields: [userId], references: [id])
   property             Property  @relation(fields: [propertyId], references: [id])
-  project              Project   @relation(fields: [projectId], references: [id])
+  project              Project?  @relation(fields: [projectId], references: [id])
   payments             Payment[]
 
   @@index([userId])
@@ -270,6 +275,8 @@ model Document {
   status      String?
   fileName    String            @map("file_name")
   storagePath String?           @map("storage_path")
+  /// Office note shown with the file to the customer and staff, e.g. "Signed copy handed to Ali".
+  note        String            @default("")
   user        User?             @relation("BuyerDocuments", fields: [userId], references: [id])
   project     Project?          @relation(fields: [projectId], references: [id])
   versions    DocumentVersion[]
@@ -413,30 +420,34 @@ model Service {
 
 /// Construction chemicals and building materials sold by the company (Website → /products).
 model Product {
-  id          String   @id @default(uuid())
+  id        String   @id @default(uuid())
   /// Public address: /products/<slug>. Set when created, kept when the name changes.
-  slug        String   @unique
-  name        String
+  slug      String   @unique
+  name      String
   /// waterproofing | heatproofing | termite | concrete_repair | accessories (see PRODUCT_CATEGORIES)
-  category    String
-  brand       String   @default("")
+  category  String
+  brand     String   @default("")
   /// Main use, one or two sentences (shown on cards).
-  summary     String   @default("")
+  summary   String   @default("")
   /// One price option per line: "label | price in rupees | unit", e.g. "9 inch | 3800 | per roll".
-  options     String   @default("")
+  options   String   @default("")
   /// Lowest price, for "From Rs …" and sorting. Kept in step with options.
-  pricePkr    Int?     @map("price_pkr")
+  pricePkr  Int?     @map("price_pkr")
   /// One benefit per line.
-  benefits    String   @default("")
+  benefits  String   @default("")
   /// Technical data, one item per line.
-  specs       String   @default("")
+  specs     String   @default("")
   /// Small print under the price, e.g. "Prices without bilty (transport not included)".
-  note        String   @default("")
-  imagePath   String   @default("") @map("image_path")
-  published   Boolean  @default(true)
-  sortOrder   Int      @default(0) @map("sort_order")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+  note      String   @default("")
+  imagePath String   @default("") @map("image_path")
+  /// Extra photos after the cover, shown as a swipeable gallery.
+  gallery   String[] @default([])
+  /// Optional product video: a YouTube / Facebook link or a direct .mp4 link (see lib/video.ts).
+  videoUrl  String   @default("") @map("video_url")
+  published Boolean  @default(true)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@index([published, category, sortOrder])
 }

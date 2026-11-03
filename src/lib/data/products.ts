@@ -20,6 +20,10 @@ export type ProductRow = {
   specs: string[];
   note: string;
   imagePath: string;
+  /** Extra photos after the cover, in order. */
+  gallery: string[];
+  /** Optional video link (YouTube, Facebook or .mp4), "" when none. */
+  videoUrl: string;
   published: boolean;
   sortOrder: number;
 };
@@ -73,7 +77,7 @@ export async function getProduct(id: string) {
   return row ? mapProduct(row) : null;
 }
 
-export type ProductInput = Omit<ProductRow, "id" | "slug" | "imagePath" | "pricePkr"> & { imagePath?: string };
+export type ProductInput = Omit<ProductRow, "id" | "slug" | "imagePath" | "gallery" | "pricePkr"> & { imagePath?: string; gallery?: string[] };
 
 /** A slug from the name, made unique with -2, -3 … */
 async function uniqueSlug(name: string) {

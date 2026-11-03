@@ -4,8 +4,7 @@ import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { StaffAddPanel } from "@/components/admin/StaffAddPanel";
 import { Icon } from "@/components/admin/shell/icons";
 import { changeStaffRoleAction, createStaffAction, deleteStaffAction, setStaffActiveAction } from "@/lib/actions/staff";
-import { CITIES } from "@/lib/constants";
-import { getStaffRows } from "@/lib/data";
+import { getKnownCities, getStaffRows } from "@/lib/data";
 import type { StaffRow } from "@/lib/data/staff";
 import { ROLE_LABELS, STAFF_ROLES, type StaffRole } from "@/lib/permission-catalog";
 import { requireAdmin } from "@/lib/permissions";
@@ -45,7 +44,7 @@ const signedIn = (iso: string) => new Date(iso).toLocaleString("en-GB", { timeZo
 
 export default async function StaffPage({ searchParams }: Props) {
   const { user: me } = await requireAdmin();
-  const [sp, rows] = await Promise.all([searchParams, getStaffRows()]);
+  const [sp, rows, cities] = await Promise.all([searchParams, getStaffRows(), getKnownCities()]);
   const active = rows.filter((r) => r.active);
   const inactive = rows.filter((r) => !r.active);
   const never = active.filter((r) => !r.lastLoginAt);
@@ -336,7 +335,7 @@ export default async function StaffPage({ searchParams }: Props) {
                 <Icon name="close" />
               </Link>
             </div>
-            <StaffAddPanel action={createStaffAction} cities={CITIES} roles={STAFF_ROLES.map((r) => ({ key: r, label: ROLE_LABELS[r], scope: r === "admin" ? "Full access, including staff and permissions" : r === "sales" ? "Leads, customers and bookings" : "PM desk, project progress and documents" }))} />
+            <StaffAddPanel action={createStaffAction} cities={cities} roles={STAFF_ROLES.map((r) => ({ key: r, label: ROLE_LABELS[r], scope: r === "admin" ? "Full access, including staff and permissions" : r === "sales" ? "Leads, customers and bookings" : "PM desk, project progress and documents" }))} />
           </aside>
         )}
       </div>

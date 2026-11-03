@@ -105,6 +105,7 @@ export default async function PortalHomePage({ searchParams }: Props) {
                   <div className="min-w-0 flex-1">
                     <p className="text-[17px] font-semibold">{d.name}</p>
                     <p className="text-[14px] text-muted">{formatLongDate(d.issued_on)}</p>
+                    {d.note && <p className="mt-1 text-[15px] text-body">{d.note}</p>}
                   </div>
                   {d.storage_path && (
                     <a
@@ -137,7 +138,7 @@ export default async function PortalHomePage({ searchParams }: Props) {
       {active.map((b) => {
         const inst = nextInstalment(b, today);
         const pct = paidPercent(b);
-        const place = [b.project.name, b.property.locality || b.property.city].filter(Boolean).join(" · ");
+        const place = [b.project?.name, b.property.locality || b.property.city].filter(Boolean).join(" · ");
         return (
           <div key={b.id} className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
             <article className={`${CARD} overflow-hidden md:grid md:grid-cols-[minmax(220px,40%)_1fr]`}>
@@ -149,6 +150,7 @@ export default async function PortalHomePage({ searchParams }: Props) {
                   <Ring percent={pct} />
                   <MoneyFacts paid={b.paid_pkr} remaining={b.outstanding_pkr} total={b.total_price_pkr} className="grid flex-1 gap-3" />
                 </div>
+                {b.project && (
                 <div className="mt-6 border-t border-line pt-5">
                   <ProgressBar label="Construction progress" percent={b.project.progress_percent} />
                   <div className="mt-3 flex items-center justify-between gap-3 text-[15px]">
@@ -158,6 +160,7 @@ export default async function PortalHomePage({ searchParams }: Props) {
                     </Link>
                   </div>
                 </div>
+                )}
               </div>
             </article>
 

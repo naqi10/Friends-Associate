@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { ChatComingSoon } from "@/components/ChatComingSoon";
 import { ChatWidget } from "@/components/ChatWidget";
 import { isEnabled } from "@/lib/release";
+import { FormHelpers } from "@/components/FormHelpers";
 import { Providers } from "@/components/Providers";
 import { PublicChrome } from "@/components/PublicChrome";
 import { DEFAULT_OG_IMAGE, HOME_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
@@ -99,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <SiteFooter />
           </PublicChrome>
           <PublicChrome>{isEnabled("chatbot") ? <ChatWidget /> : <ChatComingSoon />}</PublicChrome>
+          <FormHelpers />
         </Providers>
       </body>
     </html>

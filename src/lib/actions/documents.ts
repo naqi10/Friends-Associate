@@ -89,6 +89,7 @@ export async function uploadDocumentAction(formData: FormData) {
   const category = text(formData, "category");
   const projectId = text(formData, "project_id") || null;
   const userId = audience === "buyer" ? text(formData, "user_id") || null : null;
+  const note = text(formData, "note", 500);
   if (!name) fail("required");
   if (!(DOCUMENT_TYPES as readonly string[]).includes(category)) fail("doc-type");
   if (projectId && !(await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } }))) fail("missing");
@@ -109,20 +110,21 @@ export async function uploadDocumentAction(formData: FormData) {
     issuedOn: new Date().toISOString().slice(0, 10),
     fileName,
     storagePath,
+    note,
   });
   await writeAuditLog({
     userId: actor.id,
     action: "upload",
     module: "documents",
     recordId: doc.id,
-    newValue: { name, category, audience, userId, projectId, fileName, sizeBytes: file.size },
+    newValue: { name, category, audience, userId, projectId, fileName, sizeBytes: file.size, ...(note ? { note } : {}) },
   });
   // Only a customer who can see their documents is told about one (see canSeeDocuments).
   if (userId && (await canSeeDocuments(userId))) {
     await notifyUser(userId, { type: "document", title: `New document: ${name}`, message: "A new document has been added to your portal.", link: "/portal/documents" });
     after(async () => {
       const buyer = await getUserById(userId);
-      if (buyer) await sendNewDocumentEmail(buyer, name);
+      if (buyer) await sendNewDocumentEmail(buyer, name, false, note);
     });
   }
   revalidateDocuments();
@@ -182,4 +184,18 @@ export async function markDocumentCheckedAction(formData: FormData) {
   await writeAuditLog({ userId: actor.id, action: "update", module: "documents", recordId: id, oldValue: { status: doc.status }, newValue: { status: "Approved" } });
   revalidateDocuments();
   redirect(withParam(back, "saved=checked"));
+}
+
+/** Changes the caption shown under a file's name (to the customer too, for their files). */
+export async function setDocumentNoteAction(formData: FormData) {
+  const { user: actor } = await requireStaff("documents", "update");
+  const id = text(formData, "id");
+  const back = documentsReturn(formData);
+  const note = text(formData, "note", 500);
+  const doc = await prisma.document.findUnique({ where: { id }, select: { note: true } });
+  if (!doc) redirect(withParam(back, "error=missing"));
+  await prisma.document.update({ where: { id }, data: { note } });
+  await writeAuditLog({ userId: actor.id, action: "update", module: "documents", recordId: id, oldValue: { note: doc!.note }, newValue: { note } });
+  revalidateDocuments();
+  redirect(withParam(back, "saved=caption"));
 }

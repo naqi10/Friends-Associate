@@ -78,7 +78,7 @@ export const LISTING_TYPES = [
 ] as const;
 export type ListingType = (typeof LISTING_TYPES)[number]["key"];
 
-export const PROPERTY_TYPES = ["House", "Apartment", "Plot", "Shop", "Office", "Plaza", "Farm house", "Commercial"] as const;
+export const PROPERTY_TYPES = ["House", "Apartment", "Plot", "Shop", "Office", "Plaza", "Farm house", "Commercial", "School", "Petrol pump"] as const;
 
 /** Budget bands used by property filters and forms (whole PKR; rent bands are per month). */
 export const BUDGET_BANDS: Record<ListingType, { key: string; label: string; min?: number; max?: number }[]> = {

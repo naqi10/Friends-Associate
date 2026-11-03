@@ -11,10 +11,10 @@ export const metadata = { title: "My account", robots: { index: false } };
 type Props = { searchParams: Promise<{ saved?: string; error?: string }> };
 
 export default async function PortalProfilePage({ searchParams }: Props) {
-  const { user } = await getPortal();
-  const sp = await searchParams;
+  const [{ user }, sp] = await Promise.all([getPortal(), searchParams]);
   const facts: [string, string][] = [
-    ["Email (sign in)", user.email],
+    ["User ID (sign in)", user.username ?? ""],
+    ["Email", user.email],
     ["Phone", user.phone],
     ["City", user.city],
     ["CNIC", user.cnic],
@@ -66,9 +66,20 @@ export default async function PortalProfilePage({ searchParams }: Props) {
           </form>
         </div>
 
+        {/* The office sets customers' passwords; it can let one customer change their own (Admin → Customer). */}
+        {user.can_change_password ? (
+          <section className={`${CARD} p-6`}>
+            <ChangePasswordForm saved={sp.saved} error={sp.error} />
+          </section>
+        ) : (
         <section className={`${CARD} p-6`}>
-          <ChangePasswordForm saved={sp.saved} error={sp.error} />
+          <h2 className="text-[20px] font-semibold">Password</h2>
+          <p className="mt-2 text-[16px] text-muted">Your password is given by our office. If you forgot it or want a new one, our office will set it for you.</p>
+          <Link href="/portal/support" className="mt-5 inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-[16px] font-semibold text-paper hover:bg-body">
+            Ask our office
+          </Link>
         </section>
+        )}
       </div>
     </PortalShell>
   );

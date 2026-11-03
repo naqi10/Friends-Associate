@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FormError } from "@/components/FormError";
+import { CaptionForm } from "@/components/admin/CaptionForm";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { DocumentUpload, FilePickForm } from "@/components/admin/DocumentUpload";
 import { Icon } from "@/components/admin/shell/icons";
@@ -8,7 +9,7 @@ import { setDocumentFileAction, uploadDocumentAction } from "@/lib/actions/docum
 import { deleteDocumentAction } from "@/lib/actions/lifecycle";
 import { DOCUMENT_TYPES } from "@/lib/catalog";
 import { getDocumentRowsForAdmin, getDocumentVersions, getProjects, getUsers } from "@/lib/data";
-import { formatDate } from "@/lib/format";
+import { buyerHint, formatDate } from "@/lib/format";
 import { requireStaff } from "@/lib/permissions";
 
 export const metadata = { title: "Documents" };
@@ -23,6 +24,7 @@ const SAVED: Record<string, string> = {
   attached: "File attached. It can be downloaded now.",
   version: "New version uploaded. The previous file is kept in Version history.",
   deleted: "Document deleted.",
+  caption: "Caption saved.",
 };
 
 function fileIcon(fileName: string) {
@@ -125,6 +127,7 @@ export default async function AdminDocumentsPage({ searchParams }: Props) {
             <FilePickForm audience={d.audience === "buyer" ? "buyer" : "public"} action={setDocumentFileAction} id={d.id} returnTo={returnTo} className="block rounded-xl px-3 py-2 hover:bg-mist" label="Replace with a new version…" />
           )}
           {!d.storagePath && <FilePickForm audience={d.audience === "buyer" ? "buyer" : "public"} action={setDocumentFileAction} id={d.id} returnTo={returnTo} className="block rounded-xl px-3 py-2 hover:bg-mist" label="Attach file…" />}
+          {canUpdate && <CaptionForm id={d.id} note={d.note} returnTo={returnTo} />}
           <Link href={href(base, { versions: d.id })} className="block rounded-xl px-3 py-2 hover:bg-mist">
             Version history{d._count.versions ? ` (${d._count.versions} older)` : ""}
           </Link>
@@ -303,6 +306,7 @@ export default async function AdminDocumentsPage({ searchParams }: Props) {
                               <p className="text-sm text-muted">
                                 {[d.category !== d.name && d.category, d.project?.name].filter(Boolean).join(" · ")}
                               </p>
+                              {d.note && <p className="mt-0.5 text-sm text-body">{d.note}</p>}
                             </div>
                           </div>
                         </td>
@@ -334,6 +338,7 @@ export default async function AdminDocumentsPage({ searchParams }: Props) {
                         <p className="text-sm text-muted">
                           {[d.category !== d.name && d.category, d.project?.name, formatDate(d.issuedOn)].filter(Boolean).join(" · ")}
                         </p>
+                        {d.note && <p className="mt-0.5 text-sm text-body">{d.note}</p>}
                         <div className="mt-2">
                           <Audience d={d} />
                         </div>
@@ -359,7 +364,7 @@ export default async function AdminDocumentsPage({ searchParams }: Props) {
             action={uploadDocumentAction}
             types={DOCUMENT_TYPES}
             projects={projects.map((p) => ({ id: p.id, name: p.name }))}
-            buyers={buyers.filter((b) => b.active !== false).map((b) => ({ id: b.id, name: b.name }))}
+            buyers={buyers.filter((b) => b.active !== false).map((b) => ({ id: b.id, name: b.name, hint: buyerHint(b) }))}
             returnTo={returnTo}
             defaultBuyerId={forBuyer?.id}
           />

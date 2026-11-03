@@ -1,20 +1,23 @@
+import { CityField } from "@/components/admin/CityField";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FormError } from "@/components/FormError";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
+import { CaptionForm } from "@/components/admin/CaptionForm";
 import { DocumentUpload, FilePickForm } from "@/components/admin/DocumentUpload";
 import { Icon } from "@/components/admin/shell/icons";
-import { Field, Notice, SelectField } from "@/components/admin/Field";
+import { Field, Notice } from "@/components/admin/Field";
 import { markDocumentCheckedAction, setDocumentFileAction, uploadDocumentAction } from "@/lib/actions/documents";
 import { deleteCustomerAction, deleteDocumentAction } from "@/lib/actions/lifecycle";
 import {
   resetCustomerPasswordAction,
+  setCustomerPasswordChangeAction,
   updateCustomerAction,
 } from "@/lib/actions/customers";
 import { DOCUMENT_TYPES } from "@/lib/catalog";
 import { documentsVisible, isCustomerProof } from "@/lib/document-access";
-import { CITIES, MIN_PASSWORD_LENGTH } from "@/lib/constants";
-import { customerBlockers, getBookingsForUserDetailed, getCustomer, getDocumentsForUser, MAX_BOOKINGS_PER_BUYER } from "@/lib/data";
+import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
+import { customerBlockers, getBookingsForUserDetailed, getCustomer, getDocumentsForUser, MAX_BOOKINGS_PER_BUYER, STANDALONE } from "@/lib/data";
 import { formatDate, formatPkr } from "@/lib/format";
 import { requireStaff } from "@/lib/permissions";
 
@@ -29,6 +32,9 @@ const SAVED: Record<string, string> = {
   version: "New version uploaded. The customer was told about the update.",
   checked: "Marked as checked.",
   deleted: "File deleted. The customer no longer sees it.",
+  caption: "Caption saved. The customer sees it under the file name.",
+  "pw-allowed": "This customer can now change their own password from their portal.",
+  "pw-blocked": "Only the office can change this customer's password now.",
 };
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string; error?: string }> };
@@ -44,7 +50,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
     can("documents", "view") ? getDocumentsForUser(id) : Promise.resolve([]),
   ]);
   if (!customer) notFound();
-  const projects = [...new Map(bookings.map((b) => [b.project.id, { id: b.project.id, name: b.project.name }])).values()];
+  const projects = [...new Map(bookings.flatMap((b) => (b.project ? [[b.project.id, { id: b.project.id, name: b.project.name }] as const] : []))).values()];
   const returnTo = `/admin/customers/${customer.id}`;
   const confirmed = documentsVisible(bookings);
 
@@ -71,7 +77,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
             <Field label="User ID (for sign in)" name="username" defaultValue={customer.username ?? ""} autoCapitalize="none" spellCheck={false} placeholder="e.g. ali.khan" />
             <Field label="Email (optional, also signs in)" name="email" type="email" defaultValue={customer.email ?? ""} />
             <Field label="Phone" name="phone" type="tel" defaultValue={customer.phone} />
-            <SelectField label="City" name="city" options={CITIES} defaultValue={customer.city} required />
+            <CityField defaultValue={customer.city} required />
             <Field label="CNIC" name="cnic" defaultValue={customer.cnic} pattern="\d{5}-\d{7}-\d" />
             <label className="flex items-center gap-2 text-sm sm:col-span-2">
               <input type="checkbox" name="active" defaultChecked={customer.active} className="h-4 w-4" />
@@ -132,6 +138,18 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
               Reset password
             </button>
           </form>
+          <form action={setCustomerPasswordChangeAction} className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+            <input type="hidden" name="id" value={customer.id} />
+            <input type="hidden" name="allow" value={customer.canChangePassword ? "0" : "1"} />
+            <p className="text-sm">
+              <span className="font-medium">Customer can change own password:</span>{" "}
+              <span className={customer.canChangePassword ? "font-semibold text-emerald-800" : "font-semibold text-muted"}>{customer.canChangePassword ? "Allowed" : "No (office only)"}</span>
+              <span className="block text-xs text-muted">Turn on only if the customer asks for it.</span>
+            </p>
+            <button type="submit" className="rounded-full border-[1.5px] border-line-strong bg-white px-4 py-2 text-sm font-semibold hover:bg-mist">
+              {customer.canChangePassword ? "Turn off" : "Allow"}
+            </button>
+          </form>
         </section>
         )}
       </div>
@@ -162,7 +180,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
                     {b.status === "Cancelled" && <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-normal text-stone-600">Cancelled</span>}
                   </p>
                   <p className="text-stone-600">
-                    {b.project.name} · Paid {formatPkr(b.paid_pkr)} · Outstanding {formatPkr(b.outstanding_pkr)}
+                    {b.project?.name ?? STANDALONE} · Paid {formatPkr(b.paid_pkr)} · Outstanding {formatPkr(b.outstanding_pkr)}
                   </p>
                 </div>
                 {can("bookings", "view") && (
@@ -209,6 +227,8 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
                           {d.category} · {formatDate(d.issued_on)}
                           {d.version ? ` · ${d.version}` : ""}
                         </p>
+                        {d.note && <p className="mt-0.5 text-xs text-body">{d.note}</p>}
+                        {can("documents", "update") && <CaptionForm id={d.id} note={d.note} returnTo={returnTo} className="mt-1 inline-block text-xs font-medium text-teal-800 hover:underline" />}
                       </div>
                       {d.storage_path ? (
                         <a href={`/api/documents/${d.id}/download`} className="inline-flex items-center gap-1 font-medium text-teal-800 hover:underline">

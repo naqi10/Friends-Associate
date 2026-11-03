@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { submitWithKey, uploadDirect } from "@/components/admin/directUpload";
+import { Combobox } from "@/components/admin/Combobox";
 import { Icon } from "@/components/admin/shell/icons";
 
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx";
@@ -13,7 +14,8 @@ const BUYER_ACCEPT = ".pdf,.dwg,.jpg,.jpeg,.png,.webp,.zip";
 const BUYER_ALLOWED = /\.(pdf|dwg|jpe?g|png|webp|zip)$/i;
 const BUYER_MAX_BYTES = 200 * 1024 * 1024;
 
-type Option = { id: string; name: string };
+/** `hint` (phone, user ID…) is shown under the name and searched too. */
+type Option = { id: string; name: string; hint?: string };
 type Action = (formData: FormData) => Promise<void>;
 
 function sizeLabel(bytes: number) {
@@ -149,29 +151,22 @@ export function DocumentUpload({
         <input name="name" required maxLength={160} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Lahore master plan" className={field} />
       </label>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 min-[1500px]:grid-cols-2">
-        <label className="block text-sm font-semibold">
-          Type
-          <select name="category" required defaultValue="" className={field}>
-            <option value="" disabled>
-              Choose…
-            </option>
-            {types.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-sm font-semibold">
-          Project
-          <select name="project_id" defaultValue="" className={field}>
-            <option value="">None (company-wide)</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Combobox label="Type" name="category" required labelClassName="font-semibold" placeholder="Type to search…" options={types.map((t) => ({ value: t, label: t }))} />
+        <Combobox
+          label="Project"
+          name="project_id"
+          labelClassName="font-semibold"
+          emptyLabel="None (company-wide)"
+          options={projects.map((p) => ({ value: p.id, label: p.name }))}
+        />
       </div>
+      <label className="block text-sm font-semibold">
+        Caption <span className="font-normal text-muted">(optional)</span>
+        <textarea name="note" rows={2} maxLength={500} placeholder="What is this file? e.g. Ground floor plan, revised 2 Nov. Original handed to Ali." className={field} />
+        <span className="mt-1 block text-xs font-normal text-muted">
+          A short note shown under the file name{forBuyer ? ", to the customer too" : " on the website"}, so everyone knows what the file is.
+        </span>
+      </label>
 
       {fixedBuyer ? (
         <>
@@ -209,20 +204,16 @@ export function DocumentUpload({
         </div>
       </fieldset>
       {audience === "buyer" && (
-        <label className="block text-sm font-semibold">
-          Buyer
-          <select name="user_id" required defaultValue={defaultBuyerId ?? ""} className={field}>
-            <option value="" disabled>
-              Choose the buyer…
-            </option>
-            {buyers.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-          <span className="mt-1 block text-xs font-normal text-muted">The buyer gets a notification in their portal.</span>
-        </label>
+        <Combobox
+          label="Buyer"
+          name="user_id"
+          required
+          labelClassName="font-semibold"
+          defaultValue={defaultBuyerId ?? ""}
+          placeholder="Type a name, phone or user ID"
+          hint="The buyer gets a notification in their portal."
+          options={buyers.map((b) => ({ value: b.id, label: b.name, hint: b.hint }))}
+        />
       )}
       </>
       )}

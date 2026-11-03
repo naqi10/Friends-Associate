@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { FormError } from "@/components/FormError";
-import { Field, SelectField } from "@/components/admin/Field";
+import { Combobox } from "@/components/admin/Combobox";
+import { Field } from "@/components/admin/Field";
 import { createBookingAction } from "@/lib/actions/bookings";
 import { getAvailablePropertyOptions, getBuyerOptions, MAX_BOOKINGS_PER_BUYER } from "@/lib/data";
-import { formatPkr } from "@/lib/format";
+import { PROPERTY_TYPES } from "@/lib/catalog";
+import { buyerHint, formatPkr } from "@/lib/format";
 import { requireStaff } from "@/lib/permissions";
 
 export const metadata = { title: "New booking" };
+
+/** Filter chips: the property types that actually occur, in the usual order. */
+const usedTypes = (types: string[]) => PROPERTY_TYPES.filter((t) => types.includes(t));
 
 type Props = { searchParams: Promise<{ buyer?: string; error?: string }> };
 
@@ -44,20 +49,34 @@ export default async function NewBookingPage({ searchParams }: Props) {
       <FormError code={sp.error} />
       <form action={createBookingAction} className="mt-6 grid gap-4 admin-card p-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <SelectField
+          <Combobox
             label="Buyer"
             name="user_id"
             required
             defaultValue={sp.buyer}
-            options={eligible.map((b) => ({ value: b.id, label: `${b.name} (${b.email}) — ${b._count.bookings} booking(s)` }))}
+            placeholder="Type a name, phone or user ID"
+            filters={usedTypes(eligible.flatMap((b) => b.bookings.map((x) => x.property.type)))}
+            options={eligible.map((b) => ({
+              value: b.id,
+              label: b.name,
+              hint: [buyerHint(b), `${b._count.bookings} booking(s)`].filter(Boolean).join(" · "),
+              tags: b.bookings.map((x) => x.property.type),
+            }))}
           />
         </div>
         <div className="sm:col-span-2">
-          <SelectField
+          <Combobox
             label="Property (available units only)"
             name="property_id"
             required
-            options={properties.map((p) => ({ value: p.id, label: `${p.title} — ${p.project?.name ?? "Standalone"} — ${formatPkr(p.pricePkr)}` }))}
+            placeholder="Type a title, area or project"
+            filters={usedTypes(properties.map((p) => p.type))}
+            options={properties.map((p) => ({
+              value: p.id,
+              label: p.title,
+              hint: [p.type, p.project?.name ?? "Standalone", [p.locality, p.city].filter(Boolean).join(", "), formatPkr(p.pricePkr)].filter(Boolean).join(" · "),
+              tags: [p.type],
+            }))}
           />
         </div>
         <Field label="Booked on" name="booked_on" type="date" defaultValue={today} required />

@@ -99,7 +99,7 @@ export async function deletePropertyAction(formData: FormData) {
   let failure = "";
   try {
     const before = await deleteProperty(id);
-    await removeImage(before.imagePath);
+    await Promise.all([before.imagePath, ...before.gallery].map((p) => removeImage(p)));
     await writeAuditLog({ userId: actor.id, action: "delete", module: "properties", recordId: id, oldValue: before });
   } catch (e) {
     failure = code(e);

@@ -1,6 +1,7 @@
 import type { Division, ListingType, ProjectCategory } from "./catalog";
 
-export type City = "Lahore" | "Karachi" | "Rahim Yar Khan";
+/** One of CITIES, or any city typed in by staff (see cleanCity). */
+export type City = string;
 
 export type UserRole = "buyer" | "sales" | "project_manager" | "admin";
 
@@ -114,6 +115,8 @@ export interface Property {
   price_pkr: number;
   status: PropertyStatus;
   image_path: string;
+  /** Extra photos after the cover, in order. */
+  gallery: string[];
   listing_type: ListingType;
   locality: string;
   area_marla: number | null;
@@ -137,6 +140,8 @@ export interface User {
   cnic: string;
   document_download_paid_at: string | null;
   active: boolean;
+  /** Customers: the office allowed them to change their own password (staff always can). */
+  can_change_password: boolean;
 }
 
 export interface Session {
@@ -157,7 +162,8 @@ export interface Booking {
   id: string;
   user_id: string;
   property_id: string;
-  project_id: string;
+  /** Null for a standalone listing. */
+  project_id: string | null;
   status: string;
   booked_on: string;
   total_price_pkr: number;
@@ -181,6 +187,8 @@ export interface Document {
   status: BuyerDocumentStatus | null;
   file_name: string;
   storage_path?: string | null;
+  /** Office note shown with the file ("" when none). */
+  note: string;
 }
 
 export interface NewsItem {

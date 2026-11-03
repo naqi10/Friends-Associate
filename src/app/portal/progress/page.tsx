@@ -11,7 +11,7 @@ export const metadata = { title: "Project progress", robots: { index: false } };
 export default async function PortalProgressPage() {
   const { active } = await getPortal();
   // A buyer with several units in one project should see that project once.
-  const projects = [...new Map(active.map((b) => [b.project.id, b.project])).values()];
+  const projects = [...new Map(active.flatMap((b) => (b.project ? [[b.project.id, b.project] as const] : []))).values()];
   const [stages, updates] = await Promise.all([Promise.all(projects.map((p) => getProjectStages(p.id))), getPublishedUpdates(projects.map((p) => p.id))]);
 
   return (

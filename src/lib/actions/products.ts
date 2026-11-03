@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PRODUCT_CATEGORIES, isKey } from "@/lib/catalog";
 import { deleteProduct, getProduct, parseOptions, saveProduct, splitLines, writeAuditLog } from "@/lib/data";
-import { ImageError, optionalImage, removeImage, saveImage } from "@/lib/images";
+import { ImageError, optionalImage, readGallery, removeImage, saveImage } from "@/lib/images";
 import { requireAdmin } from "@/lib/permissions";
+import { videoEmbed } from "@/lib/video";
 
 const MAX_LINES = 15;
 
@@ -39,10 +40,12 @@ export async function saveProductAction(formData: FormData) {
     benefits: splitLines(text(formData, "benefits", 3000)).map((l) => l.slice(0, 160)),
     specs: splitLines(text(formData, "specs", 3000)).map((l) => l.slice(0, 160)),
     note: text(formData, "note", 300),
+    videoUrl: text(formData, "video_url", 500),
     sortOrder: Number.isInteger(sortOrder) && sortOrder >= 0 && sortOrder <= 999 ? sortOrder : 0,
     published: formData.get("published") === "on",
   };
   if (!input.name) back("required");
+  if (input.videoUrl && !videoEmbed(input.videoUrl)) back("video-link");
   // Every non-empty price line must parse, so a typo never silently drops a price from the website.
   const priceLines = optionsText.split(/\r?\n/).filter((l) => l.trim()).length;
   if (priceLines !== parseOptions(optionsText).length) back("product-price");
@@ -52,20 +55,21 @@ export async function saveProductAction(formData: FormData) {
   if (id && !before) back("missing");
 
   let imagePath: string | undefined;
+  let photos: Awaited<ReturnType<typeof readGallery>> | undefined;
   const file = optionalImage(formData);
-  if (file) {
-    try {
-      imagePath = await saveImage(file, "products");
-    } catch (e) {
-      if (e instanceof ImageError) back(e.code);
-      throw e;
-    }
-  } else if (formData.get("remove_image") === "on") {
-    imagePath = "";
+  try {
+    if (file) imagePath = await saveImage(file, "products");
+    else if (formData.get("remove_image") === "on") imagePath = "";
+    photos = await readGallery(formData, "products", before?.gallery ?? []);
+  } catch (e) {
+    if (imagePath) await removeImage(imagePath);
+    if (e instanceof ImageError) back(e.code);
+    throw e;
   }
 
-  const saved = await saveProduct(id, { ...input, ...(imagePath !== undefined ? { imagePath } : {}) });
+  const saved = await saveProduct(id, { ...input, gallery: photos!.gallery, ...(imagePath !== undefined ? { imagePath } : {}) });
   if (imagePath !== undefined && before?.imagePath && before.imagePath !== imagePath) await removeImage(before.imagePath);
+  await Promise.all(photos!.removed.map((p) => removeImage(p)));
   await writeAuditLog({ userId: actor.id, action: id ? "update" : "create", module: "products", recordId: saved.id, oldValue: before, newValue: saved });
 
   revalidateProductViews(saved.slug);
@@ -89,6 +93,7 @@ export async function setProductPublishedAction(formData: FormData) {
     benefits: p.benefits,
     specs: p.specs,
     note: p.note,
+    videoUrl: p.videoUrl,
     sortOrder: p.sortOrder,
     published,
   });
@@ -103,7 +108,7 @@ export async function deleteProductAction(formData: FormData) {
   const before = await getProduct(id);
   if (!before) redirect("/admin/products?error=missing");
   await deleteProduct(id);
-  await removeImage(before!.imagePath);
+  await Promise.all([before!.imagePath, ...before!.gallery].map((p) => removeImage(p)));
   await writeAuditLog({ userId: actor.id, action: "delete", module: "products", recordId: id, oldValue: before });
   revalidateProductViews(before!.slug);
   redirect("/admin/products?saved=deleted");

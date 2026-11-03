@@ -469,6 +469,11 @@ export default async function BookingsDeskPage({ searchParams }: Props) {
                     Receipt or reference no.
                     <input name="reference_number" maxLength={80} placeholder="e.g. bank ref or cheque no." className="mt-1.5 w-full rounded-xl border border-line-strong bg-white px-4 py-3 text-[15px] text-ink outline-none focus:border-ink" />
                   </label>
+                  <label className="block text-sm text-muted">
+                    Note (optional)
+                    <input name="remarks" maxLength={500} placeholder="e.g. Received by Ali at the Lahore office" className="mt-1.5 w-full rounded-xl border border-line-strong bg-white px-4 py-3 text-[15px] text-ink outline-none focus:border-ink" />
+                    <span className="mt-1 block text-xs">The customer sees it with this payment and on the receipt.</span>
+                  </label>
                   <label className="flex cursor-pointer items-center gap-3 rounded-xl border-[1.5px] border-dashed border-line-strong bg-white px-4 py-3 text-[15px] text-body hover:bg-mist">
                     <Icon name="upload" className="h-5 w-5" />
                     <span className="min-w-0 flex-1">Attach receipt (PDF or image)</span>

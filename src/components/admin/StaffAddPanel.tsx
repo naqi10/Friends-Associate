@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Combobox } from "@/components/admin/Combobox";
 
 type Role = { key: string; label: string; scope: string };
 
@@ -50,14 +51,7 @@ export function StaffAddPanel({ action, roles, cities }: { action: (formData: Fo
         Work email
         <input name="email" type="email" required autoComplete="off" placeholder="name@faryk.com" className={field} />
       </label>
-      <label className="block text-sm font-medium text-body">
-        City
-        <select name="city" required defaultValue={cities[0]} className={field}>
-          {cities.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-      </label>
+      <Combobox label="City" name="city" required creatable labelClassName="font-medium text-body" defaultValue={cities[0]} placeholder="Choose or type a city" options={cities.map((c) => ({ value: c, label: c }))} />
       <fieldset>
         <legend className="text-sm font-medium text-body">Role</legend>
         <div className="mt-1.5 space-y-2.5">

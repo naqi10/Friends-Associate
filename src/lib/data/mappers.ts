@@ -117,6 +117,7 @@ export function mapProperty(p: DbProperty): Property {
     price_pkr: p.pricePkr,
     status: p.status as Property["status"],
     image_path: p.imagePath,
+    gallery: p.gallery,
     listing_type: p.listingType as Property["listing_type"],
     locality: p.locality,
     area_marla: p.areaMarla,
@@ -139,6 +140,7 @@ export function mapUser(u: DbUser): User {
     cnic: u.cnic,
     document_download_paid_at: u.documentDownloadPaidAt?.toISOString() ?? null,
     active: u.active,
+    can_change_password: u.canChangePassword,
   };
 }
 
@@ -173,6 +175,7 @@ export function mapDocument(d: DbDocument): Document {
     status: d.status as Document["status"],
     file_name: d.fileName,
     storage_path: d.storagePath,
+    note: d.note,
   };
 }
 

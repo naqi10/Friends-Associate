@@ -12,7 +12,7 @@ import {
   updateStaff,
   writeAuditLog,
 } from "@/lib/data";
-import { CITIES } from "@/lib/constants";
+import { cleanCity } from "@/lib/constants";
 import { STAFF_ROLES, type StaffRole } from "@/lib/permission-catalog";
 import { requireAdmin } from "@/lib/permissions";
 import { hashPassword, readNewPassword } from "@/lib/passwords";
@@ -28,12 +28,12 @@ function readStaffProfile(formData: FormData) {
     name: text(formData, "name"),
     email: text(formData, "email").toLowerCase(),
     phone: text(formData, "phone"),
-    city: text(formData, "city"),
+    city: cleanCity(text(formData, "city")),
     role: text(formData, "role") as StaffRole,
   };
   if (profile.name.length < 2 || profile.name.length > 120) return { error: "name" as const };
   if (!EMAIL_RE.test(profile.email) || profile.email.length > 200) return { error: "email" as const };
-  if (!(CITIES as readonly string[]).includes(profile.city)) return { error: "city" as const };
+  if (!profile.city) return { error: "city" as const };
   if (!(STAFF_ROLES as readonly string[]).includes(profile.role)) return { error: "role" as const };
   return { profile };
 }

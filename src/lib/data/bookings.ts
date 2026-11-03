@@ -45,7 +45,7 @@ export async function getBookingRows(): Promise<BookingRow[]> {
     buyerName: b.user.name,
     propertyTitle: b.property.title,
     propertyStatus: b.property.status,
-    projectName: b.project.name,
+    projectName: b.project?.name ?? STANDALONE,
     status: b.status,
     bookedOn: b.bookedOn,
     totalPricePkr: b.totalPricePkr,
@@ -69,9 +69,9 @@ export async function getBooking(id: string) {
 
 export async function getAvailablePropertyOptions() {
   return prisma.property.findMany({
-    where: { status: "Available", archivedAt: null, bookings: { none: ACTIVE }, projectId: { not: null }, listingType: "sale" },
+    where: { status: "Available", archivedAt: null, bookings: { none: ACTIVE }, listingType: "sale" },
     orderBy: { title: "asc" },
-    select: { id: true, title: true, pricePkr: true, project: { select: { name: true } } },
+    select: { id: true, title: true, pricePkr: true, type: true, city: true, locality: true, project: { select: { name: true } } },
   });
 }
 
@@ -89,7 +89,8 @@ export type NewBookingInput = {
 
 /**
  * Enforces the schema rules from DATABASE_SCHEMA.md in one transaction:
- * buyer has < 10 bookings, the property is Available and unbooked, the project matches the property,
+ * buyer has < 10 bookings, the property is Available and unbooked, the project is copied from the property
+ * (none for a standalone listing),
  * total price is copied from the property, and paid + outstanding = total.
  */
 export async function createBooking(input: NewBookingInput) {
@@ -106,14 +107,12 @@ export async function createBooking(input: NewBookingInput) {
       select: { status: true, pricePkr: true, projectId: true, archivedAt: true, bookings: { where: ACTIVE, select: { id: true } } },
     });
     if (!property || property.status !== "Available" || property.archivedAt || property.bookings.length > 0) throw new BookingRuleError("property");
-    // Instalment bookings exist only for units in company projects; standalone listings go through leads.
-    if (!property.projectId) throw new BookingRuleError("property");
     if (input.paidPkr > property.pricePkr) throw new BookingRuleError("overpaid");
 
     const booking = await tx.booking.create({
       data: {
         ...input,
-        projectId: property.projectId as string,
+        projectId: property.projectId,
         totalPricePkr: property.pricePkr,
         outstandingPkr: property.pricePkr - input.paidPkr,
       },
@@ -317,6 +316,9 @@ export async function cancelBooking(id: string, reason: string) {
 
 export type DeskTab = "all" | "overdue" | "today" | "paid";
 
+/** Shown where a project name would be, for a booking of a standalone listing. */
+export const STANDALONE = "Standalone property";
+
 export type DeskBooking = {
   id: string;
   buyer: { id: string; name: string; phone: string };
@@ -354,7 +356,7 @@ export async function getBookingDesk(today: string) {
     id: b.id,
     buyer: b.user,
     property: b.property.title,
-    project: b.project,
+    project: b.project ?? { id: "", name: STANDALONE },
     totalPkr: b.totalPricePkr,
     paidPkr: b.paidPkr,
     outstandingPkr: b.outstandingPkr,
@@ -380,7 +382,7 @@ export async function getBookingDesk(today: string) {
       overdueCount: overdue.length,
       dueTodayCount: today_.length,
     },
-    projects: [...new Map(all.map((b) => [b.project.id, b.project])).values()].sort((a, b) => a.name.localeCompare(b.name)),
+    projects: [...new Map(all.filter((b) => b.project.id).map((b) => [b.project.id, b.project])).values()].sort((a, b) => a.name.localeCompare(b.name)),
   };
 }
 

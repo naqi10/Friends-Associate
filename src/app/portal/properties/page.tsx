@@ -25,7 +25,7 @@ export default async function PortalPropertiesPage() {
         {bookings.map((b) => {
           const cancelled = !active.includes(b);
           const facts: [string, string][] = [
-            ["Project", b.project.name],
+            ["Project", b.project?.name ?? "Standalone property"],
             ["Location", [b.property.locality, b.property.city].filter(Boolean).join(", ")],
             ["Type", b.property.type],
             ["Size", b.property.size],
@@ -53,21 +53,23 @@ export default async function PortalPropertiesPage() {
                       <Ring percent={paidPercent(b)} size={120} />
                       <MoneyFacts paid={b.paid_pkr} remaining={b.outstanding_pkr} total={b.total_price_pkr} className="grid flex-1 gap-3" />
                     </div>
-                    <ProgressBar label="Construction progress" percent={b.project.progress_percent} className="mt-6" />
+                    {b.project && <ProgressBar label="Construction progress" percent={b.project.progress_percent} className="mt-6" />}
                   </>
                 )}
                 <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[15px] font-medium">
                   <Link href={`/portal/payments#b-${b.id}`} className="text-teal-800 underline underline-offset-4">
                     Payments →
                   </Link>
-                  {!cancelled && (
+                  {!cancelled && b.project && (
                     <Link href="/portal/progress" className="text-teal-800 underline underline-offset-4">
                       Site updates →
                     </Link>
                   )}
-                  <Link href={`/projects/${b.project.slug}`} className="text-teal-800 underline underline-offset-4">
-                    About the project →
-                  </Link>
+                  {b.project && (
+                    <Link href={`/projects/${b.project.slug}`} className="text-teal-800 underline underline-offset-4">
+                      About the project →
+                    </Link>
+                  )}
                 </div>
               </div>
             </article>

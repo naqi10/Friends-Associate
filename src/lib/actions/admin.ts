@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
+  createProjectFromName,
   upsertProject,
   upsertProperty,
   getProjectBySlugExcluding,
@@ -10,8 +11,10 @@ import {
   getPropertyById,
   writeAuditLog,
 } from "@/lib/data";
+import { cleanCity } from "@/lib/constants";
+import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/permissions";
-import type { City, ProjectType, PropertyStatus, PropertyType } from "@/lib/types";
+import type { ProjectType, PropertyStatus, PropertyType } from "@/lib/types";
 import {
   DIVISIONS,
   LISTING_TYPES,
@@ -22,7 +25,7 @@ import {
   type ListingType,
   type ProjectCategory,
 } from "@/lib/catalog";
-import { ImageError, optionalImage, removeImage, saveImage } from "@/lib/images";
+import { ImageError, optionalImage, readGallery, removeImage, saveImage } from "@/lib/images";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -50,6 +53,9 @@ export async function saveProjectAction(formData: FormData) {
   const division = text(formData, "division");
   const category = text(formData, "category");
   if (!isKey(DIVISIONS, division) || !isKey(PROJECT_CATEGORIES, category)) back("category");
+  // Blank keeps the old default; anything typed must look like a city name.
+  const city = text(formData, "city") ? cleanCity(text(formData, "city")) : "Rahim Yar Khan";
+  if (!city) back("city");
 
   const progress = nonNegativeInt(formData, "progress_percent");
   const availableUnits = nonNegativeInt(formData, "available_units");
@@ -71,7 +77,7 @@ export async function saveProjectAction(formData: FormData) {
     name,
     division: division as Division,
     category: category as ProjectCategory,
-    city: (text(formData, "city") || "Rahim Yar Khan") as City,
+    city,
     location: text(formData, "location"),
     description: text(formData, "description"),
     status: text(formData, "status"),
@@ -107,11 +113,16 @@ export async function saveProjectAction(formData: FormData) {
 
 export async function savePropertyAction(formData: FormData) {
   const id = text(formData, "id") || undefined;
-  const { user: actor } = await requireStaff("properties", id ? "update" : "add");
+  const { user: actor, can } = await requireStaff("properties", id ? "update" : "add");
   const title = text(formData, "title");
-  const projectId = text(formData, "project_id") || null;
+  let projectId = text(formData, "project_id") || null;
+  // A project name typed into the Project field that is not in the list yet (see Combobox createName).
+  const newProject = projectId ? "" : text(formData, "new_project").replace(/\s+/g, " ").slice(0, 120);
   const back = (code: string) => redirect(`${id ? `/admin/properties/${id}` : "/admin/properties/new"}?error=${code}`);
   if (!title) back("required");
+  // Blank keeps the old default; anything typed must look like a city name.
+  const city = text(formData, "city") ? cleanCity(text(formData, "city")) : "Rahim Yar Khan";
+  if (!city) back("city");
   const price = nonNegativeInt(formData, "price_pkr");
   if (price === undefined) back("price");
   const listingType = text(formData, "listing_type");
@@ -121,23 +132,35 @@ export async function savePropertyAction(formData: FormData) {
   const areaMarla = marlaRaw === "" ? parseMarla(size) : Number(marlaRaw);
   if (areaMarla !== null && (!Number.isFinite(areaMarla) || areaMarla < 0)) back("number");
 
+  if (newProject.length === 1) back("new-project");
+  if (newProject) {
+    const existing = await prisma.project.findFirst({ where: { name: { equals: newProject, mode: "insensitive" } }, select: { id: true } });
+    if (existing) projectId = existing.id;
+    else {
+      if (!can("projects", "add")) back("new-project-permission");
+      projectId = await createProjectFromName(newProject, city);
+      await writeAuditLog({ userId: actor.id, action: "create", module: "projects", recordId: projectId, newValue: { name: newProject, city, published: false, from: "property form" } });
+    }
+  }
+
   const before = id ? await getPropertyById(id) : undefined;
   let imagePath: string | undefined;
+  let photos: Awaited<ReturnType<typeof readGallery>> | undefined;
   const image = optionalImage(formData);
-  if (image) {
-    try {
-      imagePath = await saveImage(image, "properties");
-    } catch (e) {
-      if (e instanceof ImageError) back(e.code);
-      throw e;
-    }
+  try {
+    if (image) imagePath = await saveImage(image, "properties");
+    photos = await readGallery(formData, "properties", before?.gallery ?? []);
+  } catch (e) {
+    if (imagePath) await removeImage(imagePath);
+    if (e instanceof ImageError) back(e.code);
+    throw e;
   }
 
   const input = {
     project_id: projectId,
     title,
     listing_type: listingType as ListingType,
-    city: (text(formData, "city") || "Rahim Yar Khan") as City,
+    city,
     locality: text(formData, "locality"),
     type: (text(formData, "type") || "Plot") as PropertyType,
     size,
@@ -147,9 +170,11 @@ export async function savePropertyAction(formData: FormData) {
     description: text(formData, "description"),
     published: formData.get("published") === "on",
     ...(imagePath ? { image_path: imagePath } : {}),
+    gallery: photos!.gallery,
   };
   const savedId = await upsertProperty({ id, ...input });
   if (imagePath && before) await removeImage(before.image_path);
+  await Promise.all(photos!.removed.map((p) => removeImage(p)));
   await writeAuditLog({
     userId: actor.id,
     action: id ? "update" : "create",

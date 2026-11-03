@@ -10,6 +10,7 @@ const customerSelect = {
   city: true,
   cnic: true,
   active: true,
+  canChangePassword: true,
   documentDownloadPaidAt: true,
 } as const;
 
@@ -54,7 +55,16 @@ export async function getBuyerOptions() {
   return prisma.user.findMany({
     where: { role: "buyer", active: true },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, email: true, _count: { select: { bookings: { where: { status: { not: "Cancelled" } } } } } },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      username: true,
+      phone: true,
+      _count: { select: { bookings: { where: { status: { not: "Cancelled" } } } } },
+      // Property types the customer has booked, for the "filter by property type" chips on New booking.
+      bookings: { select: { property: { select: { type: true } } } },
+    },
   });
 }
 
@@ -86,7 +96,7 @@ export async function createCustomer(data: {
 
 export async function updateCustomer(
   id: string,
-  data: Partial<{ name: string; email: string | null; username: string | null; phone: string; city: string; cnic: string; active: boolean; documentDownloadPaidAt: Date | null; passwordHash: string }>,
+  data: Partial<{ name: string; email: string | null; username: string | null; phone: string; city: string; cnic: string; active: boolean; canChangePassword: boolean; documentDownloadPaidAt: Date | null; passwordHash: string }>,
 ) {
   return prisma.user.update({ where: { id }, data, select: customerSelect });
 }

@@ -149,6 +149,7 @@ export default async function PortalPaymentsPage({ searchParams }: Props) {
                                 {formatLongDate(p.paidOn)} · {p.method}
                                 {reversed && <span className="font-semibold text-red-700"> · Reversed</span>}
                               </span>
+                              {p.remarks && <span className="mt-0.5 block text-[15px] text-body">Note: {p.remarks}</span>}
                             </span>
                             <span className="hidden font-mono text-[13px] text-muted sm:inline">{receiptLabel(p.receiptNo)}</span>
                             <Icon name="chevron" className="h-5 w-5 shrink-0 text-muted" />

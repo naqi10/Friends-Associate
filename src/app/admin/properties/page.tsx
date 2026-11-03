@@ -14,7 +14,7 @@ export const metadata = { title: "Properties" };
 type Search = { saved?: string; error?: string; archived?: string; l?: string; s?: string; q?: string; n?: string; skipped?: string };
 type Props = { searchParams: Promise<Search> };
 
-const TYPE_ICON: Record<string, string> = { Plot: "grid", House: "home", "Farm house": "home", Apartment: "building", Plaza: "building", Commercial: "building", Shop: "shop", Office: "office" };
+const TYPE_ICON: Record<string, string> = { Plot: "grid", House: "home", "Farm house": "home", Apartment: "building", Plaza: "building", Commercial: "building", Shop: "shop", Office: "office", School: "office", "Petrol pump": "building" };
 const STATUS_CHIP: Record<string, string> = {
   Available: "bg-emerald-50 text-emerald-800",
   Booked: "bg-teal-50 text-teal-800",

@@ -171,6 +171,7 @@ export async function getDocumentRowsForAdmin() {
       storagePath: true,
       fileName: true,
       version: true,
+      note: true,
       user: { select: { id: true, name: true } },
       project: { select: { id: true, name: true } },
       _count: { select: { versions: true } },

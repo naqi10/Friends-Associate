@@ -73,7 +73,7 @@ export async function runHelpChat(message: string, user: User | null, can: Can):
     }
     if ((text.includes("progress") || text.includes("construction")) && can("progress", "view")) {
       if (bookings.length === 0) return "You have no bookings on file.";
-      const projects = new Map(bookings.map((b) => [b.project.id, b.project]));
+      const projects = new Map(bookings.flatMap((b) => (b.project ? [[b.project.id, b.project] as const] : [])));
       return [...projects.values()].map((p) => `${p.name}: ${p.progress_percent}% — ${p.status}`).join("\n");
     }
   }

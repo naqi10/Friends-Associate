@@ -80,3 +80,26 @@ async function findFocus(image: Buffer): Promise<{ x: number; y: number }> {
     return { x: 50, y: 50 };
   }
 }
+
+/** Most photos one listing or product can have in its gallery (besides the cover photo). */
+export const MAX_GALLERY_PHOTOS = 12;
+
+/**
+ * Reads a GalleryField: `gallery_keep` lists the current photos still wanted (in order), `gallery_new` the
+ * photos just added. New ones are stored like any photo. Only paths that were already in the gallery can be
+ * kept, so a form cannot point the gallery at someone else's file. The caller removes `removed` after saving.
+ */
+export async function readGallery(formData: FormData, folder: "properties" | "products", before: string[]) {
+  const keep = formData.getAll("gallery_keep").map(String).filter((p, i, all) => before.includes(p) && all.indexOf(p) === i);
+  const files = formData.getAll("gallery_new").filter((f): f is File => f instanceof File && f.size > 0);
+  const room = Math.max(0, MAX_GALLERY_PHOTOS - keep.length);
+  const added: string[] = [];
+  try {
+    for (const f of files.slice(0, room)) added.push(await saveImage(f, folder));
+  } catch (e) {
+    // Do not leave half a batch behind when one photo is refused.
+    await Promise.all(added.map((p) => removeImage(p)));
+    throw e;
+  }
+  return { gallery: [...keep, ...added], removed: before.filter((p) => !keep.includes(p)) };
+}

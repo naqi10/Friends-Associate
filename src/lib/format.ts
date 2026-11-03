@@ -121,3 +121,8 @@ export function formatPkrShort(amount: number): string {
   if (amount >= 100_000) return `PKR ${(Math.round((amount / 100_000) * 10) / 10).toString()} L`;
   return `PKR ${amount.toLocaleString("en-PK")}`;
 }
+
+/** The line under a customer's name in searchable pickers: user ID, phone and email, so any of them finds the person. */
+export function buyerHint(b: { username?: string | null; phone?: string | null; email?: string | null }) {
+  return [b.username && `ID ${b.username}`, b.phone, b.email].filter(Boolean).join(" · ");
+}

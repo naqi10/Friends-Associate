@@ -1,7 +1,8 @@
+import { CityField } from "@/components/admin/CityField";
 import { FormError } from "@/components/FormError";
 import { Field, SelectField } from "@/components/admin/Field";
 import { createStaffAction } from "@/lib/actions/staff";
-import { CITIES, MIN_PASSWORD_LENGTH } from "@/lib/constants";
+import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
 import { ROLE_LABELS, ROLE_SUMMARIES, STAFF_ROLES } from "@/lib/permission-catalog";
 import { requireAdmin } from "@/lib/permissions";
 
@@ -26,7 +27,7 @@ export default async function NewStaffPage({ searchParams }: Props) {
         </div>
         <Field label="Work email (login)" name="email" type="email" required autoComplete="off" />
         <Field label="Phone" name="phone" type="tel" />
-        <SelectField label="Office" name="city" options={CITIES} required />
+        <CityField label="Office" required />
         <SelectField
           label="Role"
           name="role"

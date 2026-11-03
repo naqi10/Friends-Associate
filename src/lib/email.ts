@@ -168,7 +168,7 @@ export async function sendNewLeadEmails(lead: NewLead & { id: string }, opts: { 
 }
 
 /** Tells a customer that a document was added to (or updated in) their portal. Sent after the response. */
-export async function sendNewDocumentEmail(customer: { name: string; email: string }, docName: string, updated = false) {
+export async function sendNewDocumentEmail(customer: { name: string; email: string }, docName: string, updated = false, note = "") {
   if (!emailEnabled() || !EMAIL_RE.test(customer.email)) return;
   const url = absoluteUrl("/portal/documents");
   const what = updated ? "A newer version of a document" : "A new document";
@@ -177,11 +177,12 @@ export async function sendNewDocumentEmail(customer: { name: string; email: stri
     subject: `${updated ? "Updated document" : "New document"}: ${docName} · ${BRAND.name}`,
     html: layout(
       `Assalam-o-Alaikum, ${customer.name.split(" ")[0]}`,
-      `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${what} is now in your customer portal:</p><p style="margin:0;padding:14px 16px;background:#f4f4f2;border-radius:12px;font-size:15px"><b>${esc(docName)}</b></p>${button(url, "Open my documents")}<p style="margin:18px 0 0;font-size:13px;color:#5f5f5a">Sign in with your user ID or email address. Questions? Call ${esc(BRAND.phone)}.</p>`,
+      `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${what} is now in your customer portal:</p><p style="margin:0;padding:14px 16px;background:#f4f4f2;border-radius:12px;font-size:15px"><b>${esc(docName)}</b>${note ? `<br><span style="color:#5f5f5a">${esc(note)}</span>` : ""}</p>${button(url, "Open my documents")}<p style="margin:18px 0 0;font-size:13px;color:#5f5f5a">Sign in with your user ID or email address. Questions? Call ${esc(BRAND.phone)}.</p>`,
     ),
     text: `Assalam-o-Alaikum ${customer.name},
 
-${what} is now in your customer portal: ${docName}
+${what} is now in your customer portal: ${docName}${note ? `
+Note: ${note}` : ""}
 
 Open it here: ${url}
 
@@ -227,7 +228,7 @@ export async function sendWelcomeEmail(customer: { name: string; email: string; 
       `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">Your ${esc(BRAND.name)} customer account is ready. In it you can see your property, payments, receipts and documents.</p>${rows([
         ["Sign in with", login],
         ["Password", "The one our office gave you"],
-      ])}${button(url, "Sign in")}<p style="margin:18px 0 0;font-size:13px;color:#5f5f5a">Change your password after you sign in (Profile). Questions? Call ${esc(BRAND.phone)}.</p>`,
+      ])}${button(url, "Sign in")}<p style="margin:18px 0 0;font-size:13px;color:#5f5f5a">Keep your password private. Forgot it? Our office will set a new one. Questions? Call ${esc(BRAND.phone)}.</p>`,
     ),
     text: `Welcome, ${customer.name}.
 
@@ -241,8 +242,8 @@ ${BRAND.name} · ${BRAND.phone}`,
   });
 }
 
-/** Security notice after a customer's password changes, so a change they did not make gets noticed. */
-export async function sendPasswordChangedEmail(customer: { name: string; email: string }, byOffice: boolean) {
+/** Security notice after a customer's password changes (by the office, or by a customer the office allowed to). */
+export async function sendPasswordChangedEmail(customer: { name: string; email: string }, byOffice = true) {
   if (!emailEnabled() || !EMAIL_RE.test(customer.email)) return;
   const how = byOffice ? "Our office has set a new password for your customer account." : "The password of your customer account was just changed.";
   await sendEmail({

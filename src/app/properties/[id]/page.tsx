@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { CONTAINER, PageHero } from "@/components/public/ui";
-import { CoverImage } from "@/components/public/CoverImage";
+import { PhotoCarousel } from "@/components/public/PhotoCarousel";
 import { CallbackForm } from "@/components/public/EnquiryForms";
 import { formatPkr } from "@/lib/format";
+import { hasRealImage } from "@/lib/media";
 import { getProjectById, getPropertyBySlugOrId } from "@/lib/data";
 import { propertyPath } from "@/lib/property-slug";
 import { pageMetadata } from "@/lib/seo";
@@ -60,7 +61,13 @@ export default async function PropertyDetailPage({ params, searchParams }: Props
 
       <div className={`${CONTAINER} py-12 md:py-16`}>
       <div className="overflow-hidden rounded-tile">
-        <CoverImage src={property.image_path} alt={property.title} className="h-64 md:h-[460px]" sizes="(min-width: 1280px) 1232px, 100vw" preload />
+        <PhotoCarousel
+          photos={[property.image_path, ...property.gallery].filter((p) => hasRealImage(p))}
+          alt={property.title}
+          className="h-64 md:h-[460px]"
+          sizes="(min-width: 1280px) 1232px, 100vw"
+          preload
+        />
       </div>
 
       <div className="mt-12 grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_380px]">

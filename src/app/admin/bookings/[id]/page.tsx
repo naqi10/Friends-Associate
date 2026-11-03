@@ -7,7 +7,7 @@ import { Field, Notice, SelectField } from "@/components/admin/Field";
 import { cancelBookingAction } from "@/lib/actions/lifecycle";
 import { recordPaymentAction, reversePaymentAction, updateBookingAction } from "@/lib/actions/bookings";
 import { PAYMENT_METHODS } from "@/lib/catalog";
-import { CANCELLED, getBooking, getPaymentsForBooking, unitemisedPaid } from "@/lib/data";
+import { CANCELLED, getBooking, getPaymentsForBooking, STANDALONE, unitemisedPaid } from "@/lib/data";
 import { formatDate, formatPkr, overdueAmount, receiptLabel, todayPk } from "@/lib/format";
 import { requireStaff } from "@/lib/permissions";
 
@@ -46,7 +46,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
       </Link>
       <h1 className="mt-5 text-[32px] leading-tight font-semibold tracking-tight lg:text-[44px]">{b.property.title}</h1>
       <p className="mt-1.5 text-[15px] text-muted">
-        {b.project.name} · Buyer{" "}
+        {b.project?.name ?? STANDALONE} · Buyer{" "}
         <Link href={`/admin/customers/${b.user.id}`} className="text-teal-800 hover:underline">
           {b.user.name}
         </Link>{" "}
@@ -128,7 +128,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
             <SelectField label="Method" name="method" options={PAYMENT_METHODS} required />
             <Field label="Reference / cheque number" name="reference_number" maxLength={80} hint="Required for bank transfers and cheques." />
             <div className="sm:col-span-2">
-              <Field label="Remarks (optional)" name="remarks" maxLength={500} hint="Printed on the receipt, e.g. 8th quarterly instalment." />
+              <Field label="Note (optional)" name="remarks" maxLength={500} hint="The customer sees it with this payment and on the receipt, e.g. Received by Ali at the Lahore office." />
             </div>
             <div className="sm:col-span-2">
               <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">
@@ -154,6 +154,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
                     <th className="py-2 pr-3">Amount</th>
                     <th className="py-2 pr-3">Method</th>
                     <th className="py-2 pr-3">Reference</th>
+                    <th className="py-2 pr-3">Note</th>
                     <th className="py-2 pr-3">Recorded by</th>
                     <th className="py-2">Action</th>
                   </tr>
@@ -172,6 +173,7 @@ export default async function BookingDetailPage({ params, searchParams }: Props)
                         <td className={`py-2 pr-3 whitespace-nowrap ${reversed ? "line-through" : ""}`}>{formatPkr(p.amountPkr)}</td>
                         <td className="py-2 pr-3">{p.method}</td>
                         <td className="py-2 pr-3">{p.referenceNumber || "—"}</td>
+                        <td className="max-w-[16rem] py-2 pr-3">{p.remarks || "—"}</td>
                         <td className="py-2 pr-3">{p.recordedBy ?? "—"}</td>
                         <td className="py-2">
                           {reversed ? (

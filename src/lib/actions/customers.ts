@@ -17,7 +17,7 @@ import {
 } from "@/lib/data";
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/permissions";
-import { CITIES } from "@/lib/constants";
+import { cleanCity } from "@/lib/constants";
 import { sendPasswordChangedEmail, sendWelcomeEmail } from "@/lib/email";
 import { hashPassword, readNewPassword } from "@/lib/passwords";
 
@@ -40,7 +40,7 @@ function readProfile(formData: FormData) {
     email: email || null,
     username: username || null,
     phone: text(formData, "phone"),
-    city: text(formData, "city"),
+    city: cleanCity(text(formData, "city")),
     cnic: text(formData, "cnic"),
   };
   if (profile.name.length < 2 || profile.name.length > 120) return { error: "name" as const };
@@ -48,7 +48,7 @@ function readProfile(formData: FormData) {
   if (!profile.email && !profile.username) return { error: "login-needed" as const };
   if (profile.username && !USERNAME_RE.test(profile.username)) return { error: "username" as const };
   if (profile.email && (!EMAIL_RE.test(profile.email) || profile.email.length > 200)) return { error: "email" as const };
-  if (!(CITIES as readonly string[]).includes(profile.city)) return { error: "city" as const };
+  if (!profile.city) return { error: "city" as const };
   if (profile.cnic && !CNIC_RE.test(profile.cnic)) return { error: "cnic" as const };
   return { profile };
 }
@@ -131,6 +131,18 @@ export async function setCustomerActiveAction(formData: FormData) {
   redirect(listReturn(formData, `saved=${active ? "enabled" : "disabled"}`) ?? `/admin/customers/${id}?saved=profile`);
 }
 
+/** Lets one customer change their own password from their portal, or takes that back (off by default). */
+export async function setCustomerPasswordChangeAction(formData: FormData) {
+  const { user: actor } = await requireStaff("users", "update");
+  const id = text(formData, "id");
+  const before = await getCustomer(id);
+  if (!before) redirect("/admin/customers?error=missing");
+  const allow = text(formData, "allow") === "1";
+  await updateCustomer(id, { canChangePassword: allow });
+  await writeAuditLog({ userId: actor.id, action: allow ? "allow-password-change" : "block-password-change", module: "customers", recordId: id, oldValue: { canChangePassword: before!.canChangePassword }, newValue: { canChangePassword: allow } });
+  redirect(`/admin/customers/${id}?saved=${allow ? "pw-allowed" : "pw-blocked"}#password`);
+}
+
 export async function resetCustomerPasswordAction(formData: FormData) {
   const { user: actor } = await requireStaff("users", "update");
   const id = text(formData, "id");
@@ -147,7 +159,7 @@ export async function resetCustomerPasswordAction(formData: FormData) {
   await writeAuditLog({ userId: actor.id, action: "reset-password", module: "customers", recordId: id });
   if (customer!.email) {
     const email = customer!.email;
-    after(() => sendPasswordChangedEmail({ name: customer!.name, email }, true));
+    after(() => sendPasswordChangedEmail({ name: customer!.name, email }));
   }
 
   redirect(`/admin/customers/${id}?saved=password`);

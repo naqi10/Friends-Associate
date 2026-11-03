@@ -1,8 +1,8 @@
+import { CityField } from "@/components/admin/CityField";
 import { Field, SelectField } from "@/components/admin/Field";
 import { ImageField } from "@/components/admin/ImageField";
 import { saveProjectAction } from "@/lib/actions/admin";
 import { DIVISIONS, PROJECT_CATEGORIES } from "@/lib/catalog";
-import { CITIES } from "@/lib/constants";
 import type { Project } from "@/lib/types";
 
 /** Shared add/edit form for projects. */
@@ -22,7 +22,7 @@ export function ProjectForm({ project }: { project?: Project }) {
         placeholder="petrol-pump-khanpur-road"
         hint="Lowercase words joined by hyphens. Changing it changes the public link."
       />
-      <SelectField label="City" name="city" options={CITIES} defaultValue={p?.city ?? "Rahim Yar Khan"} />
+      <CityField defaultValue={p?.city ?? "Rahim Yar Khan"} required />
       <SelectField
         label="Division"
         name="division"

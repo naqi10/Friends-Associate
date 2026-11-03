@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { LISTING_TYPES, PROPERTY_TYPES, isKey, parseMarla } from "@/lib/catalog";
-import { CITIES } from "@/lib/constants";
+import { cleanCity } from "@/lib/constants";
 import { duplicateProject, propertiesWithActiveBooking, writeAuditLog } from "@/lib/data";
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/permissions";
@@ -184,7 +184,7 @@ export async function importPropertiesAction(_prev: ImportResult | null, formDat
     const title = col(row, "title").slice(0, 150);
     const type = PROPERTY_TYPES.find((t) => t.toLowerCase() === col(row, "type").toLowerCase());
     const listing = col(row, "listing").toLowerCase() === "rent" ? "rent" : col(row, "listing").toLowerCase() === "sale" ? "sale" : null;
-    const city = CITIES.find((c) => c.toLowerCase() === col(row, "city").toLowerCase());
+    const city = cleanCity(col(row, "city"));
     const price = Number(col(row, "price_pkr").replace(/[,\s]/g, ""));
     const statusRaw = col(row, "status") || "Available";
     const status = MANUAL_STATUSES.find((s) => s.toLowerCase() === statusRaw.toLowerCase());
@@ -195,7 +195,7 @@ export async function importPropertiesAction(_prev: ImportResult | null, formDat
     if (title.length < 3) problems.push("title is missing");
     if (!type) problems.push(`type must be one of ${PROPERTY_TYPES.join(", ")}`);
     if (!listing || !isKey(LISTING_TYPES, listing)) problems.push("listing must be sale or rent");
-    if (!city) problems.push(`city must be one of ${CITIES.join(", ")}`);
+    if (!city) problems.push("city is missing or not a valid city name");
     if (!Number.isSafeInteger(price) || price <= 0) problems.push("price_pkr must be a whole number above 0");
     if (!status) problems.push("status must be Available or Sold");
     if (slug && !projectId) problems.push(`no active project with slug "${slug}"`);

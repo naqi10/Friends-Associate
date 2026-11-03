@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { ProjectCard } from "@/components/public/Cards";
 import { BTN_OUTLINE, CONTAINER, PageHero } from "@/components/public/ui";
 import { DIVISIONS, PROJECT_CATEGORIES, isKey } from "@/lib/catalog";
-import { CITIES } from "@/lib/constants";
-import { getPageContent, getProjectsFiltered } from "@/lib/data";
+import { getListingCities, getPageContent, getProjectsFiltered } from "@/lib/data";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -20,8 +19,10 @@ export default async function ProjectsPage({ searchParams }: Props) {
   const filter = {
     division: isKey(DIVISIONS, sp.division) ? sp.division : undefined,
     category: isKey(PROJECT_CATEGORIES, sp.category) ? sp.category : undefined,
-    city: (CITIES as readonly string[]).includes(sp.city ?? "") ? sp.city : undefined,
+    city: undefined as string | undefined,
   };
+  const cities = await getListingCities("project");
+  if (cities.includes(sp.city ?? "")) filter.city = sp.city;
   const [projects, page] = await Promise.all([getProjectsFiltered({ ...filter, publishedOnly: true }), getPageContent("page.projects")]);
   const filtered = Object.values(filter).some(Boolean);
   const select = "min-w-[170px] rounded-xl border-[1.5px] border-line-strong bg-paper px-3 py-2.5 text-[15px] text-ink outline-none focus:border-ink";
@@ -61,7 +62,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
           <span className="text-xs font-medium text-muted">City</span>
           <select name="city" defaultValue={filter.city ?? ""} className={select}>
             <option value="">All</option>
-            {CITIES.map((c) => (
+            {cities.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>

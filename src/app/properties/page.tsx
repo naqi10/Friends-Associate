@@ -5,8 +5,7 @@ import { BTN_DARK, CONTAINER, INPUT, PageHero } from "@/components/public/ui";
 import { FormStatus, Honeypot } from "@/components/public/EnquiryForms";
 import { sellPropertyAction } from "@/lib/actions/leads";
 import { BUDGET_BANDS, PROPERTY_TYPES, SIZE_BANDS, type ListingType } from "@/lib/catalog";
-import { CITIES } from "@/lib/constants";
-import { getPageContent, getPropertiesWithProject, getPropertyLocalities } from "@/lib/data";
+import { getListingCities, getPageContent, getPropertiesWithProject, getPropertyLocalities } from "@/lib/data";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -61,12 +60,12 @@ export default async function PropertiesPage({ searchParams }: Props) {
 }
 
 async function Listings({ listingType, sp, tab }: { listingType: ListingType; sp: Search; tab: Tab }) {
-  const localities = await getPropertyLocalities();
+  const [localities, cities] = await Promise.all([getPropertyLocalities(), getListingCities("property")]);
   const budget = BUDGET_BANDS[listingType].find((b) => b.key === sp.budget);
   const size = SIZE_BANDS.find((s) => s.key === sp.size);
   const filter = {
     type: pick(sp.type, PROPERTY_TYPES),
-    city: pick(sp.city, CITIES),
+    city: cities.includes(sp.city ?? "") ? sp.city : undefined,
     locality: localities.includes(sp.locality ?? "") ? sp.locality : undefined,
   };
   // Available only unless the visitor asks to include booked/sold units (old ?status=Available links still work).
@@ -132,7 +131,7 @@ async function Listings({ listingType, sp, tab }: { listingType: ListingType; sp
           <span className="text-xs font-medium text-muted">City</span>
           <select name="city" defaultValue={filter.city ?? ""} className={select}>
             <option value="">Any</option>
-            {CITIES.map((c) => (
+            {cities.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>

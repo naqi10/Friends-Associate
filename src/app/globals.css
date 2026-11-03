@@ -49,6 +49,23 @@
     text-wrap: balance;
   }
 
+  /* Number fields: no up/down arrows (a stray click or scroll must never change a price). See FormHelpers for the wheel. */
+  input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* A field the server said is wrong, after a form comes back with an error (FormHelpers marks it). */
+  [data-field-error] {
+    border-color: rgb(220 38 38) !important;
+    box-shadow: 0 0 0 3px rgb(220 38 38 / 0.15);
+  }
+
   /* Keyboard focus: a dark ring with a light halo, visible on white and on black sections alike. */
   :focus-visible {
     outline: 2px solid var(--color-ink);

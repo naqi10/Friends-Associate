@@ -12,11 +12,11 @@ export function Receipt({ payment, headOffice }: { payment: ReceiptData; headOff
     ["Received from", payment.user.name],
     ...(payment.user.cnic ? ([["CNIC", payment.user.cnic]] as [string, string][]) : []),
     ["Property", `${payment.booking.property.title} (${payment.booking.property.type}, ${payment.booking.property.size})`],
-    ["Project", `${payment.booking.project.name}, ${payment.booking.project.city}`],
+    ...(payment.booking.project ? ([["Project", `${payment.booking.project.name}, ${payment.booking.project.city}`]] as [string, string][]) : []),
     ["Payment date", formatDate(payment.paidOn)],
     ["Method", payment.method],
     ...(payment.referenceNumber ? ([["Reference / cheque no.", payment.referenceNumber]] as [string, string][]) : []),
-    ...(payment.remarks ? ([["Remarks", payment.remarks]] as [string, string][]) : []),
+    ...(payment.remarks ? ([["Note", payment.remarks]] as [string, string][]) : []),
   ];
 
   return (

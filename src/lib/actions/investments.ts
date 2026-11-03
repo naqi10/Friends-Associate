@@ -1,5 +1,7 @@
 "use server";
 
+import { cleanCity } from "@/lib/constants";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getInvestmentById, investmentSlugTaken, saveInvestment, writeAuditLog } from "@/lib/data";
@@ -68,7 +70,7 @@ export async function saveInvestmentAction(formData: FormData) {
     title,
     projectId: text(formData, "project_id", 60) || null,
     investmentType,
-    city: text(formData, "city", 60) || "Rahim Yar Khan",
+    city: cleanCity(text(formData, "city", 60)) || "Rahim Yar Khan",
     location: text(formData, "location", 120),
     summary: text(formData, "summary", 300),
     description: text(formData, "description", 5000),

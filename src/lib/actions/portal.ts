@@ -116,7 +116,7 @@ export async function sendPaymentProofAction(formData: FormData) {
   const doc = await createDocumentRecord({
     audience: "buyer",
     userId: user.id,
-    projectId: booking!.project.id,
+    projectId: booking!.project?.id ?? null,
     name: `${PROOF_PREFIX} · ${booking!.property.title}`.slice(0, 160),
     category: "Payment Receipt",
     issuedOn: today,
@@ -140,7 +140,7 @@ export async function sendPaymentProofAction(formData: FormData) {
       "Paid on": paidOn,
       "Booking page": absoluteUrl(`/admin/bookings/${booking!.id}`),
     },
-    { propertyId: booking!.property.id, projectId: booking!.project.id },
+    { propertyId: booking!.property.id, projectId: booking!.project?.id },
   );
   revalidatePath("/portal/documents");
   redirect(`${back}?sent=receipt#send-receipt`);

@@ -18,6 +18,9 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
+  // Product videos: YouTube / Facebook players, or a direct .mp4 link on any https site.
+  "frame-src https://www.youtube-nocookie.com https://www.facebook.com",
+  "media-src 'self' https:",
   `connect-src 'self'${bucketOrigin ? ` ${bucketOrigin}` : ""}${isDev ? " ws: wss:" : ""}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",

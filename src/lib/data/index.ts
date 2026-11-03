@@ -17,7 +17,8 @@ import {
   mapSettings,
   mapUser,
 } from "./mappers";
-import { uniquePropertySlug } from "../property-slug";
+import { slugify, uniquePropertySlug } from "../property-slug";
+import { CITIES } from "../constants";
 
 // cache() dedupes these within one request: header, footer and page all ask for the company.
 export const getCompany = cache(async () => {
@@ -251,6 +252,25 @@ function definedOnly<T extends Record<string, unknown>>(obj: T): Partial<T> {
   return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as Partial<T>;
 }
 
+/**
+ * A project typed into a property's Project field. It starts unpublished, so the website shows nothing new
+ * until an admin fills in its details on Projects and publishes it.
+ */
+export async function createProjectFromName(name: string, city: string) {
+  const base = slugify(name) || "project";
+  let slug = base;
+  for (let i = 2; await prisma.project.findUnique({ where: { slug }, select: { id: true } }); i++) slug = `${base}-${i}`;
+  const row = await prisma.project.create({
+    data: {
+      slug, name, city, location: city, developer: "", description: "", status: "Planning", expectedCompletion: "", contactPerson: "", contactPhone: "",
+      progressPercent: 0, type: "Residential", imagePath: "", masterPlan: "", sitePlan: "", pricingLabel: "", paymentPlan: "", availableUnits: 0,
+      division: "construction", category: "residential", published: false,
+    },
+    select: { id: true },
+  });
+  return row.id;
+}
+
 export async function upsertProject(data: Partial<Project> & { id?: string; slug: string; name: string }) {
   const fields = {
     slug: data.slug,
@@ -335,6 +355,7 @@ export async function upsertProperty(data: Partial<Property> & { id?: string; pr
     pricePkr: data.price_pkr,
     status: data.status,
     imagePath: data.image_path,
+    gallery: data.gallery,
   };
   if (data.id) {
     // An archived unit stays hidden until it is restored, whatever the edit form says.
@@ -383,6 +404,7 @@ export async function createDocumentRecord(input: {
   storagePath: string;
   /** Buyer documents default to "Issued"; a payment proof the customer sent starts as "Pending" (to be checked). */
   status?: "Issued" | "Pending" | "Approved";
+  note?: string;
 }) {
   return prisma.document.create({
     data: {
@@ -396,6 +418,7 @@ export async function createDocumentRecord(input: {
       storagePath: input.storagePath,
       version: input.audience === "buyer" ? "v1.0" : null,
       status: input.audience === "buyer" ? (input.status ?? "Issued") : null,
+      note: input.note ?? "",
     },
   });
 }
@@ -408,7 +431,8 @@ const projectSummary = { select: { id: true, name: true, slug: true, progressPer
 
 export type BookingWithRelations = ReturnType<typeof mapBooking> & {
   property: { id: string; title: string; type: string; size: string; city: string; locality: string; imagePath: string; slug: string | null };
-  project: { id: string; name: string; slug: string; progress_percent: number; status: string };
+  /** Null for a standalone listing. */
+  project: { id: string; name: string; slug: string; progress_percent: number; status: string } | null;
 };
 
 export async function getBookingsForUserDetailed(userId: string): Promise<BookingWithRelations[]> {
@@ -423,7 +447,7 @@ export async function getBookingsForUserDetailed(userId: string): Promise<Bookin
   return rows.map((b) => ({
     ...mapBooking(b),
     property: b.property,
-    project: {
+    project: b.project && {
       id: b.project.id,
       name: b.project.name,
       slug: b.project.slug,
@@ -481,6 +505,26 @@ export async function getPropertyLocalities() {
     orderBy: { locality: "asc" },
   });
   return rows.map((r) => r.locality);
+}
+
+/** Cities for city fields: the company's own first, then every other city already used anywhere. */
+export async function getKnownCities() {
+  const [a, b, c, d] = await Promise.all([
+    prisma.property.findMany({ distinct: ["city"], select: { city: true } }),
+    prisma.project.findMany({ distinct: ["city"], select: { city: true } }),
+    prisma.user.findMany({ distinct: ["city"], select: { city: true } }),
+    prisma.investmentOpportunity.findMany({ distinct: ["city"], select: { city: true } }),
+  ]);
+  const others = [...new Set([...a, ...b, ...c, ...d].map((r) => r.city).filter((x) => x && !(CITIES as readonly string[]).includes(x)))].sort();
+  return [...CITIES, ...others];
+}
+
+/** Cities that have published listings (property filter) or published projects (project filter). */
+export async function getListingCities(of: "property" | "project") {
+  const where = { published: true, archivedAt: null };
+  const rows = of === "property" ? await prisma.property.findMany({ where, distinct: ["city"], select: { city: true } }) : await prisma.project.findMany({ where, distinct: ["city"], select: { city: true } });
+  const used = new Set(rows.map((r) => r.city));
+  return [...CITIES.filter((c) => used.has(c)), ...[...used].filter((c) => !(CITIES as readonly string[]).includes(c)).sort()];
 }
 
 export type ProjectFilter = { division?: string; category?: string; city?: string; status?: string; publishedOnly?: boolean };

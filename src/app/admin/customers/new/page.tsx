@@ -1,7 +1,8 @@
+import { CityField } from "@/components/admin/CityField";
 import { FormError } from "@/components/FormError";
-import { Field, SelectField } from "@/components/admin/Field";
+import { Field } from "@/components/admin/Field";
 import { createCustomerAction } from "@/lib/actions/customers";
-import { CITIES, MIN_PASSWORD_LENGTH } from "@/lib/constants";
+import { MIN_PASSWORD_LENGTH } from "@/lib/constants";
 import { getLead } from "@/lib/data";
 import { requireStaff } from "@/lib/permissions";
 
@@ -14,7 +15,7 @@ export default async function NewCustomerPage({ searchParams }: Props) {
   const { error, lead: leadId } = await searchParams;
   // "Convert to customer" from the Sales desk: start from the lead's details.
   const lead = leadId && can("leads", "update") ? await getLead(leadId) : null;
-  const city = lead && (CITIES as readonly string[]).includes(lead.city) ? lead.city : undefined;
+  const city = lead?.city || undefined;
 
   return (
     <div className="px-4 py-6 sm:px-[30px] lg:py-10">
@@ -53,7 +54,7 @@ export default async function NewCustomerPage({ searchParams }: Props) {
           hint="Also works for sign in, and is used for notification emails."
         />
         <Field label="Phone" name="phone" type="tel" placeholder="+92 3xx xxxxxxx" defaultValue={lead?.phone} />
-        <SelectField label="City" name="city" options={CITIES} required defaultValue={city} />
+        <CityField required defaultValue={city} />
         <Field label="CNIC" name="cnic" placeholder="35202-1234567-1" pattern="\d{5}-\d{7}-\d" />
         <Field
           label="Password"
