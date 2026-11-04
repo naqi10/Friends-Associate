@@ -86,6 +86,9 @@ export function mapProject(p: DbProject): Project {
     progress_percent: p.progressPercent,
     type: p.type as Project["type"],
     image_path: p.imagePath,
+    gallery: p.gallery,
+    map_link: p.mapLink,
+    video_url: p.videoUrl,
     master_plan: p.masterPlan,
     site_plan: p.sitePlan,
     pricing_label: p.pricingLabel,
@@ -118,6 +121,8 @@ export function mapProperty(p: DbProperty): Property {
     status: p.status as Property["status"],
     image_path: p.imagePath,
     gallery: p.gallery,
+    map_link: p.mapLink,
+    video_url: p.videoUrl,
     listing_type: p.listingType as Property["listing_type"],
     locality: p.locality,
     area_marla: p.areaMarla,
@@ -176,6 +181,7 @@ export function mapDocument(d: DbDocument): Document {
     file_name: d.fileName,
     storage_path: d.storagePath,
     note: d.note,
+    hidden: d.hidden,
   };
 }
 

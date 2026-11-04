@@ -87,6 +87,11 @@ export interface Project {
   progress_percent: number;
   type: ProjectType;
   image_path: string;
+  /** Extra photos after the cover, in order. */
+  gallery: string[];
+  /** Google Maps link, address or coordinates ("" = no map). */
+  map_link: string;
+  video_url: string;
   master_plan: string;
   site_plan: string;
   pricing_label: string;
@@ -117,6 +122,9 @@ export interface Property {
   image_path: string;
   /** Extra photos after the cover, in order. */
   gallery: string[];
+  /** Google Maps link, address or coordinates ("" = no map). */
+  map_link: string;
+  video_url: string;
   listing_type: ListingType;
   locality: string;
   area_marla: number | null;
@@ -189,6 +197,8 @@ export interface Document {
   storage_path?: string | null;
   /** Office note shown with the file ("" when none). */
   note: string;
+  /** Not shown to the customer (or on the website) until the office shows it. */
+  hidden: boolean;
 }
 
 export interface NewsItem {

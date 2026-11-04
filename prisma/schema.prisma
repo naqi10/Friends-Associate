@@ -56,6 +56,12 @@ model Project {
   progressPercent    Int                     @map("progress_percent")
   type               String
   imagePath          String                  @map("image_path")
+  /// Extra photos after the cover (imagePath), shown as a swipeable gallery on the project page.
+  gallery            String[]                @default([])
+  /// Google Maps link, address or "lat, lng" for the location map ("" = no map).
+  mapLink            String                  @default("") @map("map_link")
+  /// YouTube, Facebook, Google Drive or .mp4 link ("" = no video).
+  videoUrl           String                  @default("") @map("video_url")
   masterPlan         String                  @map("master_plan")
   sitePlan           String                  @map("site_plan")
   pricingLabel       String                  @map("pricing_label")
@@ -130,6 +136,10 @@ model Property {
   imagePath   String    @map("image_path")
   /// Extra photos after the cover (imagePath), shown as a swipeable gallery on the listing.
   gallery     String[]  @default([])
+  /// Google Maps link, address or "lat, lng" for the location map ("" = no map).
+  mapLink     String    @default("") @map("map_link")
+  /// YouTube, Facebook, Google Drive or .mp4 link ("" = no video).
+  videoUrl    String    @default("") @map("video_url")
   /// "sale" | "rent"
   listingType String    @default("sale") @map("listing_type")
   locality    String    @default("")
@@ -277,6 +287,8 @@ model Document {
   storagePath String?           @map("storage_path")
   /// Office note shown with the file to the customer and staff, e.g. "Signed copy handed to Ali".
   note        String            @default("")
+  /// Uploaded but not shown yet: hidden from the customer's portal (or the website) until the office shows it.
+  hidden      Boolean           @default(false)
   user        User?             @relation("BuyerDocuments", fields: [userId], references: [id])
   project     Project?          @relation(fields: [projectId], references: [id])
   versions    DocumentVersion[]

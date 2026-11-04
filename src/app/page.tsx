@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Emphasis, HomeImage, Pill } from "@/components/home/HomeImage";
 import { CategoryIcon, WhatsAppIcon } from "@/components/home/icons";
 import { PropertiesToggle, type HomeListing } from "@/components/home/PropertiesToggle";
-import { BRAND } from "@/lib/brand";
+import { BRAND, isComingSoon } from "@/lib/brand";
 import { DIVISIONS, INVESTMENT_TYPES, PROJECT_CATEGORIES, labelOf } from "@/lib/catalog";
 import {
   getCompany,
@@ -60,7 +60,7 @@ const TRUST = [
   { title: "Approvals handled", text: "Drawings, NOC and paperwork done by our own team before work begins." },
   { title: "Progress you can see", text: "Every stage is published online, with your own customer portal for payments and documents." },
   { title: "Written agreements", text: "Clear terms for every booking, build and investment — no verbal promises." },
-  { title: "Three city offices", text: "Rahim Yar Khan head office, with teams in Lahore and Karachi." },
+  { title: "Three city offices", text: "Rahim Yar Khan head office, with teams in Multan and Lahore." },
 ];
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ listing?: string }> }) {
@@ -102,7 +102,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   const hours = openingHoursSpec(extras.hours);
   const region = (city: string) => (city === "Karachi" ? "Sindh" : "Punjab");
-  // One entry per office: the head office is the main business, Lahore and Karachi are its branches.
+  // One entry per office: the head office is the main business, the others its branches ("Coming soon" ones are left out).
   const officeLd = (o: (typeof offices)[number]) => ({
     "@type": ["GeneralContractor", "RealEstateAgent"],
     name: `${company.name} — ${o.city}`,
@@ -127,8 +127,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     priceRange: "PKR",
     ...(head ? { address: officeLd(head).address, hasMap: officeLd(head).hasMap } : {}),
     ...(hours ? { openingHoursSpecification: [hours] } : {}),
-    department: offices.filter((o) => o.id !== head?.id).map(officeLd),
-    areaServed: ["Rahim Yar Khan", "Lahore", "Karachi", "Punjab", "Sindh", "Pakistan"],
+    department: offices.filter((o) => o.id !== head?.id && !isComingSoon(o.address)).map(officeLd),
+    areaServed: ["Rahim Yar Khan", "Multan", "Lahore", "Punjab", "Pakistan"],
     sameAs: Object.values(extras.social).filter(Boolean),
     knowsAbout: ["Architecture", "Construction", "Petrol pump NOC", "LPG plant consultancy", "Cost estimation", "Waterproofing", "Real estate"],
   };

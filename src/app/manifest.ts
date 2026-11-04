@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: BRAND.name,
     short_name: "Friends Assoc.",
-    description: "Architecture, construction and properties in Rahim Yar Khan, Lahore and Karachi.",
+    description: "Architecture, construction and properties in Rahim Yar Khan, Multan and Lahore.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

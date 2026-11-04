@@ -26,6 +26,7 @@ import {
   type ProjectCategory,
 } from "@/lib/catalog";
 import { ImageError, optionalImage, readGallery, removeImage, saveImage } from "@/lib/images";
+import { readMapAndVideo } from "@/lib/map";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -59,17 +60,21 @@ export async function saveProjectAction(formData: FormData) {
 
   const progress = nonNegativeInt(formData, "progress_percent");
   const availableUnits = nonNegativeInt(formData, "available_units");
+  const links = await readMapAndVideo(formData);
+  if (typeof links === "string") back(links);
+  const { mapLink, videoUrl } = links as Exclude<typeof links, string>;
   const before = id ? await getProjectById(id) : undefined;
 
   let imagePath: string | undefined;
+  let photos: Awaited<ReturnType<typeof readGallery>> | undefined;
   const image = optionalImage(formData);
-  if (image) {
-    try {
-      imagePath = await saveImage(image, "projects");
-    } catch (e) {
-      if (e instanceof ImageError) back(e.code);
-      throw e;
-    }
+  try {
+    if (image) imagePath = await saveImage(image, "projects");
+    photos = await readGallery(formData, "projects", before?.gallery ?? []);
+  } catch (e) {
+    if (imagePath) await removeImage(imagePath);
+    if (e instanceof ImageError) back(e.code);
+    throw e;
   }
 
   const input = {
@@ -94,10 +99,14 @@ export async function saveProjectAction(formData: FormData) {
     featured: formData.get("featured") === "on",
     published: formData.get("published") === "on",
     ...(imagePath ? { image_path: imagePath } : {}),
+    gallery: photos!.gallery,
+    map_link: mapLink,
+    video_url: videoUrl,
   };
   const savedId = await upsertProject({ id, ...input });
   // Remove the replaced upload only after the new one is saved.
   if (imagePath && before) await removeImage(before.image_path);
+  await Promise.all(photos!.removed.map((p) => removeImage(p)));
   await writeAuditLog({
     userId: actor.id,
     action: id ? "update" : "create",
@@ -143,6 +152,10 @@ export async function savePropertyAction(formData: FormData) {
     }
   }
 
+  const links = await readMapAndVideo(formData);
+  if (typeof links === "string") back(links);
+  const { mapLink, videoUrl } = links as Exclude<typeof links, string>;
+
   const before = id ? await getPropertyById(id) : undefined;
   let imagePath: string | undefined;
   let photos: Awaited<ReturnType<typeof readGallery>> | undefined;
@@ -171,6 +184,8 @@ export async function savePropertyAction(formData: FormData) {
     published: formData.get("published") === "on",
     ...(imagePath ? { image_path: imagePath } : {}),
     gallery: photos!.gallery,
+    map_link: mapLink,
+    video_url: videoUrl,
   };
   const savedId = await upsertProperty({ id, ...input });
   if (imagePath && before) await removeImage(before.image_path);

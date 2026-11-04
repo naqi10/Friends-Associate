@@ -3,6 +3,7 @@ import { Combobox } from "@/components/admin/Combobox";
 import { Field, SelectField } from "@/components/admin/Field";
 import { GalleryField } from "@/components/admin/GalleryField";
 import { ImageField } from "@/components/admin/ImageField";
+import { MapVideoFields } from "@/components/admin/MapVideoFields";
 import { savePropertyAction } from "@/lib/actions/admin";
 import { LISTING_TYPES, PROPERTY_TYPES } from "@/lib/catalog";
 import type { Property } from "@/lib/types";
@@ -66,6 +67,9 @@ export function PropertyForm({ property, projects }: { property?: Property; proj
       </div>
       <div className="sm:col-span-2">
         <GalleryField current={p?.gallery ?? []} />
+      </div>
+      <div className="sm:col-span-2">
+        <MapVideoFields mapLink={p?.map_link} videoUrl={p?.video_url} title={p?.title} />
       </div>
       <label className="flex items-center gap-2 text-sm sm:col-span-2">
         <input type="checkbox" name="published" defaultChecked={p?.published ?? true} className="h-4 w-4" />

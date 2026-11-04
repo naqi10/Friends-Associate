@@ -221,9 +221,9 @@ export async function applyRestructure(prisma: PrismaClient, log: (m: string) =>
   // 1. Brand
   await prisma.company.updateMany({
     where: { id: 1 },
-    data: { name: "Friends Associates", website: "faryk.com", whatsapp: "+92 312 6711828", tagline: "Architecture · Construction · Properties" },
+    data: { name: "Friends Associates", website: "faryk.com", whatsapp: "+92 300 6711828", tagline: "Architecture · Construction · Properties" },
   });
-  await prisma.office.updateMany({ where: { city: "Rahim Yar Khan" }, data: { phone: "0312-6711828", sortOrder: 0, address: "Abu Dhabi Dari, Sanghi Road, near Mian Pharmacy" } });
+  await prisma.office.updateMany({ where: { city: "Rahim Yar Khan" }, data: { phone: "0300-6711828", sortOrder: 0, address: "Abu Dhabi (Dari Sanghi) Road, near Mian Pharmacy, opp. Jalandhar Sweets" } });
   // Refresh the hero only where it still holds the original launch copy, so admin edits are never overwritten.
   const hero = await prisma.contentBlock.findUnique({ where: { key: "home.hero" } });
   if (hero) {
@@ -294,7 +294,7 @@ export async function applyRestructure(prisma: PrismaClient, log: (m: string) =>
       city: "Rahim Yar Khan",
       developer: "Friends Associates",
       contactPerson: "Friends Associates",
-      contactPhone: "0312-6711828",
+      contactPhone: "0300-6711828",
       type: p.category === "residential" ? "Residential" : "Commercial",
       imagePath: "",
       masterPlan: "",

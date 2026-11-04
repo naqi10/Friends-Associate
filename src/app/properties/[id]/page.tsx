@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { CONTAINER, PageHero } from "@/components/public/ui";
+import { LocationMap } from "@/components/public/LocationMap";
 import { PhotoCarousel } from "@/components/public/PhotoCarousel";
+import { ProductVideo } from "@/components/public/ProductVideo";
 import { CallbackForm } from "@/components/public/EnquiryForms";
 import { formatPkr } from "@/lib/format";
 import { hasRealImage } from "@/lib/media";
@@ -82,6 +84,11 @@ export default async function PropertyDetailPage({ params, searchParams }: Props
             ))}
           </dl>
           {property.description && <p className="mt-8 whitespace-pre-line text-[17px] leading-relaxed text-body">{property.description}</p>}
+          <div className="mt-10 space-y-10 empty:hidden">
+            <ProductVideo url={property.video_url} title={property.title} heading="Video" />
+            {/* A unit in a project without its own pin shows the project's location. */}
+            <LocationMap link={property.map_link || (project?.published ? project.map_link : "")} title={property.title} />
+          </div>
           {project && project.published && (
             <div className="mt-8 rounded-card bg-mist p-6 text-[15px]">
               <p>

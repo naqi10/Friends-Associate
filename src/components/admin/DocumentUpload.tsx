@@ -217,6 +217,15 @@ export function DocumentUpload({
       )}
       </>
       )}
+      <label className="flex items-start gap-3 rounded-2xl border-[1.5px] border-line-strong bg-white p-4 text-sm">
+        <input type="checkbox" name="hide" className="mt-0.5 h-4.5 w-4.5 shrink-0 accent-teal-700" />
+        <span>
+          <span className="block text-[15px] font-semibold">{forBuyer ? "Keep hidden from the customer for now" : "Keep off the website for now"}</span>
+          <span className="block text-muted">
+            Upload it now and show it later: tick “{forBuyer ? "Visible to customer" : "Visible on website"}” on the file when it is ready{forBuyer ? ". The customer is told only then" : ""}.
+          </span>
+        </span>
+      </label>
       <SubmitButton disabled={!!problem} progress={progress} />
     </form>
   );

@@ -21,6 +21,8 @@ export async function GET(_req: Request, { params }: Props) {
   const isStaffViewer = !!user && user.role !== "buyer" && can("documents", "view");
 
   if (doc.audience === "public" && !can("documents", "view")) return denied();
+  // A file the office has not shown yet exists only for staff.
+  if (doc.hidden && !isStaffViewer) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   if (doc.audience === "buyer" && !isStaffViewer) {
     // Ownership check first: a buyer can never fetch another buyer's file by changing the id.

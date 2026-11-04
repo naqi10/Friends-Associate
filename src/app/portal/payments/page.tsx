@@ -4,7 +4,7 @@ import { Icon } from "@/components/admin/shell/icons";
 import { PortalShell } from "@/components/PortalShell";
 import { ProofForm } from "@/components/portal/ProofForm";
 import { CARD, DueChip, SentNotice } from "@/components/portal/ui";
-import { BRAND } from "@/lib/brand";
+import { BRAND, isComingSoon } from "@/lib/brand";
 import { getHomeExtras, getOffices, getPaymentsForUser, unitemisedPaid } from "@/lib/data";
 import { formatLacCr, formatLongDate, receiptLabel } from "@/lib/format";
 import { permissionsFor } from "@/lib/permissions";
@@ -92,7 +92,7 @@ export default async function PortalPaymentsPage({ searchParams }: Props) {
               Pay in cash or by cheque at any of our offices. You get a receipt for every payment, and it appears below in your payment history.
             </p>
             <ul className="mt-4 space-y-3">
-              {offices.map((o) => (
+              {offices.filter((o) => !isComingSoon(o.address)).map((o) => (
                 <li key={o.id} className="rounded-[18px] bg-mist p-4 text-[15px]">
                   <p className="font-semibold">{o.city}</p>
                   <p className="text-body">{o.address}</p>

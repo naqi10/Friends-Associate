@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { FormError } from "@/components/FormError";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { CaptionForm } from "@/components/admin/CaptionForm";
+import { HiddenPill, VisibilityToggle } from "@/components/admin/VisibilityToggle";
 import { DocumentUpload, FilePickForm } from "@/components/admin/DocumentUpload";
 import { Icon } from "@/components/admin/shell/icons";
 import { Field, Notice } from "@/components/admin/Field";
@@ -33,6 +34,8 @@ const SAVED: Record<string, string> = {
   checked: "Marked as checked.",
   deleted: "File deleted. The customer no longer sees it.",
   caption: "Caption saved. The customer sees it under the file name.",
+  hidden: "File hidden from the customer. Tick “Visible to customer” to show it again.",
+  shown: "File is visible to the customer now. They get a notification and an email.",
   "pw-allowed": "This customer can now change their own password from their portal.",
   "pw-blocked": "Only the office can change this customer's password now.",
 };
@@ -47,7 +50,7 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
     getCustomer(id),
     getBookingsForUserDetailed(id),
     customerBlockers(id),
-    can("documents", "view") ? getDocumentsForUser(id) : Promise.resolve([]),
+    can("documents", "view") ? getDocumentsForUser(id, { includeHidden: true }) : Promise.resolve([]),
   ]);
   if (!customer) notFound();
   const projects = [...new Map(bookings.flatMap((b) => (b.project ? [[b.project.id, { id: b.project.id, name: b.project.name }] as const] : []))).values()];
@@ -222,13 +225,19 @@ export default async function CustomerDetailPage({ params, searchParams }: Props
                         <p className="font-medium">
                           {d.name}
                           {fromCustomer && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Sent by customer · check it</span>}
+                          {d.hidden && <HiddenPill />}
                         </p>
                         <p className="text-xs text-stone-500">
                           {d.category} · {formatDate(d.issued_on)}
                           {d.version ? ` · ${d.version}` : ""}
                         </p>
                         {d.note && <p className="mt-0.5 text-xs text-body">{d.note}</p>}
-                        {can("documents", "update") && <CaptionForm id={d.id} note={d.note} returnTo={returnTo} className="mt-1 inline-block text-xs font-medium text-teal-800 hover:underline" />}
+                        {can("documents", "update") && (
+                          <div className="mt-1 flex flex-wrap items-start gap-x-4">
+                            <CaptionForm id={d.id} note={d.note} returnTo={returnTo} className="inline-block text-xs font-medium text-teal-800 hover:underline" />
+                            <VisibilityToggle id={d.id} hidden={d.hidden} audience="buyer" returnTo={returnTo} className="flex items-center gap-1.5 text-xs font-medium text-body hover:text-ink" />
+                          </div>
+                        )}
                       </div>
                       {d.storage_path ? (
                         <a href={`/api/documents/${d.id}/download`} className="inline-flex items-center gap-1 font-medium text-teal-800 hover:underline">

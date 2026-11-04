@@ -4,7 +4,7 @@ import { createLead, getPropertiesWithProject, getPublishedInvestments, type New
 import { sendNewLeadEmails } from "../email";
 import { answerLabel, fieldLabel, type Answers, type Flow, type Lang } from "./flow";
 
-const CITY_NAMES: Record<string, string> = { rahim_yar_khan: "Rahim Yar Khan", lahore: "Lahore", karachi: "Karachi" };
+const CITY_NAMES: Record<string, string> = { rahim_yar_khan: "Rahim Yar Khan", lahore: "Lahore", multan: "Multan", karachi: "Karachi" };
 
 export type ListingResult = { id: string; slug: string | null; image: string; projectName: string | null; title: string; price: number; listingType: string; size: string; locality: string; city: string };
 export type InvestmentResult = { slug: string; title: string; minimum: number; duration: string };

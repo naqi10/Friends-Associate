@@ -44,7 +44,7 @@ export function ProductForm({ product }: { product?: ProductRow }) {
         defaultValue={product?.videoUrl}
         maxLength={500}
         placeholder="https://www.youtube.com/watch?v=…"
-        hint="Paste a YouTube or Facebook video link, or a direct link to an .mp4 file. It plays on the product page."
+        hint="Paste a YouTube, Facebook or Google Drive video link (Drive: share as “Anyone with the link”), or a direct link to an .mp4 file. It plays on the product page."
       />
       <CheckboxField label="Published (shown on the website)" name="published" defaultChecked={product ? product.published : true} />
       <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">

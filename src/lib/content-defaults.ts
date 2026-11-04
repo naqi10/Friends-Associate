@@ -33,7 +33,7 @@ export const PAGE_CONTENT = {
     label: "About us",
     path: "/about",
     title: "About Friends Associates",
-    intro: "Architecture, construction and property services from our head office in Rahim Yar Khan, with teams in Lahore and Karachi.",
+    intro: "Architecture, construction and property services, with teams in Rahim Yar Khan, Multan and Lahore.",
   },
   "page.architecture": {
     label: "Architecture",
@@ -109,7 +109,7 @@ export const ABOUT_LISTS = {
       "Drawings, NOC and approvals handled by our own team",
       "Construction, waterproofing and property sales under one roof",
       "Customer portal with payments, documents and progress",
-      "Offices in Rahim Yar Khan, Lahore and Karachi",
+      "Offices in Rahim Yar Khan, Multan and Lahore",
     ],
   },
 } as const;

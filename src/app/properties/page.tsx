@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Properties — buy, rent or sell",
   description:
-    "Houses, plots, apartments, shops and offices for sale and rent in Rahim Yar Khan, Lahore and Karachi. Filter by budget, size and area, or list your own.",
+    "Houses, plots, apartments, shops and offices for sale and rent in Rahim Yar Khan, Multan and Lahore. Filter by budget, size and area, or list your own.",
   path: "/properties",
 });
 

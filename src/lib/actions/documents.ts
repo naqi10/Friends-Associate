@@ -79,6 +79,16 @@ function revalidateDocuments() {
   revalidatePath("/admin/documents");
 }
 
+/** Portal notice and email for a file the customer can now see. Only a customer who can see their documents is told (see canSeeDocuments). */
+async function announceDocument(userId: string, name: string, note: string) {
+  if (!(await canSeeDocuments(userId))) return;
+  await notifyUser(userId, { type: "document", title: `New document: ${name}`, message: "A new document has been added to your portal.", link: "/portal/documents" });
+  after(async () => {
+    const buyer = await getUserById(userId);
+    if (buyer) await sendNewDocumentEmail(buyer, name, false, note);
+  });
+}
+
 export async function uploadDocumentAction(formData: FormData) {
   const { user: actor } = await requireStaff("documents", "add");
   const back = documentsReturn(formData);
@@ -90,6 +100,8 @@ export async function uploadDocumentAction(formData: FormData) {
   const projectId = text(formData, "project_id") || null;
   const userId = audience === "buyer" ? text(formData, "user_id") || null : null;
   const note = text(formData, "note", 500);
+  // "Keep hidden for now": upload it today, show it later with the file's "Visible" checkbox.
+  const hidden = formData.get("hide") === "on";
   if (!name) fail("required");
   if (!(DOCUMENT_TYPES as readonly string[]).includes(category)) fail("doc-type");
   if (projectId && !(await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } }))) fail("missing");
@@ -111,22 +123,17 @@ export async function uploadDocumentAction(formData: FormData) {
     fileName,
     storagePath,
     note,
+    hidden,
   });
   await writeAuditLog({
     userId: actor.id,
     action: "upload",
     module: "documents",
     recordId: doc.id,
-    newValue: { name, category, audience, userId, projectId, fileName, sizeBytes: file.size, ...(note ? { note } : {}) },
+    newValue: { name, category, audience, userId, projectId, fileName, sizeBytes: file.size, ...(note ? { note } : {}), ...(hidden ? { hidden } : {}) },
   });
-  // Only a customer who can see their documents is told about one (see canSeeDocuments).
-  if (userId && (await canSeeDocuments(userId))) {
-    await notifyUser(userId, { type: "document", title: `New document: ${name}`, message: "A new document has been added to your portal.", link: "/portal/documents" });
-    after(async () => {
-      const buyer = await getUserById(userId);
-      if (buyer) await sendNewDocumentEmail(buyer, name, false, note);
-    });
-  }
+  // A hidden file is announced when the office shows it (setDocumentVisibilityAction).
+  if (userId && !hidden) await announceDocument(userId, name, note);
   revalidateDocuments();
   redirect(withParam(back, "saved=1"));
 }
@@ -156,7 +163,7 @@ export async function setDocumentFileAction(formData: FormData) {
     oldValue: { fileName: result.before.fileName, version: result.before.version, storagePath: result.before.storagePath },
     newValue: { fileName, version: result.after.version, sizeBytes: file.size },
   });
-  if (result.after.audience === "buyer" && result.after.userId && (await canSeeDocuments(result.after.userId))) {
+  if (result.after.audience === "buyer" && result.after.userId && !result.after.hidden && (await canSeeDocuments(result.after.userId))) {
     await notifyUser(result.after.userId, {
       type: "document",
       title: result.replaced ? `Updated document: ${result.after.name} (${result.after.version})` : `Document ready: ${result.after.name}`,
@@ -198,4 +205,24 @@ export async function setDocumentNoteAction(formData: FormData) {
   await writeAuditLog({ userId: actor.id, action: "update", module: "documents", recordId: id, oldValue: { note: doc!.note }, newValue: { note } });
   revalidateDocuments();
   redirect(withParam(back, "saved=caption"));
+}
+
+/**
+ * The "Visible to customer" checkbox on an uploaded file: hide it (the customer's portal or the website no longer
+ * lists it) or show it. Showing a customer's file for the first time sends them the usual notice and email.
+ */
+export async function setDocumentVisibilityAction(formData: FormData) {
+  const { user: actor } = await requireStaff("documents", "update");
+  const id = text(formData, "id");
+  const back = documentsReturn(formData);
+  const hidden = text(formData, "visible") !== "1";
+  const doc = await prisma.document.findUnique({ where: { id }, select: { hidden: true, audience: true, userId: true, name: true, note: true } });
+  if (!doc) redirect(withParam(back, "error=missing"));
+  if (doc.hidden !== hidden) {
+    await prisma.document.update({ where: { id }, data: { hidden } });
+    await writeAuditLog({ userId: actor.id, action: "update", module: "documents", recordId: id, oldValue: { hidden: doc.hidden }, newValue: { hidden } });
+    if (!hidden && doc.audience === "buyer" && doc.userId) await announceDocument(doc.userId, doc.name, doc.note);
+  }
+  revalidateDocuments();
+  redirect(withParam(back, `saved=${hidden ? "hidden" : "shown"}`));
 }

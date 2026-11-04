@@ -1,7 +1,7 @@
 export const DEMO_PASSWORD = "Faryk@2026";
 
 /** The company's own cities, offered first in every city field. Any other city can be typed in. */
-export const CITIES = ["Lahore", "Karachi", "Rahim Yar Khan"] as const;
+export const CITIES = ["Lahore", "Multan", "Karachi", "Rahim Yar Khan"] as const;
 
 /**
  * A typed-in city, tidied: spaces collapsed and each word capitalised ("rahim yar  khan" → "Rahim Yar Khan").

@@ -4,6 +4,7 @@ import { CaptionForm } from "@/components/admin/CaptionForm";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { DocumentUpload, FilePickForm } from "@/components/admin/DocumentUpload";
 import { Icon } from "@/components/admin/shell/icons";
+import { HiddenPill, VisibilityToggle } from "@/components/admin/VisibilityToggle";
 import { AutoSelect } from "@/components/sales/AutoSubmit";
 import { setDocumentFileAction, uploadDocumentAction } from "@/lib/actions/documents";
 import { deleteDocumentAction } from "@/lib/actions/lifecycle";
@@ -25,6 +26,8 @@ const SAVED: Record<string, string> = {
   version: "New version uploaded. The previous file is kept in Version history.",
   deleted: "Document deleted.",
   caption: "Caption saved.",
+  hidden: "File hidden. It is no longer shown until you tick “Visible” again.",
+  shown: "File is visible now. A customer's file also sends them a notification and email.",
 };
 
 function fileIcon(fileName: string) {
@@ -128,6 +131,7 @@ export default async function AdminDocumentsPage({ searchParams }: Props) {
           )}
           {!d.storagePath && <FilePickForm audience={d.audience === "buyer" ? "buyer" : "public"} action={setDocumentFileAction} id={d.id} returnTo={returnTo} className="block rounded-xl px-3 py-2 hover:bg-mist" label="Attach file…" />}
           {canUpdate && <CaptionForm id={d.id} note={d.note} returnTo={returnTo} />}
+          {canUpdate && <VisibilityToggle id={d.id} hidden={d.hidden} audience={d.audience} returnTo={returnTo} />}
           <Link href={href(base, { versions: d.id })} className="block rounded-xl px-3 py-2 hover:bg-mist">
             Version history{d._count.versions ? ` (${d._count.versions} older)` : ""}
           </Link>
@@ -302,6 +306,7 @@ export default async function AdminDocumentsPage({ searchParams }: Props) {
                               <p className="font-semibold">
                                 {d.name}
                                 {d.version && <span className="ml-2 rounded-md bg-mist px-1.5 py-0.5 text-xs font-medium text-muted">{d.version}</span>}
+                                {d.hidden && <HiddenPill />}
                               </p>
                               <p className="text-sm text-muted">
                                 {[d.category !== d.name && d.category, d.project?.name].filter(Boolean).join(" · ")}
@@ -334,7 +339,10 @@ export default async function AdminDocumentsPage({ searchParams }: Props) {
                         <Icon name={fileIcon(d.fileName)} className="h-5 w-5" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold">{d.name}</p>
+                        <p className="font-semibold">
+                          {d.name}
+                          {d.hidden && <HiddenPill />}
+                        </p>
                         <p className="text-sm text-muted">
                           {[d.category !== d.name && d.category, d.project?.name, formatDate(d.issuedOn)].filter(Boolean).join(" · ")}
                         </p>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FacebookIcon, InstagramIcon, YouTubeIcon } from "@/components/home/icons";
-import { BRAND } from "@/lib/brand";
+import { BRAND, isComingSoon } from "@/lib/brand";
 import { getCompany, getHomeExtras, getOffices } from "@/lib/data";
 import { Logo } from "@/components/Logo";
 
@@ -57,12 +57,16 @@ export async function SiteFooter() {
             <span className="font-serif text-[26px] leading-none">{company.name}</span>
             <span className="text-sm text-dim">{company.tagline}</span>
             <div className="mt-2 flex flex-col gap-2 text-sm">
-              <a href={`tel:${BRAND.phoneIntl.replace(/\s/g, "")}`} className={LINK}>
-                {BRAND.phone}
-              </a>
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={LINK}>
-                WhatsApp {BRAND.phone}
-              </a>
+              {/* One number for calls and WhatsApp: shown once, with both ways to reach it. */}
+              <span>
+                <a href={`tel:${BRAND.phoneIntl.replace(/\s/g, "")}`} className={LINK}>
+                  {BRAND.phone}
+                </a>
+                <span className="text-dim"> · </span>
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={LINK}>
+                  WhatsApp
+                </a>
+              </span>
               <a href={`mailto:${company.email}`} className={LINK}>
                 {company.email}
               </a>
@@ -92,7 +96,7 @@ export async function SiteFooter() {
                 <strong className="font-semibold">{o.city}</strong>
                 {o.city === BRAND.city && <span className="text-dim"> · Head office</span>}
                 <br />
-                <span className="text-faint">{o.address}</span>
+                {isComingSoon(o.address) ? <span className="text-dim italic">Coming soon</span> : <span className="text-faint">{o.address}</span>}
               </span>
             ))}
           </div>

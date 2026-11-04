@@ -38,7 +38,7 @@ export default async function ContactContentPage({ searchParams }: Props) {
         <Field label="Tagline (under the name in the footer)" name="tagline" defaultValue={company.tagline} maxLength={120} required />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Email" name="email" type="email" defaultValue={company.email} maxLength={200} required />
-          <Field label="WhatsApp number" name="whatsapp" type="tel" defaultValue={company.whatsapp} maxLength={30} required hint="e.g. +92 312 6711828" />
+          <Field label="WhatsApp number" name="whatsapp" type="tel" defaultValue={company.whatsapp} maxLength={30} required hint="e.g. +92 300 6711828" />
         </div>
         <p className="text-xs text-stone-500">The main phone number ({BRAND.phone}) is part of the site design; ask the developer to change it.</p>
         <button type="submit" className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper hover:bg-body">

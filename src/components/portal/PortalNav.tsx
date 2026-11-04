@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/admin/shell/icons";
+import { logoutAction } from "@/lib/actions/auth";
 
 type Tab = { href: string; label: string; short?: string; icon: string; badge?: number; dot?: boolean; phone?: boolean; desktop?: boolean };
 
@@ -54,8 +55,25 @@ export function PortalTabs({ unread, overdue }: { unread: number; overdue: boole
               </Link>
             );
           })}
+        <form action={logoutAction} className="flex shrink-0">
+          <button type="submit" className="flex items-center gap-2 px-3 py-4 text-[15px] whitespace-nowrap text-body hover:text-ink">
+            <Icon name="logout" className="h-[18px] w-[18px]" />
+            Log out
+          </button>
+        </form>
       </div>
     </nav>
+  );
+}
+
+/** Phones: the round "Log out" button in the portal's top bar, next to the account button. */
+export function PortalLogoutButton() {
+  return (
+    <form action={logoutAction}>
+      <button type="submit" aria-label="Log out" title="Log out" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-paper">
+        <Icon name="logout" className="h-5 w-5" />
+      </button>
+    </form>
   );
 }
 

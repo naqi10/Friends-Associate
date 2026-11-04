@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/admin/shell/icons";
-import { PortalBottomNav, PortalTabs } from "@/components/portal/PortalNav";
+import { PortalBottomNav, PortalLogoutButton, PortalTabs } from "@/components/portal/PortalNav";
 import { BRAND } from "@/lib/brand";
 import { getPortal, initials } from "@/lib/portal";
 
@@ -34,10 +34,11 @@ export async function PortalShell({
             <Link href={back} aria-label="Back" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mist">
               <Icon name="back" className="h-5 w-5" />
             </Link>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h1 className="truncate text-[20px] leading-tight font-semibold">{title}</h1>
               {subtitle && <p className="truncate text-[14px] text-muted">{subtitle}</p>}
             </div>
+            <PortalLogoutButton />
           </div>
         </div>
       ) : (
@@ -59,6 +60,7 @@ export async function PortalShell({
               <Link href="/portal/profile" aria-label="My account" className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-[15px] font-semibold text-paper">
                 {initials(user.name)}
               </Link>
+              <PortalLogoutButton />
             </div>
           </div>
         </div>

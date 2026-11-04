@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BTN_DARK, BTN_OUTLINE, BTN_SMALL_DARK, BTN_SMALL_OUTLINE, CONTAINER, INPUT, PageHero, SectionHead } from "@/components/public/ui";
 import { FormStatus, Honeypot } from "@/components/public/EnquiryForms";
 import { contactAction } from "@/lib/actions/leads";
-import { BRAND } from "@/lib/brand";
+import { BRAND, isComingSoon } from "@/lib/brand";
 import { getCompany, getFaqs, getHomeExtras, getOffices, getPageContent, getPublishedServices } from "@/lib/data";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 
@@ -69,8 +69,14 @@ export default async function ContactPage({ searchParams }: Props) {
                   {o.city}
                   {o.city === BRAND.city && <span className="ml-2 rounded-full bg-ink px-2.5 py-0.5 text-xs font-semibold text-paper">Head office</span>}
                 </p>
-                <p className="text-body">{o.address}</p>
-                <p>{o.phone}</p>
+                {isComingSoon(o.address) ? (
+                  <p className="text-muted italic">Coming soon</p>
+                ) : (
+                  <>
+                    <p className="text-body">{o.address}</p>
+                    <p>{o.phone}</p>
+                  </>
+                )}
               </li>
             ))}
           </ul>

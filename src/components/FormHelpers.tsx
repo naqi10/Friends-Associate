@@ -48,6 +48,8 @@ const ERROR_FIELDS: Record<string, string[]> = {
   "booking-buyer": ["user_id"],
   property: ["property_id"],
   "doc-type": ["category"],
+  "video-link": ["video_url"],
+  "map-link": ["map_link"],
   "buyer-type": ["file"],
   "receipt-type": ["file"],
   type: ["file"],

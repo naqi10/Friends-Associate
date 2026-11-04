@@ -58,7 +58,7 @@ export function metaDescription(text: string | null | undefined, fallback = ""):
 
 /** Home page description: a complete sentence of about 150–160 characters (Google / WhatsApp previews). */
 export const HOME_DESCRIPTION =
-  "Friends Associates: architecture, naqsha and NOC approvals, turnkey construction and property sales in Rahim Yar Khan, Lahore and Karachi. Call 0312-6711828.";
+  "Friends Associates: architecture, naqsha and NOC approvals, turnkey construction and property sales in Rahim Yar Khan, Multan and Lahore. Call 0300-6711828.";
 
 const DAY: Record<string, string> = { mon: "Mo", tue: "Tu", wed: "We", thu: "Th", fri: "Fr", sat: "Sa", sun: "Su" };
 const DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];

@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     "house plan Pakistan",
     "property Rahim Yar Khan",
     "construction company Lahore",
-    "property Karachi",
+    "property Multan",
     "Rahim Yar Khan plots",
     "architecture firm Pakistan",
   ],

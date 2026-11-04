@@ -101,7 +101,7 @@ export const getNewsBySlug = cache(async (slug: string) => {
 
 export async function getPublicDocuments() {
   const rows = await prisma.document.findMany({
-    where: { audience: "public" },
+    where: { audience: "public", hidden: false },
     orderBy: { issuedOn: "desc" },
   });
   return rows.map(mapDocument);
@@ -116,9 +116,10 @@ export async function getDocumentRowById(id: string) {
   return prisma.document.findUnique({ where: { id } });
 }
 
-export async function getDocumentsForUser(userId: string) {
+/** A customer's files. Files the office has hidden are left out unless `includeHidden` (staff pages). */
+export async function getDocumentsForUser(userId: string, { includeHidden = false } = {}) {
   const rows = await prisma.document.findMany({
-    where: { audience: "buyer", userId },
+    where: { audience: "buyer", userId, ...(includeHidden ? {} : { hidden: false }) },
     orderBy: [{ issuedOn: "desc" }, { name: "asc" }],
   });
   return rows.map(mapDocument);
@@ -286,6 +287,9 @@ export async function upsertProject(data: Partial<Project> & { id?: string; slug
     progressPercent: data.progress_percent,
     type: data.type,
     imagePath: data.image_path,
+    gallery: data.gallery,
+    mapLink: data.map_link,
+    videoUrl: data.video_url,
     masterPlan: data.master_plan,
     sitePlan: data.site_plan,
     pricingLabel: data.pricing_label,
@@ -356,6 +360,8 @@ export async function upsertProperty(data: Partial<Property> & { id?: string; pr
     status: data.status,
     imagePath: data.image_path,
     gallery: data.gallery,
+    mapLink: data.map_link,
+    videoUrl: data.video_url,
   };
   if (data.id) {
     // An archived unit stays hidden until it is restored, whatever the edit form says.
@@ -405,6 +411,7 @@ export async function createDocumentRecord(input: {
   /** Buyer documents default to "Issued"; a payment proof the customer sent starts as "Pending" (to be checked). */
   status?: "Issued" | "Pending" | "Approved";
   note?: string;
+  hidden?: boolean;
 }) {
   return prisma.document.create({
     data: {
@@ -419,6 +426,7 @@ export async function createDocumentRecord(input: {
       version: input.audience === "buyer" ? "v1.0" : null,
       status: input.audience === "buyer" ? (input.status ?? "Issued") : null,
       note: input.note ?? "",
+      hidden: input.hidden ?? false,
     },
   });
 }

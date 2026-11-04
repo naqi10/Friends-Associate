@@ -89,7 +89,7 @@ export const MAX_GALLERY_PHOTOS = 12;
  * photos just added. New ones are stored like any photo. Only paths that were already in the gallery can be
  * kept, so a form cannot point the gallery at someone else's file. The caller removes `removed` after saving.
  */
-export async function readGallery(formData: FormData, folder: "properties" | "products", before: string[]) {
+export async function readGallery(formData: FormData, folder: "properties" | "products" | "projects", before: string[]) {
   const keep = formData.getAll("gallery_keep").map(String).filter((p, i, all) => before.includes(p) && all.indexOf(p) === i);
   const files = formData.getAll("gallery_new").filter((f): f is File => f instanceof File && f.size > 0);
   const room = Math.max(0, MAX_GALLERY_PHOTOS - keep.length);

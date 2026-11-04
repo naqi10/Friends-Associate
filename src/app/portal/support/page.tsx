@@ -2,7 +2,7 @@ import { Icon } from "@/components/admin/shell/icons";
 import { PortalShell } from "@/components/PortalShell";
 import { BTN_INK, CARD, SentNotice } from "@/components/portal/ui";
 import { portalRequestAction } from "@/lib/actions/portal";
-import { BRAND } from "@/lib/brand";
+import { BRAND, isComingSoon } from "@/lib/brand";
 import { getCompany, getHomeExtras, getOffices } from "@/lib/data";
 import { getPortal } from "@/lib/portal";
 
@@ -51,8 +51,14 @@ export default async function PortalSupportPage({ searchParams }: Props) {
                     {o.city}
                     {o.city === BRAND.city && <span className="ml-1 text-[13px] font-normal text-muted">· Head office</span>}
                   </p>
-                  <p className="mt-1 text-body">{o.address}</p>
-                  {o.phone && <p className="mt-1 text-muted">{o.phone}</p>}
+                  {isComingSoon(o.address) ? (
+                    <p className="mt-1 text-muted italic">Coming soon</p>
+                  ) : (
+                    <>
+                      <p className="mt-1 text-body">{o.address}</p>
+                      {o.phone && <p className="mt-1 text-muted">{o.phone}</p>}
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

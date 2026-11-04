@@ -1,6 +1,8 @@
 import { CityField } from "@/components/admin/CityField";
 import { Field, SelectField } from "@/components/admin/Field";
+import { GalleryField } from "@/components/admin/GalleryField";
 import { ImageField } from "@/components/admin/ImageField";
+import { MapVideoFields } from "@/components/admin/MapVideoFields";
 import { saveProjectAction } from "@/lib/actions/admin";
 import { DIVISIONS, PROJECT_CATEGORIES } from "@/lib/catalog";
 import type { Project } from "@/lib/types";
@@ -44,7 +46,7 @@ export function ProjectForm({ project }: { project?: Project }) {
       <Field label="Expected completion" name="expected_completion" defaultValue={p?.expected_completion ?? "TBC"} />
       <Field label="Available units" name="available_units" type="number" min={0} defaultValue={p?.available_units ?? 0} />
       <Field label="Contact person" name="contact_person" defaultValue={p?.contact_person ?? "Friends Associates"} />
-      <Field label="Contact phone" name="contact_phone" defaultValue={p?.contact_phone ?? "0312-6711828"} />
+      <Field label="Contact phone" name="contact_phone" defaultValue={p?.contact_phone ?? "0300-6711828"} />
       <Field label="Pricing label" name="pricing_label" defaultValue={p?.pricing_label} hint="Optional, e.g. PKR 95 lakh – 3.2 crore" />
       <Field label="Payment plan" name="payment_plan" defaultValue={p?.payment_plan} />
       <label className="block text-sm sm:col-span-2">
@@ -53,6 +55,12 @@ export function ProjectForm({ project }: { project?: Project }) {
       </label>
       <div className="sm:col-span-2">
         <ImageField current={p?.image_path} label="Cover photo" />
+      </div>
+      <div className="sm:col-span-2">
+        <GalleryField current={p?.gallery ?? []} label="More photos (site, design, progress)" />
+      </div>
+      <div className="sm:col-span-2">
+        <MapVideoFields mapLink={p?.map_link} videoUrl={p?.video_url} title={p?.name} />
       </div>
       <Field label="SEO title" name="seo_title" defaultValue={p?.seo_title} maxLength={70} hint="Optional. Shown in Google results." />
       <Field label="SEO description" name="seo_description" defaultValue={p?.seo_description} maxLength={170} />

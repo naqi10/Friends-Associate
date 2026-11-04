@@ -32,7 +32,7 @@ const LANGS: { key: Lang; label: string; short: string }[] = [
   { key: "ur", label: "اردو", short: "اردو" },
   { key: "roman", label: "Roman Urdu", short: "Roman" },
 ];
-/** The phone with a non-breaking hyphen, so "0312-6711828" never splits across two lines. */
+/** The phone with a non-breaking hyphen, so "0300-6711828" never splits across two lines. */
 const PHONE = BRAND.phone.replace(/-/g, "‑");
 const WHATSAPP = `https://wa.me/${BRAND.phoneIntl.replace(/\D/g, "")}`;
 const TEL = `tel:${BRAND.phoneIntl.replace(/\s/g, "")}`;
@@ -118,9 +118,9 @@ const QUICK: Quick[] = [
     key: "office",
     label: t("Office location", "دفتر کا پتہ", "Office location"),
     reply: t(
-      `Our head office is in ${BRAND.city}, with teams in Lahore and Karachi. Call ${PHONE} before visiting.`,
-      `ہمارا ہیڈ آفس ${"رحیم یار خان"} میں ہے، اور لاہور اور کراچی میں ٹیمیں ہیں۔ آنے سے پہلے ${PHONE} پر کال کریں۔`,
-      `Hamara head office ${BRAND.city} mein hai, Lahore aur Karachi mein bhi teams hain. Aane se pehle ${PHONE} par call karein.`,
+      `Our head office is in ${BRAND.city}, with teams in Multan and Lahore. Call ${PHONE} before visiting.`,
+      `ہمارا ہیڈ آفس ${"رحیم یار خان"} میں ہے، اور ملتان اور لاہور میں ٹیمیں ہیں۔ آنے سے پہلے ${PHONE} پر کال کریں۔`,
+      `Hamara head office ${BRAND.city} mein hai, Multan aur Lahore mein bhi teams hain. Aane se pehle ${PHONE} par call karein.`,
     ),
     link: { href: "/contact", label: t("Addresses & map", "پتے اور نقشہ", "Pate aur naqsha") },
   },

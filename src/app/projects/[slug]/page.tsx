@@ -5,6 +5,9 @@ import { PropertyCard } from "@/components/public/Cards";
 import { CONTAINER, PageHero } from "@/components/public/ui";
 import { CoverImage } from "@/components/public/CoverImage";
 import { CallbackForm } from "@/components/public/EnquiryForms";
+import { LocationMap } from "@/components/public/LocationMap";
+import { PhotoCarousel } from "@/components/public/PhotoCarousel";
+import { ProductVideo } from "@/components/public/ProductVideo";
 import { StageBars } from "@/components/StageBars";
 import { DIVISIONS, PROJECT_CATEGORIES, labelOf } from "@/lib/catalog";
 import {
@@ -15,6 +18,7 @@ import {
   getPropertiesWithProject,
 } from "@/lib/data";
 import { formatPkr } from "@/lib/format";
+import { hasRealImage } from "@/lib/media";
 import { absoluteUrl, jsonLd, pageMetadata, metaDescription } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ sent?: string; error?: string }> };
@@ -42,6 +46,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
     getInvestmentsForProject(project.id),
   ]);
   const division = DIVISIONS.find((d) => d.key === project.division);
+  const photos = [project.image_path, ...project.gallery].filter((p) => hasRealImage(p));
 
   const breadcrumbs = {
     "@context": "https://schema.org",
@@ -77,12 +82,21 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
 
       <div className={`${CONTAINER} py-12 md:py-16`}>
       <div className="overflow-hidden rounded-tile">
-        <CoverImage src={project.image_path} alt={project.name} className="h-64 md:h-[460px]" sizes="(min-width: 1280px) 1232px, 100vw" preload />
+        {photos.length > 1 ? (
+          <PhotoCarousel photos={photos} alt={project.name} className="h-64 md:h-[460px]" sizes="(min-width: 1280px) 1232px, 100vw" preload />
+        ) : (
+          <CoverImage src={project.image_path} alt={project.name} className="h-64 md:h-[460px]" sizes="(min-width: 1280px) 1232px, 100vw" preload />
+        )}
       </div>
 
       <div className="mt-12 grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="min-w-0">
           <p className="whitespace-pre-line text-[17px] leading-relaxed text-body">{project.description}</p>
+
+          <div className="mt-10 space-y-10 empty:hidden">
+            <ProductVideo url={project.video_url} title={project.name} heading="Project video" />
+            <LocationMap link={project.map_link} title={project.name} />
+          </div>
 
           <section aria-labelledby="progress" className="mt-10">
             <div className="flex items-baseline justify-between">

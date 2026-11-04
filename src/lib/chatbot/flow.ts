@@ -46,7 +46,7 @@ const cityField: ChoiceField = {
   options: [
     opt("rahim_yar_khan", "Rahim Yar Khan", "رحیم یار خان", "Rahim Yar Khan"),
     opt("lahore", "Lahore", "لاہور", "Lahore"),
-    opt("karachi", "Karachi", "کراچی", "Karachi"),
+    opt("multan", "Multan", "ملتان", "Multan"),
     opt("other", "Other city", "کوئی اور شہر", "Koi aur shehar"),
   ],
 };
