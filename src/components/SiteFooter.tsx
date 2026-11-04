@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { FacebookIcon, InstagramIcon, YouTubeIcon } from "@/components/home/icons";
+import { Icon } from "@/components/admin/shell/icons";
+import { FacebookIcon, InstagramIcon, WhatsAppIcon, YouTubeIcon } from "@/components/home/icons";
 import { BRAND, isComingSoon } from "@/lib/brand";
 import { getCompany, getHomeExtras, getOffices } from "@/lib/data";
 import { Logo } from "@/components/Logo";
@@ -37,6 +38,7 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
 
 const HEADING = "mb-1 text-xs font-semibold tracking-[0.2em] text-dim uppercase";
 const LINK = "text-paper hover:text-faint";
+const BADGE = "flex h-9 w-9 shrink-0 items-center justify-center rounded-full";
 
 export async function SiteFooter() {
   const [company, offices, extras] = await Promise.all([getCompany(), getOffices(), getHomeExtras()]);
@@ -56,19 +58,24 @@ export async function SiteFooter() {
             <Logo variant="full" light className="w-[210px]" />
             <span className="font-serif text-[26px] leading-none">{company.name}</span>
             <span className="text-sm text-dim">{company.tagline}</span>
-            <div className="mt-2 flex flex-col gap-2 text-sm">
-              {/* One number for calls and WhatsApp: shown once, with both ways to reach it. */}
-              <span>
-                <a href={`tel:${BRAND.phoneIntl.replace(/\s/g, "")}`} className={LINK}>
+            {/* One number for calls and WhatsApp, shown once; coloured icons say which is which. */}
+            <div className="mt-2 flex flex-col gap-3 text-[15px]">
+              <div className="flex items-center gap-3">
+                <a href={`tel:${BRAND.phoneIntl.replace(/\s/g, "")}`} className={`${LINK} flex items-center gap-3 font-semibold`}>
+                  <span className={`${BADGE} bg-amber-400 text-ink`}>
+                    <Icon name="phone" className="h-[18px] w-[18px]" />
+                  </span>
                   {BRAND.phone}
                 </a>
-                <span className="text-dim"> · </span>
-                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={LINK}>
-                  WhatsApp
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${BRAND.phone}`} title="WhatsApp" className={`${BADGE} bg-[#25D366] text-white hover:brightness-110`}>
+                  <WhatsAppIcon className="h-[18px] w-[18px]" />
                 </a>
-              </span>
-              <a href={`mailto:${company.email}`} className={LINK}>
-                {company.email}
+              </div>
+              <a href={`mailto:${company.email}`} className={`${LINK} flex min-w-0 items-center gap-3`}>
+                <span className={`${BADGE} bg-sky-400 text-ink`}>
+                  <Icon name="mail" className="h-[18px] w-[18px]" />
+                </span>
+                <span className="min-w-0 [overflow-wrap:anywhere]">{company.email}</span>
               </a>
             </div>
             {social.length > 0 && (
