@@ -52,7 +52,7 @@ export async function SiteFooter() {
   return (
     <footer className="mt-auto bg-ink text-paper">
       <div className="mx-auto max-w-[1280px] px-6 pt-20 pb-8">
-        <div className="grid gap-10 border-b border-line-dark pb-14 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-10 border-b border-line-dark pb-14 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))]">
           <div className="flex flex-col gap-4">
             <Logo variant="full" light className="w-[210px]" />
             <span className="font-serif text-[26px] leading-none">{company.name}</span>
@@ -71,7 +71,7 @@ export async function SiteFooter() {
                 <span className={`${BADGE} bg-sky-400 text-ink`}>
                   <Icon name="mail" className="h-[18px] w-[18px]" />
                 </span>
-                <span className="min-w-0 [overflow-wrap:anywhere]">{company.email}</span>
+                <span className="whitespace-nowrap">{company.email}</span>
               </a>
             </div>
             {social.length > 0 && (
