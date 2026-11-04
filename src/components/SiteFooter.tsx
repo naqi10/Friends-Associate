@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/admin/shell/icons";
-import { FacebookIcon, InstagramIcon, WhatsAppIcon, YouTubeIcon } from "@/components/home/icons";
+import { FacebookIcon, InstagramIcon, YouTubeIcon } from "@/components/home/icons";
 import { BRAND, isComingSoon } from "@/lib/brand";
 import { getCompany, getHomeExtras, getOffices } from "@/lib/data";
 import { Logo } from "@/components/Logo";
@@ -42,7 +42,6 @@ const BADGE = "flex h-9 w-9 shrink-0 items-center justify-center rounded-full";
 
 export async function SiteFooter() {
   const [company, offices, extras] = await Promise.all([getCompany(), getOffices(), getHomeExtras()]);
-  const whatsapp = `https://wa.me/${company.whatsapp.replace(/\D/g, "")}`;
   const social = [
     { href: extras.social.facebook, label: "Facebook", Icon: FacebookIcon },
     { href: extras.social.instagram, label: "Instagram", Icon: InstagramIcon },
@@ -58,7 +57,7 @@ export async function SiteFooter() {
             <Logo variant="full" light className="w-[210px]" />
             <span className="font-serif text-[26px] leading-none">{company.name}</span>
             <span className="text-sm text-dim">{company.tagline}</span>
-            {/* One number for calls and WhatsApp, shown once; coloured icons say which is which. */}
+            {/* Phone and email with coloured icons. */}
             <div className="mt-2 flex flex-col gap-3 text-[15px]">
               <div className="flex items-center gap-3">
                 <a href={`tel:${BRAND.phoneIntl.replace(/\s/g, "")}`} className={`${LINK} flex items-center gap-3 font-semibold`}>
@@ -66,9 +65,6 @@ export async function SiteFooter() {
                     <Icon name="phone" className="h-[18px] w-[18px]" />
                   </span>
                   {BRAND.phone}
-                </a>
-                <a href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${BRAND.phone}`} title="WhatsApp" className={`${BADGE} bg-[#25D366] text-white hover:brightness-110`}>
-                  <WhatsAppIcon className="h-[18px] w-[18px]" />
                 </a>
               </div>
               <a href={`mailto:${company.email}`} className={`${LINK} flex min-w-0 items-center gap-3`}>
