@@ -133,6 +133,11 @@ export async function SiteFooter() {
         <div className="flex flex-wrap justify-between gap-4 pt-6 pb-20 text-[13px] text-dim md:pb-0">
           <span>
             © {new Date().getFullYear()} {company.name} · {BRAND.domain}
+            <span className="text-quiet"> · Developed by </span>
+            <a href="https://tedxon.com" target="_blank" rel="noopener" className="font-semibold text-faint hover:text-paper">
+              TEDXON.COM
+            </a>
+            <span className="text-quiet"> 2026</span>
           </span>
           <nav aria-label="Legal" className="flex flex-wrap gap-5">
             <Link href="/privacy" className="text-dim hover:text-paper">
