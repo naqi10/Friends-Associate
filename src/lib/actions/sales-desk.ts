@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { LEAD_STATUSES, isKey, labelOf } from "@/lib/catalog";
-import { addLeadActivity, assignUnassignedLeads, getAssignableStaff, getLead, updateLead, writeAuditLog } from "@/lib/data";
+import { addLeadActivity, assignUnassignedLeads, getAssignableStaff, getLead, getSpamLeadIds, updateLead, writeAuditLog } from "@/lib/data";
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/permissions";
 
@@ -114,12 +114,20 @@ export async function assignAllAction(formData: FormData) {
   back(formData, `saved=assigned-all&n=${total}`);
 }
 
-/** Bulk change for ticked rows: "assign:<userId|none>" or "status:<key>". */
+/** Bulk change for ticked rows: "assign:<userId|none>", "status:<key>" or "delete" (spam). */
 export async function bulkLeadAction(formData: FormData) {
   const { user } = await requireStaff("leads", "update");
   const ids = formData.getAll("ids").map(String).filter((x) => /^[0-9a-zA-Z-]{1,60}$/.test(x)).slice(0, 200);
   const op = text(formData, "op", 80);
   if (!ids.length || !op) back(formData, "error=bulk");
+  if (op === "delete") {
+    await requireStaff("leads", "delete");
+    const gone = await prisma.lead.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, phone: true, source: true } });
+    await prisma.lead.deleteMany({ where: { id: { in: ids } } });
+    await writeAuditLog({ userId: user.id, action: "bulk-delete", module: "leads", oldValue: gone });
+    revalidatePath("/sales");
+    back(formData, `saved=deleted&n=${gone.length}`);
+  }
   if (op.startsWith("status:")) {
     const status = op.slice(7);
     if (!isKey(LEAD_STATUSES, status)) back(formData, "error=bulk");
@@ -136,4 +144,17 @@ export async function bulkLeadAction(formData: FormData) {
   } else back(formData, "error=bulk");
   revalidatePath("/sales");
   back(formData, `saved=bulk&n=${ids.length}`);
+}
+
+/** "Delete spam": removes every untouched lead that matches the website spam rules (see getSpamLeadIds). */
+export async function deleteSpamLeadsAction(formData: FormData) {
+  const { user } = await requireStaff("leads", "delete");
+  const ids = await getSpamLeadIds();
+  if (ids.length) {
+    const gone = await prisma.lead.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, phone: true, source: true } });
+    await prisma.lead.deleteMany({ where: { id: { in: ids }, status: "new" } });
+    await writeAuditLog({ userId: user.id, action: "delete-spam", module: "leads", oldValue: gone });
+  }
+  revalidatePath("/sales");
+  back(formData, `saved=deleted&n=${ids.length}`);
 }

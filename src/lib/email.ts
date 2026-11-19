@@ -116,6 +116,12 @@ const button = (href: string, label: string) =>
  * A new website enquiry: an alert to the office (with Reply-To set to the client) and, when the client left an
  * email address, a short "we received your message" reply.
  */
+/** The first word of a name if it is just letters (English or Urdu), else "": never a link or other text. */
+function safeFirstName(name: string) {
+  const first = name.trim().split(/\s+/)[0] ?? "";
+  return /^[A-Za-z؀-ۿ'.-]{2,20}$/.test(first) ? first : "";
+}
+
 export async function sendNewLeadEmails(lead: NewLead & { id: string }, opts: { confirm?: boolean } = {}) {
   if (!emailEnabled()) return;
   const company = await getCompany();
@@ -158,11 +164,18 @@ export async function sendNewLeadEmails(lead: NewLead & { id: string }, opts: { 
       to: [lead.email],
       subject: `We received your enquiry · ${BRAND.name}`,
       replyTo: { email: company.email, name: BRAND.name },
+      // Nothing the sender typed goes into this email except a plain first name: bots put phishing text and links
+      // in form fields and a stranger's address in "email", to send spam through our domain.
       html: layout(
-        `Thank you, ${lead.name.split(" ")[0]}`,
-        `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">We received your enquiry about <b>${esc(lead.interest)}</b>. Our team will contact you soon on ${esc(lead.phone)}.</p><p style="margin:0;font-size:15px;line-height:1.6">If it is urgent, call us on <a href="tel:${esc(BRAND.phoneIntl.replace(/\s/g, ""))}" style="color:#0e0e0e">${esc(BRAND.phone)}</a> or message us on <a href="${esc(whatsapp)}" style="color:#0e0e0e">WhatsApp</a>.</p>`,
+        safeFirstName(lead.name) ? `Thank you, ${safeFirstName(lead.name)}` : "Thank you",
+        `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">We received your enquiry. Our team will contact you soon on the phone number you gave us.</p><p style="margin:0;font-size:15px;line-height:1.6">If it is urgent, call us on <a href="tel:${esc(BRAND.phoneIntl.replace(/\s/g, ""))}" style="color:#0e0e0e">${esc(BRAND.phone)}</a> or message us on <a href="${esc(whatsapp)}" style="color:#0e0e0e">WhatsApp</a>.</p>`,
       ),
-      text: `Thank you, ${lead.name}.\n\nWe received your enquiry about ${lead.interest}. Our team will contact you soon on ${lead.phone}.\nUrgent? Call ${BRAND.phone} or WhatsApp ${whatsapp}\n\n${BRAND.name} · ${BRAND.domain}`,
+      text: `Thank you${safeFirstName(lead.name) ? `, ${safeFirstName(lead.name)}` : ""}.
+
+We received your enquiry. Our team will contact you soon on the phone number you gave us.
+Urgent? Call ${BRAND.phone} or WhatsApp ${whatsapp}
+
+${BRAND.name} · ${BRAND.domain}`,
     });
   }
 }

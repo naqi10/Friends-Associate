@@ -8,9 +8,10 @@ import { BulkBar } from "@/components/sales/BulkBar";
 import { ContactButtons } from "@/components/sales/ContactButtons";
 import { LeadPanel } from "@/components/sales/LeadPanel";
 import { STAGE_CHIP, ago, initials, shortDate } from "@/components/sales/ui";
-import { assignAllAction, assignLeadAction, bulkLeadAction } from "@/lib/actions/sales-desk";
+import { ConfirmButton } from "@/components/admin/ConfirmButton";
+import { assignAllAction, assignLeadAction, bulkLeadAction, deleteSpamLeadsAction } from "@/lib/actions/sales-desk";
 import { LEAD_SOURCES, LEAD_STATUSES, isKey, labelOf } from "@/lib/catalog";
-import { getAssignableStaff, getLead, getLeadActivities, getLeadAttention, getLeadCities, getLeadCounts, getLeadPage, type DeskLead } from "@/lib/data";
+import { getAssignableStaff, getLead, getLeadActivities, getLeadAttention, getLeadCities, getLeadCounts, getLeadPage, getSpamLeadIds, type DeskLead } from "@/lib/data";
 import { todayPk } from "@/lib/format";
 import { requireStaff } from "@/lib/permissions";
 
@@ -48,6 +49,8 @@ export default async function SalesDeskPage({ searchParams }: Props) {
   const { user, can } = await requireStaff("leads", "view");
   const sp = await searchParams;
   const canEdit = can("leads", "update");
+  const canDelete = canEdit && can("leads", "delete");
+  const spamCount = canDelete ? (await getSpamLeadIds()).length : 0;
   const today = todayPk();
   const status = isKey(LEAD_STATUSES, sp.status) ? sp.status : undefined;
   const source = isKey(LEAD_SOURCES, sp.source) ? sp.source : undefined;
@@ -83,7 +86,7 @@ export default async function SalesDeskPage({ searchParams }: Props) {
   const maxCount = Math.max(1, ...Object.values(counts));
   const openCount = allCount - (counts.converted ?? 0) - (counts.closed ?? 0);
   const assignedLabel = filter.assigned === "unassigned" ? "Unassigned" : filter.assigned === "me" ? "Me" : staff.find((s) => s.id === filter.assigned)?.name ?? "Anyone";
-  const notice = sp.saved === "assigned-all" ? `${sp.n ?? 0} lead${sp.n === "1" ? "" : "s"} shared across the sales team.` : sp.saved === "bulk" ? `${sp.n ?? 0} lead${sp.n === "1" ? "" : "s"} updated.` : sp.saved ? SAVED[sp.saved] : undefined;
+  const notice = sp.saved === "assigned-all" ? `${sp.n ?? 0} lead${sp.n === "1" ? "" : "s"} shared across the sales team.` : sp.saved === "bulk" ? `${sp.n ?? 0} lead${sp.n === "1" ? "" : "s"} updated.` : sp.saved === "deleted" ? `${sp.n ?? 0} lead${sp.n === "1" ? "" : "s"} deleted.` : sp.saved ? SAVED[sp.saved] : undefined;
   const attentionItems = [
     attention.unassigned > 0 && `${attention.unassigned} lead${attention.unassigned === 1 ? "" : "s"} unassigned`,
     attention.noDate > 0 && `${attention.noDate} follow-up${attention.noDate === 1 ? "" : "s"} without a date`,
@@ -182,6 +185,20 @@ export default async function SalesDeskPage({ searchParams }: Props) {
         </div>
       )}
 
+      {spamCount > 0 && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-red-200 bg-red-50 px-5 py-4 text-[15px] text-red-900">
+          <p>
+            <b>{spamCount} new lead{spamCount === 1 ? "" : "s"} look like spam</b> (written in a foreign script such as Russian or Chinese, or with links in the name). The website now blocks these.
+          </p>
+          <form action={deleteSpamLeadsAction}>
+            <input type="hidden" name="return" value={returnTo} />
+            <ConfirmButton title="Delete spam leads?" message={`${spamCount} untouched lead${spamCount === 1 ? "" : "s"} that look like spam will be deleted. Leads someone has already worked on are never touched.`} confirmLabel="Delete them">
+              Delete spam leads
+            </ConfirmButton>
+          </form>
+        </div>
+      )}
+
       {/* Stage tabs */}
       <nav aria-label="Stages" className="mt-6 -mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
         <ul className="flex gap-2 lg:admin-card lg:gap-0 lg:p-0">
@@ -247,7 +264,7 @@ export default async function SalesDeskPage({ searchParams }: Props) {
 
       <div className={`mt-6 grid items-start gap-6 ${selected ? "xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_440px]" : ""}`}>
         <div className="min-w-0">
-          {canEdit && <BulkBar staff={staff} stages={LEAD_STATUSES.map((s) => ({ key: s.key, label: s.label }))} returnTo={returnTo} action={bulkLeadAction} />}
+          {canEdit && <BulkBar staff={staff} stages={LEAD_STATUSES.map((s) => ({ key: s.key, label: s.label }))} returnTo={returnTo} action={bulkLeadAction} canDelete={canDelete} />}
 
           {rows.length === 0 ? (
             <p className="admin-card px-6 py-12 text-center text-muted">No leads match these filters.</p>

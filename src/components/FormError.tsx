@@ -63,6 +63,7 @@ const MESSAGES: Record<string, string> = {
   "cancel-reason": "Write a short reason for cancelling this booking (at least 5 characters).",
   features: "A list can have at most 15 lines (one item per line).",
   "video-link": "Use a YouTube, Facebook or Google Drive video link (Drive: shared as “Anyone with the link”), or a direct https link to an .mp4 file.",
+  retry: "Sorry, that did not go through. Please wait a moment and press Send again.",
   "map-link": "We could not read that location. Paste a Google Maps link (Share → Copy link), coordinates like 28.4202, 70.2952, or an address.",
   "product-price": "Each price line must look like: label | price | unit, e.g. 9 inch | 3800 | per roll. The price is in rupees, numbers only.",
   cta: "Fill in both the button text and the button link, or leave both empty.",

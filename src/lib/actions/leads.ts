@@ -17,6 +17,7 @@ import {
 import { LEAD_STATUSES, PROPERTY_TYPES, isKey } from "@/lib/catalog";
 import { requireStaff } from "@/lib/permissions";
 import { allowPublicSubmission, clientIp } from "@/lib/public-guard";
+import { formTimerProblem, looksLikeSpam } from "@/lib/spam";
 
 const PHONE_RE = /^\+?[0-9][0-9\s-]{6,18}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,13 +39,19 @@ function withParam(path: string, param: string) {
 }
 
 /**
- * Shared guard for every public form: honeypot, per-IP rate limit, required name + valid phone.
+ * Shared guard for every public form: honeypot, form timer, per-IP rate limit, required name + valid phone.
  * Returns the cleaned contact fields, or redirects back with an error code.
  */
 async function guardPublicForm(formData: FormData, returnTo: string) {
   const back = (code: string) => redirect(withParam(returnTo, `error=${code}`) + "#enquiry");
+  const fakeSuccess = () => redirect(withParam(returnTo, "sent=1") + "#enquiry");
   // Bots fill every field; people never see this one. Pretend success so bots learn nothing.
-  if (text(formData, "website")) redirect(withParam(returnTo, "sent=1") + "#enquiry");
+  if (text(formData, "website")) fakeSuccess();
+  // Posted within seconds of the page, or with a form timer from days ago: a bot.
+  const timer = formTimerProblem(text(formData, "ft", 20));
+  if (timer === "too-fast" || timer === "stale") fakeSuccess();
+  // No timer at all: the page's script had not started yet (or a bot posted directly). A person just sends again.
+  if (timer === "missing") back("retry");
 
   const ip = clientIp(await headers());
 
@@ -60,6 +67,10 @@ async function guardPublicForm(formData: FormData, returnTo: string) {
 }
 
 async function submit(lead: NewLead, returnTo: string) {
+  // Spam (foreign scripts, links in the name…) is dropped without saving, emailing or telling the sender.
+  if (looksLikeSpam({ name: lead.name, city: lead.city, message: lead.message, other: [lead.interest, lead.location ?? "", lead.budget ?? "", lead.size ?? ""] })) {
+    redirect(withParam(returnTo, "sent=1") + "#enquiry");
+  }
   const row = await createLead(lead);
   // Office alert + client confirmation, sent after the response so a slow email never delays the visitor.
   after(() => sendNewLeadEmails({ ...lead, id: row.id }));

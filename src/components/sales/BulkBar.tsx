@@ -11,11 +11,14 @@ export function BulkBar({
   stages,
   returnTo,
   action,
+  canDelete = false,
 }: {
   staff: { id: string; name: string }[];
   stages: { key: string; label: string }[];
   returnTo: string;
   action: (formData: FormData) => Promise<void>;
+  /** Offers "Delete" for spam (needs Leads → Delete). */
+  canDelete?: boolean;
 }) {
   const [count, setCount] = useState(0);
 
@@ -57,8 +60,22 @@ export function BulkBar({
               </option>
             ))}
           </optgroup>
+          {canDelete && (
+            <optgroup label="Remove" className="text-ink">
+              <option value="delete" className="text-ink">
+                Delete (spam)
+              </option>
+            </optgroup>
+          )}
         </select>
-        <button type="submit" className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-ink">
+        <button
+          type="submit"
+          onClick={(e) => {
+            const op = (e.currentTarget.form?.elements.namedItem("op") as HTMLSelectElement | null)?.value;
+            if (op === "delete" && !window.confirm(`Delete ${count} lead${count === 1 ? "" : "s"}? This cannot be undone.`)) e.preventDefault();
+          }}
+          className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-ink"
+        >
           Apply
         </button>
       </div>

@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { createLead, getPropertiesWithProject, getPublishedInvestments, type NewLead } from "../data";
 import { sendNewLeadEmails } from "../email";
 import { answerLabel, fieldLabel, type Answers, type Flow, type Lang } from "./flow";
+import { looksLikeSpam } from "@/lib/spam";
 
 const CITY_NAMES: Record<string, string> = { rahim_yar_khan: "Rahim Yar Khan", lahore: "Lahore", multan: "Multan", karachi: "Karachi" };
 
@@ -90,6 +91,8 @@ export async function saveChatLead(flow: Flow, answers: Answers, lang: Lang, sho
     details,
     propertyId: shownListingIds.length === 1 ? shownListingIds[0] : null,
   };
+  // Same spam rules as the website forms: dropped without saving (the visitor still sees "thank you").
+  if (looksLikeSpam({ name: input.name, city: input.city, other: [input.location ?? "", input.size ?? "", input.budget ?? "", String(answers.locality ?? "")] })) return null;
   const row = await createLead(input);
   after(() => sendNewLeadEmails({ ...input, id: row.id }));
   return row;

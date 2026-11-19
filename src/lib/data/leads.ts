@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import type { LeadSource, LeadStatus } from "../catalog";
+import { looksLikeSpam } from "../spam";
 
 export type NewLead = {
   name: string;
@@ -252,4 +253,13 @@ export async function assignUnassignedLeads() {
     await prisma.lead.updateMany({ where: { id: { in: ids }, assignedToId: null }, data: { assignedToId: userId } });
   }
   return pool.filter((p) => given[p.id]).map((p) => ({ ...p, leadIds: given[p.id] }));
+}
+
+/** Untouched ("new") leads that match the website spam rules: what Admin → Leads offers to delete in one go. */
+export async function getSpamLeadIds() {
+  const rows = await prisma.lead.findMany({
+    where: { status: "new" },
+    select: { id: true, name: true, city: true, message: true, interest: true, location: true, budget: true, size: true },
+  });
+  return rows.filter((l) => looksLikeSpam({ name: l.name, city: l.city, message: l.message, other: [l.interest, l.location, l.budget, l.size] })).map((l) => l.id);
 }

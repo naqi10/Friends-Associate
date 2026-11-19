@@ -1,7 +1,8 @@
 import { FormError } from "@/components/FormError";
+import { FormTimer } from "@/components/public/FormTimer";
 import { requestCallbackAction } from "@/lib/actions/leads";
 
-/** Invisible to people, irresistible to bots. Submissions that fill it are silently dropped. */
+/** Invisible to people, irresistible to bots. Submissions that fill it (or come too fast) are silently dropped. */
 export function Honeypot() {
   return (
     <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
@@ -9,6 +10,7 @@ export function Honeypot() {
         Website
         <input type="text" name="website" tabIndex={-1} autoComplete="off" />
       </label>
+      <FormTimer />
     </div>
   );
 }
